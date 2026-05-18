@@ -131,6 +131,15 @@ And la visualización muestra fases de implementación con hitos anuales detalla
 Cuando la simulación finaliza  
 Entonces el sistema muestra "Implementación escalada: años 1-2 (fase 1: $30M), años 3-4 (fase 2: $30M), año 5 (fase 3: $20M)"  
 
+**Escenario: Simulación de acoplamientos físicos y caos social no lineal**  
+Dado que estoy en el módulo de simulador del gemelo digital  
+Cuando configuro la "Radiación Solar Directa" a 900 W/m²  
+And configuro la "Presión de Tandeo Hídrico" a 20%  
+And ejecuto la simulación por 1 año  
+Entonces la simulación proyecta que la "Desintegración y Polarización Social" supera el 80%  
+And el "Riesgo de Vandalismo / Disturbios" se dispara exponencialmente superando el 95% debido al acoplamiento de doble bucle no lineal (Ajuste B)  
+And el "Historial de Corridas y Simulaciones Archivadas" registra de forma exitosa la corrida "SIM-HIST-02" para consulta  
+
 ---
 
 ### 2.3 Feature: Predicción Electoral por Distrito
