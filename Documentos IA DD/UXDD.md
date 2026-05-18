@@ -1,7 +1,7 @@
 # UXDD - Documento de Diseño de Experiencia de Usuario (User Experience Design Document)
 ## CívicaOS: Sistema de Inteligencia Cívica Multi-Nivel
 
-**Versión:** 1.0.0  
+**Versión:** 0.5.0  
 **Fecha:** 2026-05-18  
 **Autor:** Antigravity Agent  
 **Estado:** Especificación Oficial  

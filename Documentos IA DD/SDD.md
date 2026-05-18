@@ -1,7 +1,7 @@
 # SDD - Documento de Diseño de Software
 ## CívicaOS: Sistema de Inteligencia Cívica Multi-Nivel
 
-**Versión:** 1.0.0
+**Versión:** 0.5.0
 **Fecha:** 2026-05-18
 **Autor:** MiniMax Agent
 **Estado:** Especificación Oficial
