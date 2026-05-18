@@ -1,0 +1,22 @@
+// src/events/schemas/agent-message.schema.json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AgentMessage",
+  "type": "object",
+  "properties": {
+    "messageId": { "type": "string", "format": "uuid" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "sender": { "type": "string", "enum": ["orchestrator", "data_collector", "..."] },
+    "recipient": { "type": "string" },
+    "eventType": { 
+      "type": "string",
+      "enum": ["task_assigned", "task_completed", "error", "audit_log", "obp_export"]
+    },
+    "payload": { "type": "object" },
+    "signature": { 
+      "type": "string", 
+      "description": "SHA-256 hash for integrity (ADD: Security)"
+    }
+  },
+  "required": ["messageId", "timestamp", "sender", "eventType", "payload"]
+}

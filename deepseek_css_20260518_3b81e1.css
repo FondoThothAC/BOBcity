@@ -1,0 +1,24 @@
+/* ✅ MEJORA: Media queries para móviles */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 60px;
+    padding: 16px 4px;
+  }
+  .logo-badge { font-size: 14px; }
+  .logo-sub, .nav-section-label, .nav-badge, .sidebar-footer span { display: none; }
+  .nav-item span:not(.nav-icon) { display: none; }
+  .nav-item { justify-content: center; padding: 10px; }
+  
+  .two-col, .three-col {
+    grid-template-columns: 1fr;
+  }
+  
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .content { padding: 16px; }
+  
+  .agent-flow { flex-direction: column; align-items: flex-start; }
+  .agent-arrow { transform: rotate(90deg); }
+}

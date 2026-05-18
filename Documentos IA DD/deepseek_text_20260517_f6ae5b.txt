@@ -1,0 +1,22 @@
+┌──────────────────────────────────────────────────────────────┐
+│                    CIVICPULSE ORCHESTRATOR                     │
+│  (Super Agente → Data Collector → Analyzer → Simulator → ...) │
+└──────────────────────────┬───────────────────────────────────┘
+                           │
+        ┌──────────────────┼──────────────────┐
+        ▼                  ▼                  ▼
+┌───────────────┐ ┌───────────────┐ ┌───────────────┐
+│ GIS ENGINE    │ │ SNA ENGINE    │ │ ABM ENGINE    │
+│ PostGIS       │ │ Neo4j         │ │ Mesa/AgentPy  │
+│ GeoPandas     │ │ NetworkX      │ │ Población     │
+│ Leaflet       │ │ GraphSAGE     │ │ Sintética     │
+│               │ │ Louvain       │ │               │
+└───────┬───────┘ └───────┬───────┘ └───────┬───────┘
+        │                  │                  │
+        └──────────────────┼──────────────────┘
+                           ▼
+                ┌───────────────────┐
+                │ PREDICTOR ENGINE  │
+                │ XGBoost + MNL     │
+                │ Softmax           │
+                └───────────────────┘

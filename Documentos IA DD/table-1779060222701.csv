@@ -1,0 +1,11 @@
+﻿#,Metodología,Artefactos Clave
+**01-DDD**,Domain-Driven Design,"`ubiquitous-language.md` (términos cívicos), `domain-model.md` (entidades + value objects), `domain-events.md` (eventos del dominio)"
+**02-TDD**,Test-Driven Development,"`test_abm_engine.py` (tests ejecutables del motor ABM), `test_security_privacy.py` (tests de privacidad diferencial), `test-suite-abm-predictor.md` (suite completa)"
+**03-BDD/ATDD**,Behavior/Acceptance Test-Driven,"`features-civicpulse.feature.md` (5 features Gherkin completas), `step-definitions-template.py`, `acceptance-criteria-matrix.md`"
+**04-SDD**,Security-Driven Design,"`threat-model.md` (STRIDE completo), `security-architecture.md` (Zero Trust + PETs), `security_tests.py` (tests de encriptación/auditoría)"
+**05-ADD**,Architecture-Driven Design,"`c4-context-diagram.md`, `c4-container-diagram.md`, `c4-component-orchestrator.md` (C4 Model completo + ADRs)"
+**06-EDD**,Event-Driven Design,"`event-catalog.md` (schemas Avro/JSON), `event_store.py` (implementación con hash chain), `test_event_driven.py`"
+**07-UXDD**,UX-Driven Design,"`user-personas.md` (4 personas: Estratega, Analista, Ciudadano, Inversor), `user-journey-maps.md`, `wireframes-ui-specs.md` (Design System ""Civic Glass"")"
+**08-CDD**,Component-Driven Design,"`component-inventory.md` (Atomic Design hierarchy), `storybook-stories.md`, `component-templates.md` (Button, AgentNode, TerminalConsole, SwarmVisualizer)"
+**09-IDD**,Interface-Driven Design,"`api-contracts-openapi.md` (endpoints completos: territorios, simulación, predictor, orquestador, OBP), `typescript-interfaces.md`, `postman-collection.json.md`"
+**10-MDD**,Model-Driven Development,"`database-schema.md` (PostgreSQL + PostGIS + pgvector), `migration_initial.py` (Alembic), `seed_hermosillo.py` (datos reales de Hermosillo)"

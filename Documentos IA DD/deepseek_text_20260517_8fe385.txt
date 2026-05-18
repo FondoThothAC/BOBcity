@@ -1,0 +1,11 @@
+/src/data/inegi/
+├── __init__.py
+├── config.py              # Token INEGI, CRS, rutas locales
+├── geo_loader.py          # Descarga y carga de shapefiles con GeoPandas
+├── indicators_api.py      # Cliente para API del Banco de Indicadores
+├── denue_api.py           # Cliente para API del DENUE
+├── population_synthetic.py # Construcción de población sintética desde censo
+├── spatial_joins.py       # Cruce de capas electorales + demográficas
+├── cache/                 # Almacenamiento local de shapefiles descargados
+├── exports/               # GeoJSON/Parquet procesados
+└── tests/                 # Tests unitarios con TDD

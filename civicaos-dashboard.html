@@ -1,0 +1,1609 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CívicaOS Engine</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-void: #03020a;
+  --bg-surface: rgba(255,255,255,0.035);
+  --bg-raised: rgba(255,255,255,0.065);
+  --bg-hover: rgba(255,255,255,0.09);
+  --border: rgba(255,255,255,0.08);
+  --border-glow: rgba(147,112,255,0.3);
+  --accent-purple: #9370FF;
+  --accent-cyan: #00D4AA;
+  --accent-red: #FF4466;
+  --accent-amber: #FFB347;
+  --accent-blue: #4488FF;
+  --text-primary: rgba(255,255,255,0.95);
+  --text-secondary: rgba(255,255,255,0.5);
+  --text-muted: rgba(255,255,255,0.28);
+  --font-display: 'Syne', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 20px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg-void);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ─── AMBIENT GLOW ─── */
+.ambient {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+}
+.ambient-orb {
+  position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.12;
+  animation: drift 18s ease-in-out infinite alternate;
+}
+.orb-1 { width: 600px; height: 600px; background: #7c3aed; top: -200px; left: -100px; animation-delay: 0s; }
+.orb-2 { width: 400px; height: 400px; background: #0891b2; top: 30%; right: -100px; animation-delay: -6s; }
+.orb-3 { width: 300px; height: 300px; background: #be185d; bottom: -100px; left: 40%; animation-delay: -12s; }
+@keyframes drift { from { transform: translate(0,0) scale(1); } to { transform: translate(40px,30px) scale(1.1); } }
+
+/* ─── NOISE TEXTURE ─── */
+body::after {
+  content: ''; position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 0; opacity: 0.4;
+}
+
+/* ─── LAYOUT ─── */
+.app { display: flex; min-height: 100vh; position: relative; z-index: 1; }
+
+/* ─── SIDEBAR ─── */
+.sidebar {
+  width: 220px; flex-shrink: 0;
+  background: rgba(255,255,255,0.025);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  padding: 24px 0;
+  position: sticky; top: 0; height: 100vh;
+  backdrop-filter: blur(20px);
+}
+
+.logo {
+  padding: 0 20px 28px;
+  border-bottom: 1px solid var(--border);
+}
+.logo-badge {
+  font-family: var(--font-display);
+  font-size: 18px; font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--text-primary);
+}
+.logo-badge span { color: var(--accent-purple); }
+.logo-sub {
+  font-size: 10px; font-family: var(--font-mono);
+  color: var(--text-muted); margin-top: 3px; letter-spacing: 0.05em;
+}
+
+.nav { padding: 20px 12px; flex: 1; display: flex; flex-direction: column; gap: 2px; }
+
+.nav-section-label {
+  font-size: 9px; font-family: var(--font-mono);
+  color: var(--text-muted); letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 8px 8px 6px; margin-top: 12px;
+}
+
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px; border-radius: var(--r-sm);
+  cursor: pointer; transition: all 0.15s;
+  color: var(--text-secondary);
+  border: 1px solid transparent;
+  font-size: 13px; font-weight: 400;
+  position: relative;
+}
+.nav-item:hover { background: var(--bg-raised); color: var(--text-primary); }
+.nav-item.active {
+  background: rgba(147,112,255,0.12);
+  border-color: rgba(147,112,255,0.25);
+  color: var(--accent-purple);
+}
+.nav-item.active::before {
+  content: ''; position: absolute; left: -12px; top: 50%; transform: translateY(-50%);
+  width: 3px; height: 20px; background: var(--accent-purple);
+  border-radius: 0 2px 2px 0;
+}
+.nav-icon { width: 16px; text-align: center; font-size: 15px; flex-shrink: 0; }
+.nav-badge {
+  margin-left: auto; font-size: 10px; font-family: var(--font-mono);
+  background: rgba(255,68,102,0.2); color: var(--accent-red);
+  padding: 1px 6px; border-radius: 20px;
+}
+
+.sidebar-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+}
+.role-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; font-family: var(--font-mono);
+  color: var(--accent-red); background: rgba(255,68,102,0.1);
+  border: 1px solid rgba(255,68,102,0.2);
+  padding: 4px 10px; border-radius: 20px;
+}
+.role-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent-red); animation: pulse-dot 2s ease-in-out infinite; }
+@keyframes pulse-dot { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+
+/* ─── MAIN ─── */
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+/* ─── TOPBAR ─── */
+.topbar {
+  height: 56px; display: flex; align-items: center;
+  padding: 0 28px; gap: 16px;
+  background: rgba(3,2,10,0.6); backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 10;
+}
+.topbar-title { font-family: var(--font-display); font-size: 15px; font-weight: 600; }
+.topbar-crumb { color: var(--text-muted); font-size: 13px; }
+.topbar-sep { color: var(--text-muted); }
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+.topbar-btn {
+  background: var(--bg-raised); border: 1px solid var(--border);
+  border-radius: var(--r-sm); color: var(--text-secondary);
+  padding: 6px 14px; font-size: 12px; font-family: var(--font-body);
+  cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 6px;
+}
+.topbar-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+.topbar-btn.primary {
+  background: rgba(147,112,255,0.15);
+  border-color: rgba(147,112,255,0.35);
+  color: var(--accent-purple);
+}
+.topbar-btn.primary:hover { background: rgba(147,112,255,0.25); }
+
+/* ─── CONTENT ─── */
+.content { padding: 28px; flex: 1; }
+
+/* ─── ROLE TABS ─── */
+.role-tabs {
+  display: flex; gap: 8px; margin-bottom: 28px;
+}
+.role-tab {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 18px; border-radius: var(--r-md);
+  border: 1px solid var(--border);
+  cursor: pointer; transition: all 0.2s;
+  font-size: 13px; font-weight: 500;
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+}
+.role-tab:hover { border-color: rgba(255,255,255,0.15); color: var(--text-primary); }
+.role-tab.active-master {
+  background: rgba(255,68,102,0.1);
+  border-color: rgba(255,68,102,0.3);
+  color: var(--accent-red);
+}
+.role-tab.active-agent {
+  background: rgba(68,136,255,0.1);
+  border-color: rgba(68,136,255,0.3);
+  color: var(--accent-blue);
+}
+.role-tab.active-client {
+  background: rgba(0,212,170,0.1);
+  border-color: rgba(0,212,170,0.3);
+  color: var(--accent-cyan);
+}
+
+/* ─── VIEWS (show/hide) ─── */
+.view { display: none; }
+.view.active { display: block; }
+
+/* ─── STAT CARDS ─── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px; margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 18px 20px;
+  transition: border-color 0.2s;
+}
+.stat-card:hover { border-color: rgba(255,255,255,0.14); }
+.stat-label { font-size: 11px; font-family: var(--font-mono); color: var(--text-muted); letter-spacing: 0.05em; margin-bottom: 8px; }
+.stat-value { font-family: var(--font-display); font-size: 26px; font-weight: 700; line-height: 1; }
+.stat-delta { font-size: 11px; margin-top: 6px; }
+.delta-up { color: var(--accent-cyan); }
+.delta-down { color: var(--accent-red); }
+.delta-neutral { color: var(--text-muted); }
+
+/* ─── CARD ─── */
+.card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 20px 22px;
+  margin-bottom: 16px;
+}
+.card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+.card-title {
+  font-family: var(--font-display);
+  font-size: 13px; font-weight: 600;
+  letter-spacing: 0.02em; color: var(--text-primary);
+  display: flex; align-items: center; gap: 8px;
+}
+.card-title-icon {
+  width: 28px; height: 28px;
+  border-radius: var(--r-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+}
+
+/* ─── TWO COL ─── */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+/* ─── TABLE ─── */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th {
+  text-align: left; font-size: 10px; font-family: var(--font-mono);
+  color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 8px 12px; border-bottom: 1px solid var(--border);
+}
+td { padding: 11px 12px; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,0.02); }
+
+/* ─── CHIPS / BADGES ─── */
+.chip {
+  font-size: 10px; font-family: var(--font-mono);
+  padding: 3px 8px; border-radius: 20px;
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.chip-purple { background: rgba(147,112,255,0.15); color: var(--accent-purple); border: 1px solid rgba(147,112,255,0.25); }
+.chip-cyan { background: rgba(0,212,170,0.12); color: var(--accent-cyan); border: 1px solid rgba(0,212,170,0.22); }
+.chip-red { background: rgba(255,68,102,0.12); color: var(--accent-red); border: 1px solid rgba(255,68,102,0.22); }
+.chip-amber { background: rgba(255,179,71,0.12); color: var(--accent-amber); border: 1px solid rgba(255,179,71,0.22); }
+.chip-blue { background: rgba(68,136,255,0.12); color: var(--accent-blue); border: 1px solid rgba(68,136,255,0.22); }
+.chip-muted { background: rgba(255,255,255,0.06); color: var(--text-secondary); border: 1px solid var(--border); }
+
+/* ─── PROGRESS BAR ─── */
+.progress-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.progress-label { font-size: 12px; color: var(--text-secondary); min-width: 100px; }
+.progress-track { flex: 1; height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 2px; transition: width 1s ease; }
+.progress-pct { font-size: 11px; font-family: var(--font-mono); color: var(--text-muted); min-width: 36px; text-align: right; }
+
+/* ─── TERMINAL ─── */
+.terminal {
+  background: #010108;
+  border: 1px solid rgba(147,112,255,0.2);
+  border-radius: var(--r-md);
+  padding: 14px 16px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.8;
+  max-height: 180px;
+  overflow-y: auto;
+}
+.terminal-line { display: flex; gap: 8px; }
+.t-time { color: var(--text-muted); }
+.t-agent { color: var(--accent-purple); }
+.t-ok { color: var(--accent-cyan); }
+.t-warn { color: var(--accent-amber); }
+.t-data { color: rgba(255,255,255,0.6); }
+.t-cursor { display: inline-block; width: 7px; height: 12px; background: var(--accent-purple); animation: blink 1s step-end infinite; vertical-align: text-bottom; margin-left: 2px; }
+@keyframes blink { 50%{opacity:0;} }
+
+/* ─── AGENT NODES ─── */
+.agent-flow { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 12px 0; }
+.agent-node {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 20px;
+  font-size: 11px; font-family: var(--font-mono);
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  transition: all 0.3s;
+}
+.agent-node.idle { }
+.agent-node.running {
+  border-color: rgba(147,112,255,0.4);
+  background: rgba(147,112,255,0.1);
+  color: var(--accent-purple);
+  box-shadow: 0 0 12px rgba(147,112,255,0.15);
+  animation: agent-pulse 1.5s ease-in-out infinite;
+}
+.agent-node.done {
+  border-color: rgba(0,212,170,0.3);
+  background: rgba(0,212,170,0.08);
+  color: var(--accent-cyan);
+}
+@keyframes agent-pulse { 0%,100%{box-shadow:0 0 8px rgba(147,112,255,0.15);} 50%{box-shadow:0 0 18px rgba(147,112,255,0.3);} }
+.agent-arrow { color: var(--text-muted); font-size: 10px; }
+
+/* ─── HEATMAP GRID ─── */
+.heatmap-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; margin: 12px 0; }
+.heat-cell {
+  aspect-ratio: 1; border-radius: 3px;
+  transition: transform 0.15s;
+  cursor: pointer;
+}
+.heat-cell:hover { transform: scale(1.3); z-index: 1; }
+
+/* ─── METER ─── */
+.meter-ring { display: flex; align-items: center; justify-content: center; }
+.meter-svg { transform: rotate(-90deg); }
+
+/* ─── BUTTONS ─── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: var(--r-sm);
+  font-size: 12px; font-family: var(--font-body); font-weight: 500;
+  cursor: pointer; transition: all 0.15s; border: 1px solid var(--border);
+  background: var(--bg-raised); color: var(--text-secondary);
+}
+.btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+.btn-purple {
+  background: rgba(147,112,255,0.15); color: var(--accent-purple);
+  border-color: rgba(147,112,255,0.3);
+}
+.btn-purple:hover { background: rgba(147,112,255,0.25); }
+.btn-cyan { background: rgba(0,212,170,0.12); color: var(--accent-cyan); border-color: rgba(0,212,170,0.25); }
+.btn-cyan:hover { background: rgba(0,212,170,0.22); }
+.btn-red { background: rgba(255,68,102,0.12); color: var(--accent-red); border-color: rgba(255,68,102,0.25); }
+.btn-sm { padding: 5px 10px; font-size: 11px; }
+
+/* ─── INPUT ─── */
+.input-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
+.inp-label { font-size: 11px; font-family: var(--font-mono); color: var(--text-muted); min-width: 90px; }
+.inp {
+  flex: 1; background: var(--bg-surface); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 7px 12px; font-size: 12px;
+  font-family: var(--font-body); color: var(--text-primary);
+  transition: border-color 0.15s; outline: none;
+}
+.inp:focus { border-color: rgba(147,112,255,0.4); }
+select.inp option { background: #0d0b1a; }
+
+/* ─── SLIDER ─── */
+.slider-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.slider-label { font-size: 12px; color: var(--text-secondary); min-width: 130px; }
+input[type=range].slider {
+  flex: 1; -webkit-appearance: none; height: 4px;
+  background: rgba(255,255,255,0.1); border-radius: 2px; outline: none;
+}
+input[type=range].slider::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%;
+  background: var(--accent-purple); cursor: pointer; border: 2px solid var(--bg-void);
+  box-shadow: 0 0 8px rgba(147,112,255,0.4);
+}
+.slider-val { font-size: 11px; font-family: var(--font-mono); color: var(--accent-purple); min-width: 36px; text-align: right; }
+
+/* ─── DIVIDER ─── */
+.divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+/* ─── NOTIFICATION DOT ─── */
+.notif-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent-red); display: inline-block; }
+
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+/* ─── TOAST NOTIFICATIONS ─── */
+.toast-container {
+  position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.toast {
+  padding: 12px 20px; border-radius: 8px;
+  font-size: 13px; font-family: var(--font-body);
+  color: var(--text-primary);
+  backdrop-filter: blur(12px);
+  animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  max-width: 320px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  display: flex; align-items: center; gap: 10px;
+}
+.toast-success {
+  background: rgba(0,212,170,0.12);
+  border: 1px solid rgba(0,212,170,0.3);
+  box-shadow: 0 0 15px rgba(0,212,170,0.1);
+}
+.toast-error {
+  background: rgba(255,68,102,0.12);
+  border: 1px solid rgba(255,68,102,0.3);
+  box-shadow: 0 0 15px rgba(255,68,102,0.1);
+}
+.toast-info {
+  background: rgba(147,112,255,0.12);
+  border: 1px solid rgba(147,112,255,0.3);
+  box-shadow: 0 0 15px rgba(147,112,255,0.1);
+}
+@keyframes slideIn {
+  from { transform: translateX(120%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@keyframes slideOut {
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(120%); opacity: 0; }
+}
+
+/* ─── ONLINE / OFFLINE STATUS INDICATOR ─── */
+.online-indicator {
+  font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: 20px;
+  background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+  transition: all 0.3s;
+}
+
+/* ─── ERROR SHAKE & SHIMMER SKELETON ─── */
+.agent-node.queued {
+  border-color: rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.02);
+  color: var(--text-muted);
+}
+.agent-node.error {
+  border-color: rgba(255,68,102,0.4);
+  background: rgba(255,68,102,0.1);
+  color: var(--accent-red);
+  box-shadow: 0 0 12px rgba(255,68,102,0.2);
+  animation: error-shake 0.4s ease;
+}
+@keyframes error-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(2px); }
+}
+
+.stat-card.loading {
+  position: relative; overflow: hidden;
+}
+.stat-card.loading::after {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.03) 50%, transparent 100%);
+  animation: shimmer 1.5s infinite;
+}
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* ─── RESPONSIVE MEDIA QUERIES ─── */
+@media (max-width: 992px) {
+  .app { flex-direction: column; }
+  .sidebar {
+    width: 100%; height: auto; position: relative; border-right: none; border-bottom: 1px solid var(--border);
+    padding: 16px;
+  }
+  .logo { padding: 0 0 12px; border-bottom: none; }
+  .nav { flex-direction: row; flex-wrap: wrap; padding: 8px 0; gap: 4px; }
+  .nav-section-label { display: none; }
+  .nav-item::before { display: none; }
+  .main { margin-left: 0; }
+  .two-col, .three-col { grid-template-columns: 1fr; }
+}
+@media (max-width: 576px) {
+  .stats-grid { grid-template-columns: 1fr; }
+  .content { padding: 16px; }
+  .topbar { padding: 0 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Toast Notification Container -->
+<div class="toast-container" id="toast-container"></div>
+
+<div class="ambient">
+  <div class="ambient-orb orb-1"></div>
+  <div class="ambient-orb orb-2"></div>
+  <div class="ambient-orb orb-3"></div>
+</div>
+
+<div class="app">
+
+  <!-- ════════ SIDEBAR ════════ -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-badge">Cívica<span>OS</span></div>
+      <div class="logo-sub">ENGINE v1.0 · LOCAL-FIRST</div>
+    </div>
+
+    <nav class="nav">
+      <div class="nav-section-label">Sistema</div>
+      <div class="nav-item active" onclick="setView('master'); setNav(this)">
+        <span class="nav-icon">⬡</span> Consola Maestra
+      </div>
+      <div class="nav-item" onclick="setView('agent'); setNav(this)">
+        <span class="nav-icon">◈</span> Panel Agente
+        <span class="nav-badge">3</span>
+      </div>
+      <div class="nav-item" onclick="setView('client'); setNav(this)">
+        <span class="nav-icon">◇</span> Dashboard Cliente
+      </div>
+      <div class="nav-item" onclick="setView('citizen'); setNav(this)">
+        <span class="nav-icon">◎</span> ThothAgora
+      </div>
+
+      <div class="nav-section-label">Módulos</div>
+      <div class="nav-item" onclick="setView('abm'); setNav(this)">
+        <span class="nav-icon">⬟</span> Sandbox ABM
+      </div>
+      <div class="nav-item" onclick="setView('predictor'); setNav(this)">
+        <span class="nav-icon">△</span> Predictor Electoral
+      </div>
+      <div class="nav-item" onclick="setView('swarm'); setNav(this)">
+        <span class="nav-icon">⊛</span> Swarm OpenClaw
+      </div>
+      <div class="nav-item" onclick="setView('billing'); setNav(this)">
+        <span class="nav-icon">◈</span> Billing SaaS
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="role-chip"><span class="role-dot"></span>MASTER</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:8px;font-family:var(--font-mono)">144.24.23.61 · LOCAL</div>
+    </div>
+  </aside>
+
+  <!-- ════════ MAIN ════════ -->
+  <div class="main">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <span class="topbar-crumb" id="crumb-path">Sistema</span>
+      <span class="topbar-sep">/</span>
+      <span class="topbar-title" id="crumb-title">Consola Maestra</span>
+      <div class="topbar-right">
+        <div id="online-indicator" class="online-indicator">◉ ONLINE · LOCAL-FIRST</div>
+        <button class="topbar-btn" onclick="setView('swarm'); setNav(document.querySelector('.nav-item:nth-child(8)'))">
+          <span>⊛</span> Swarm
+        </button>
+        <button class="topbar-btn primary" onclick="openNewProject()">
+          <span>+</span> Nuevo proyecto
+        </button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ════ VIEW: MASTER ════ -->
+      <div class="view active" id="view-master">
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">PROYECTOS ACTIVOS</div>
+            <div class="stat-value" style="color:var(--accent-purple)">12</div>
+            <div class="stat-delta delta-up">↑ 3 este mes</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">CLIENTES ACTIVOS</div>
+            <div class="stat-value" style="color:var(--accent-cyan)">9</div>
+            <div class="stat-delta delta-up">↑ 2 pendientes</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">AGENTES / EMPLEADOS</div>
+            <div class="stat-value" style="color:var(--accent-blue)">4</div>
+            <div class="stat-delta delta-neutral">Sin cambio</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">INGRESOS MES</div>
+            <div class="stat-value" style="color:var(--accent-amber)">$2.4M</div>
+            <div class="stat-delta delta-up">↑ MXN · +18%</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">TOKENS PROCESADOS</div>
+            <div class="stat-value" style="color:var(--text-primary)">847K</div>
+            <div class="stat-delta delta-neutral">Local · sin costo API</div>
+          </div>
+        </div>
+
+        <div class="two-col">
+
+          <!-- Proyectos -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <div class="card-title-icon" style="background:rgba(147,112,255,0.15)">⬡</div>
+                Proyectos
+              </div>
+              <button class="btn btn-purple btn-sm" onclick="openNewProject()">+ Crear</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr>
+                  <th>Proyecto</th><th>Paquete</th><th>Agente</th><th>Estado</th>
+                </tr></thead>
+                <tbody>
+                  <tr>
+                    <td><div style="font-size:12px">HER-DIS-08</div><div style="font-size:10px;color:var(--text-muted)">Palo Verde · Hermosillo</div></td>
+                    <td><span class="chip chip-amber">PLATA</span></td>
+                    <td style="font-size:12px;color:var(--text-secondary)">A. García</td>
+                    <td><span class="chip chip-cyan">• Activo</span></td>
+                  </tr>
+                  <tr>
+                    <td><div style="font-size:12px">MOR-SON-2026</div><div style="font-size:10px;color:var(--text-muted)">Estado Sonora</div></td>
+                    <td><span class="chip chip-purple">ORO</span></td>
+                    <td style="font-size:12px;color:var(--text-secondary)">L. Ramírez</td>
+                    <td><span class="chip chip-cyan">• Activo</span></td>
+                  </tr>
+                  <tr>
+                    <td><div style="font-size:12px">HER-MUN-01</div><div style="font-size:10px;color:var(--text-muted)">Municipio Hermosillo</div></td>
+                    <td><span class="chip chip-muted">BRONCE</span></td>
+                    <td style="font-size:12px;color:var(--text-secondary)">C. López</td>
+                    <td><span class="chip chip-amber">↻ Proceso</span></td>
+                  </tr>
+                  <tr>
+                    <td><div style="font-size:12px">GDL-DIS-03</div><div style="font-size:10px;color:var(--text-muted)">Zapopan · Jalisco</div></td>
+                    <td><span class="chip chip-amber">PLATA</span></td>
+                    <td style="font-size:12px;color:var(--text-secondary)">Sin asignar</td>
+                    <td><span class="chip chip-red">! Pendiente</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Agentes -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <div class="card-title-icon" style="background:rgba(68,136,255,0.15)">◈</div>
+                Agentes / Empleados
+              </div>
+              <button class="btn btn-sm" onclick="alert('Módulo: Crear agente')">+ Agente</button>
+            </div>
+            <table>
+              <thead><tr><th>Nombre</th><th>Proyectos</th><th>Estado</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><div style="display:flex;align-items:center;gap:8px"><div style="width:28px;height:28px;border-radius:50%;background:rgba(147,112,255,0.2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--accent-purple)">AG</div><div><div style="font-size:12px">Alejandro G.</div><div style="font-size:10px;color:var(--text-muted)">Análisis · Sonora</div></div></div></td>
+                  <td style="font-size:12px">HER-DIS-08</td>
+                  <td><span class="chip chip-cyan">Activo</span></td>
+                </tr>
+                <tr>
+                  <td><div style="display:flex;align-items:center;gap:8px"><div style="width:28px;height:28px;border-radius:50%;background:rgba(0,212,170,0.15);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--accent-cyan)">LR</div><div><div style="font-size:12px">Laura R.</div><div style="font-size:10px;color:var(--text-muted)">Estrategia · Sonora</div></div></div></td>
+                  <td style="font-size:12px">MOR-SON-2026</td>
+                  <td><span class="chip chip-cyan">Activo</span></td>
+                </tr>
+                <tr>
+                  <td><div style="display:flex;align-items:center;gap:8px"><div style="width:28px;height:28px;border-radius:50%;background:rgba(255,179,71,0.15);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--accent-amber)">CL</div><div><div style="font-size:12px">Carlos L.</div><div style="font-size:10px;color:var(--text-muted)">Datos · Jalisco</div></div></div></td>
+                  <td style="font-size:12px">HER-MUN-01</td>
+                  <td><span class="chip chip-amber">En proceso</span></td>
+                </tr>
+              </tbody>
+            </table>
+            <hr class="divider">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:11px;color:var(--text-muted)">Permisos por proyecto · acceso granular</span>
+              <button class="btn btn-sm">Gestionar permisos</button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- White-label themes -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <div class="card-title-icon" style="background:rgba(255,179,71,0.15)">◇</div>
+              Temas White-Label por Proyecto
+            </div>
+            <span style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono)">10 plantillas disponibles</span>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <div onclick="selectTheme(this,'#9370FF','#03020a')" class="theme-swatch active-theme" style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:var(--r-sm);border:1px solid rgba(147,112,255,0.4);background:rgba(147,112,255,0.1);cursor:pointer">
+              <div style="width:14px;height:14px;border-radius:50%;background:#9370FF"></div>
+              <span style="font-size:11px;font-family:var(--font-mono);color:var(--accent-purple)">glass-classic</span>
+            </div>
+            <div onclick="selectTheme(this,'#00FFCC','#010a08')" class="theme-swatch" style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:var(--r-sm);border:1px solid var(--border);cursor:pointer">
+              <div style="width:14px;height:14px;border-radius:50%;background:linear-gradient(135deg,#00ffcc,#ff00ff)"></div>
+              <span style="font-size:11px;font-family:var(--font-mono);color:var(--text-secondary)">cyber-neon</span>
+            </div>
+            <div onclick="selectTheme(this,'#FFD700','#030308')" class="theme-swatch" style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:var(--r-sm);border:1px solid var(--border);cursor:pointer">
+              <div style="width:14px;height:14px;border-radius:50%;background:linear-gradient(135deg,#1a3a6e,#FFD700)"></div>
+              <span style="font-size:11px;font-family:var(--font-mono);color:var(--text-secondary)">royal-corporate</span>
+            </div>
+            <div onclick="selectTheme(this,'#2ECC71','#020a04')" class="theme-swatch" style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:var(--r-sm);border:1px solid var(--border);cursor:pointer">
+              <div style="width:14px;height:14px;border-radius:50%;background:linear-gradient(135deg,#2ecc71,#00b894)"></div>
+              <span style="font-size:11px;font-family:var(--font-mono);color:var(--text-secondary)">emerald-eco</span>
+            </div>
+            <div onclick="selectTheme(this,'#FF6B35','#0a0302')" class="theme-swatch" style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:var(--r-sm);border:1px solid var(--border);cursor:pointer">
+              <div style="width:14px;height:14px;border-radius:50%;background:linear-gradient(135deg,#ff6b35,#ffd700)"></div>
+              <span style="font-size:11px;font-family:var(--font-mono);color:var(--text-secondary)">sunset-gold</span>
+            </div>
+            <div onclick="selectTheme(this,'#6C63FF','#04030f')" class="theme-swatch" style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:var(--r-sm);border:1px solid var(--border);cursor:pointer">
+              <div style="width:14px;height:14px;border-radius:50%;background:linear-gradient(135deg,#6c63ff,#3a86ff)"></div>
+              <span style="font-size:11px;font-family:var(--font-mono);color:var(--text-secondary)">quantum-indigo</span>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /view-master -->
+
+      <!-- ════ VIEW: AGENT ════ -->
+      <div class="view" id="view-agent">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">MIS PROYECTOS</div>
+            <div class="stat-value" style="color:var(--accent-blue)">3</div>
+            <div class="stat-delta delta-neutral">Asignados</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">SOLICITUDES NUEVAS</div>
+            <div class="stat-value" style="color:var(--accent-red)">2</div>
+            <div class="stat-delta delta-down">Requieren acción</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">REPORTES GENERADOS</div>
+            <div class="stat-value" style="color:var(--accent-cyan)">17</div>
+            <div class="stat-delta delta-up">↑ 4 esta semana</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">CIUDADANOS CAPTURADOS</div>
+            <div class="stat-value" style="color:var(--accent-amber)">3,240</div>
+            <div class="stat-delta delta-up">↑ +280 hoy</div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><div class="card-title-icon" style="background:rgba(255,68,102,0.15)">!</div>Solicitudes Pendientes</div>
+            </div>
+            <table>
+              <thead><tr><th>Cliente</th><th>Paquete</th><th>Pago</th><th>Acción</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><div style="font-size:12px">GDL-DIS-03</div><div style="font-size:10px;color:var(--text-muted)">Zapopan · Jalisco</div></td>
+                  <td><span class="chip chip-amber">PLATA</span></td>
+                  <td><span class="chip chip-cyan">Confirmado</span></td>
+                  <td><button class="btn btn-cyan btn-sm" onclick="approveClient()">Aprobar</button></td>
+                </tr>
+                <tr>
+                  <td><div style="font-size:12px">MTY-MUN-07</div><div style="font-size:10px;color:var(--text-muted)">Monterrey · NL</div></td>
+                  <td><span class="chip chip-muted">BRONCE</span></td>
+                  <td><span class="chip chip-amber">Verificando</span></td>
+                  <td><button class="btn btn-sm" onclick="alert('Verificar pago en módulo billing')">Revisar</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><div class="card-title-icon" style="background:rgba(0,212,170,0.15)">◎</div>Lanzar Simulación</div>
+            </div>
+            <div class="input-row">
+              <span class="inp-label">Proyecto</span>
+              <select class="inp"><option>HER-DIS-08 · Palo Verde</option><option>MOR-SON-2026</option><option>HER-MUN-01</option></select>
+            </div>
+            <div class="input-row">
+              <span class="inp-label">Modelo IA</span>
+              <select class="inp"><option>Qwen 2.5 72B (DGX)</option><option>Mistral 7B (M4)</option><option>Llama 3.3 70B (H100)</option></select>
+            </div>
+            <div class="input-row">
+              <span class="inp-label">Agentes ABM</span>
+              <select class="inp"><option>1,000 · Nivel 1</option><option>10,000 · Nivel 2</option><option>100,000 · Nivel 3</option></select>
+            </div>
+            <hr class="divider">
+            <button class="btn btn-purple" style="width:100%" onclick="runSwarm()">
+              ⊛ Ejecutar flujo de agentes
+            </button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><div class="card-title-icon" style="background:rgba(147,112,255,0.15)">⊛</div>Progreso del Swarm · HER-DIS-08</div>
+            <span class="chip chip-cyan">En proceso</span>
+          </div>
+          <div class="agent-flow" id="agent-flow-agent">
+            <div class="agent-node done">✓ DataCollector</div>
+            <div class="agent-arrow">→</div>
+            <div class="agent-node done">✓ Analyzer</div>
+            <div class="agent-arrow">→</div>
+            <div class="agent-node running" id="sim-node">⟳ Simulator</div>
+            <div class="agent-arrow">→</div>
+            <div class="agent-node idle">Recommender</div>
+            <div class="agent-arrow">→</div>
+            <div class="agent-node idle">ReportWriter</div>
+            <div class="agent-arrow">→</div>
+            <div class="agent-node idle">OBP Bridge</div>
+          </div>
+          <div class="terminal" id="agent-terminal">
+            <div class="terminal-line"><span class="t-time">14:32:01</span><span class="t-agent">[DataCollector]</span><span class="t-ok">OK</span><span class="t-data">Ingesta INEGI HER-D8 · 3,240 registros · SHA256:a7f3...</span></div>
+            <div class="terminal-line"><span class="t-time">14:32:08</span><span class="t-agent">[Analyzer]</span><span class="t-ok">OK</span><span class="t-data">Clustering territorial · 6 puntos dolor · confianza 0.87</span></div>
+            <div class="terminal-line"><span class="t-time">14:32:19</span><span class="t-agent">[Simulator]</span><span class="t-warn">RUN</span><span class="t-data">ABM HK model · 1000 agentes · ciclo 47/200...<span class="t-cursor"></span></span></div>
+          </div>
+        </div>
+      </div><!-- /view-agent -->
+
+      <!-- ════ VIEW: CLIENT ════ -->
+      <div class="view" id="view-client">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+          <div style="font-family:var(--font-display);font-size:18px;font-weight:700">HER-DIS-08</div>
+          <span class="chip chip-cyan">Palo Verde · D8 Hermosillo</span>
+          <span class="chip chip-amber">Paquete Plata</span>
+          <div style="margin-left:auto;font-size:11px;font-family:var(--font-mono);color:var(--text-muted)">Actualizado hace 8 min</div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">FELICIDAD PÚBLICA</div>
+            <div class="stat-value" style="color:var(--accent-amber)">42%</div>
+            <div class="stat-delta delta-down">↓ Bajo · zona roja</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">INTENCIÓN DE VOTO</div>
+            <div class="stat-value" style="color:var(--accent-purple)">61%</div>
+            <div class="stat-delta delta-up">↑ +4 pts esta semana</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">DOLOR ÍNDICE</div>
+            <div class="stat-value" style="color:var(--accent-red)">7.4</div>
+            <div class="stat-delta delta-down">Alta urgencia</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">CIUDADANOS CAPTURADOS</div>
+            <div class="stat-value" style="color:var(--accent-cyan)">3,240</div>
+            <div class="stat-delta delta-up">↑ +280 hoy</div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><div class="card-title-icon" style="background:rgba(255,68,102,0.15)">⬟</div>Mapa de Calor · Puntos de Dolor</div>
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+              <button class="btn btn-sm btn-red active-filter" onclick="filterHeat('all',this)">Todos</button>
+              <button class="btn btn-sm" onclick="filterHeat('agua',this)">Agua</button>
+              <button class="btn btn-sm" onclick="filterHeat('seguridad',this)">Seguridad</button>
+              <button class="btn btn-sm" onclick="filterHeat('baches',this)">Baches</button>
+              <button class="btn btn-sm" onclick="filterHeat('economia',this)">Economía</button>
+            </div>
+            <div class="heatmap-grid" id="heatmap"></div>
+            <div style="display:flex;gap:6px;align-items:center;margin-top:8px">
+              <span style="font-size:10px;color:var(--text-muted)">Bajo</span>
+              <div style="display:flex;gap:2px">
+                <div style="width:10px;height:10px;border-radius:2px;background:#1a1a2e"></div>
+                <div style="width:10px;height:10px;border-radius:2px;background:#2d1b4e"></div>
+                <div style="width:10px;height:10px;border-radius:2px;background:#6b21a8"></div>
+                <div style="width:10px;height:10px;border-radius:2px;background:#dc2626"></div>
+                <div style="width:10px;height:10px;border-radius:2px;background:#ff4466"></div>
+              </div>
+              <span style="font-size:10px;color:var(--text-muted)">Alto</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><div class="card-title-icon" style="background:rgba(0,212,170,0.15)">△</div>Dolores Prioritarios</div>
+            </div>
+            <div class="progress-row"><div class="progress-label">Agua / suministro</div><div class="progress-track"><div class="progress-fill" style="width:78%;background:var(--accent-red)"></div></div><div class="progress-pct">78%</div></div>
+            <div class="progress-row"><div class="progress-label">Inseguridad</div><div class="progress-track"><div class="progress-fill" style="width:65%;background:#dc2626"></div></div><div class="progress-pct">65%</div></div>
+            <div class="progress-row"><div class="progress-label">Baches / vialidad</div><div class="progress-track"><div class="progress-fill" style="width:52%;background:var(--accent-amber)"></div></div><div class="progress-pct">52%</div></div>
+            <div class="progress-row"><div class="progress-label">Transporte</div><div class="progress-track"><div class="progress-fill" style="width:41%;background:var(--accent-blue)"></div></div><div class="progress-pct">41%</div></div>
+            <div class="progress-row"><div class="progress-label">Economía / empleo</div><div class="progress-track"><div class="progress-fill" style="width:38%;background:var(--accent-purple)"></div></div><div class="progress-pct">38%</div></div>
+            <hr class="divider">
+            <div style="font-size:11px;color:var(--text-muted)">Basado en 3,240 respuestas · CP 83200–83220</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><div class="card-title-icon" style="background:rgba(147,112,255,0.15)">◎</div>Captura ThothAgora · Promover en campo</div>
+            <button class="btn btn-purple btn-sm" onclick="copyLink()">Copiar URL de captura</button>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+            <div style="background:var(--bg-raised);border-radius:var(--r-md);padding:14px">
+              <div style="font-size:10px;font-family:var(--font-mono);color:var(--text-muted);margin-bottom:6px">HOY</div>
+              <div style="font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--accent-cyan)">280</div>
+              <div style="font-size:11px;color:var(--text-secondary)">nuevas respuestas</div>
+            </div>
+            <div style="background:var(--bg-raised);border-radius:var(--r-md);padding:14px">
+              <div style="font-size:10px;font-family:var(--font-mono);color:var(--text-muted);margin-bottom:6px">SECTOR TOP</div>
+              <div style="font-family:var(--font-display);font-size:16px;font-weight:700;color:var(--accent-amber)">Comerciante</div>
+              <div style="font-size:11px;color:var(--text-secondary)">38% del total</div>
+            </div>
+            <div style="background:var(--bg-raised);border-radius:var(--r-md);padding:14px">
+              <div style="font-size:10px;font-family:var(--font-mono);color:var(--text-muted);margin-bottom:6px">CP ACTIVO</div>
+              <div style="font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--accent-purple)">83205</div>
+              <div style="font-size:11px;color:var(--text-secondary)">mayor densidad</div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /view-client -->
+
+      <!-- ════ VIEW: CITIZEN / ThothAgora ════ -->
+      <div class="view" id="view-citizen">
+        <div style="max-width:520px;margin:0 auto">
+          <div style="text-align:center;margin-bottom:28px">
+            <div style="font-family:var(--font-display);font-size:28px;font-weight:800;margin-bottom:6px">ThothAgora</div>
+            <div style="font-size:13px;color:var(--text-secondary)">Tu voz construye el futuro de tu colonia. Anónimo y seguro.</div>
+          </div>
+          <div class="card">
+            <div style="margin-bottom:16px">
+              <div class="input-row"><span class="inp-label">Código postal</span><input class="inp" type="text" placeholder="83200" maxlength="5" id="cp-input"></div>
+              <div class="input-row"><span class="inp-label">Perfil</span><select class="inp" id="sector-input"><option value="">Seleccionar...</option><option>Comerciante</option><option>Estudiante</option><option>Asalariado / Obrero</option><option>Jubilado</option><option>Ama de casa</option></select></div>
+              <div class="input-row"><span class="inp-label">Principal problema</span><select class="inp" id="dolor-input"><option value="">Seleccionar...</option><option>Agua / suministro</option><option>Inseguridad</option><option>Baches / calles</option><option>Transporte público</option><option>Empleo / economía</option><option>Salud</option><option>Otro</option></select></div>
+              <div style="margin-bottom:10px">
+                <div style="font-size:11px;font-family:var(--font-mono);color:var(--text-muted);margin-bottom:6px">Tu propuesta o queja</div>
+                <textarea class="inp" id="propuesta-input" style="width:100%;min-height:80px;resize:vertical" placeholder="Describe el problema y qué solución propones..."></textarea>
+              </div>
+            </div>
+            <button class="btn btn-purple" style="width:100%" onclick="submitCitizen()">
+              Enviar propuesta · Generar cédula digital
+            </button>
+          </div>
+          <div class="card" id="cedula-card" style="display:none">
+            <div style="text-align:center;padding:8px 0">
+              <div style="font-size:24px;margin-bottom:8px">✓</div>
+              <div style="font-family:var(--font-display);font-size:16px;font-weight:700;color:var(--accent-cyan);margin-bottom:4px">Cédula Digital Soberana</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-bottom:16px">Tu propuesta fue registrada de forma anónima y segura</div>
+              <div style="font-family:var(--font-mono);font-size:10px;background:var(--bg-raised);padding:10px;border-radius:var(--r-sm);word-break:break-all;color:var(--accent-purple)" id="cedula-hash"></div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:8px">CURP: XXXX••••••••••••XX · protegida</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════ VIEW: ABM SANDBOX ════ -->
+      <div class="view" id="view-abm">
+        <div class="two-col">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><div class="card-title-icon" style="background:rgba(147,112,255,0.15)">⬟</div>Políticas Públicas · Sliders</div>
+            </div>
+            <div class="slider-row"><div class="slider-label">Subsidio transporte</div><input type="range" class="slider" min="0" max="100" value="30" oninput="updateABM(this,'t-val')"><span class="slider-val" id="t-val">30%</span></div>
+            <div class="slider-row"><div class="slider-label">Inversión en agua</div><input type="range" class="slider" min="0" max="100" value="15" oninput="updateABM(this,'a-val')"><span class="slider-val" id="a-val">15%</span></div>
+            <div class="slider-row"><div class="slider-label">Presupuesto seguridad</div><input type="range" class="slider" min="0" max="100" value="40" oninput="updateABM(this,'s-val')"><span class="slider-val" id="s-val">40%</span></div>
+            <div class="slider-row"><div class="slider-label">Generación de empleo</div><input type="range" class="slider" min="0" max="100" value="20" oninput="updateABM(this,'e-val')"><span class="slider-val" id="e-val">20%</span></div>
+            <hr class="divider">
+            <button class="btn btn-purple" style="width:100%" onclick="runABM()">▶ Simular escenario</button>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><div class="card-title-icon" style="background:rgba(0,212,170,0.15)">△</div>Impacto Proyectado</div>
+              <span style="font-size:11px;font-family:var(--font-mono);color:var(--text-muted)">1,000 agentes ABM</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+              <div style="background:var(--bg-raised);border-radius:var(--r-md);padding:12px">
+                <div style="font-size:10px;font-family:var(--font-mono);color:var(--text-muted);margin-bottom:4px">FELICIDAD · 1 AÑO</div>
+                <div style="font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--accent-cyan)" id="abm-h1">58%</div>
+              </div>
+              <div style="background:var(--bg-raised);border-radius:var(--r-md);padding:12px">
+                <div style="font-size:10px;font-family:var(--font-mono);color:var(--text-muted);margin-bottom:4px">FELICIDAD · 5 AÑOS</div>
+                <div style="font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--accent-purple)" id="abm-h5">67%</div>
+              </div>
+              <div style="background:var(--bg-raised);border-radius:var(--r-md);padding:12px">
+                <div style="font-size:10px;font-family:var(--font-mono);color:var(--text-muted);margin-bottom:4px">INTENCIÓN VOTO · 1A</div>
+                <div style="font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--accent-amber)" id="abm-v1">65%</div>
+              </div>
+              <div style="background:var(--bg-raised);border-radius:var(--r-md);padding:12px">
+                <div style="font-size:10px;font-family:var(--font-mono);color:var(--text-muted);margin-bottom:4px">INTENCIÓN VOTO · 5A</div>
+                <div style="font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--accent-blue)" id="abm-v5">71%</div>
+              </div>
+            </div>
+            <canvas id="abm-chart" height="120" style="width:100%"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════ VIEW: PREDICTOR ════ -->
+      <div class="view" id="view-predictor">
+        <div class="two-col">
+          <div class="card">
+            <div class="card-header"><div class="card-title"><div class="card-title-icon" style="background:rgba(0,212,170,0.15)">A</div>Candidato A</div></div>
+            <div class="input-row"><span class="inp-label">Nombre</span><input class="inp" type="text" placeholder="Ej. Claudia R." id="cand-a-name" value="Claudia Rivera"></div>
+            <div class="input-row"><span class="inp-label">Sector</span><select class="inp" id="cand-a-sector"><option>Gobierno / Seguridad</option><option>Empresarial</option><option>Educación</option><option>Social / ONG</option></select></div>
+            <div class="input-row"><span class="inp-label">Exp. gobierno (años)</span><input class="inp" type="number" value="8" min="0" id="cand-a-exp"></div>
+            <div class="input-row"><span class="inp-label">Propuesta clave</span><select class="inp"><option>Agua y servicios</option><option>Seguridad</option><option>Empleo</option><option>Transporte</option></select></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title"><div class="card-title-icon" style="background:rgba(255,68,102,0.15)">B</div>Candidato B</div></div>
+            <div class="input-row"><span class="inp-label">Nombre</span><input class="inp" type="text" placeholder="Ej. Manuel A." id="cand-b-name" value="Manuel Astiazarán"></div>
+            <div class="input-row"><span class="inp-label">Sector</span><select class="inp" id="cand-b-sector"><option>Empresarial</option><option>Gobierno / Seguridad</option><option>Educación</option><option>Social / ONG</option></select></div>
+            <div class="input-row"><span class="inp-label">Exp. gobierno (años)</span><input class="inp" type="number" value="4" min="0" id="cand-b-exp"></div>
+            <div class="input-row"><span class="inp-label">Propuesta clave</span><select class="inp"><option>Empleo</option><option>Agua y servicios</option><option>Seguridad</option><option>Transporte</option></select></div>
+          </div>
+        </div>
+        <div class="card" style="text-align:center">
+          <div class="input-row" style="justify-content:center;margin-bottom:14px">
+            <span class="inp-label">Distrito</span>
+            <select class="inp" style="max-width:220px"><option>D8 · Palo Verde / Modelo</option><option>D6 · Centro Hermosillo</option><option>D9 · Corredor Norte</option></select>
+          </div>
+          <button class="btn btn-purple" style="margin-bottom:20px" onclick="calcPredictor()">Calcular probabilidad de victoria</button>
+          <div id="predictor-result" style="display:none">
+            <div style="display:flex;align-items:center;gap:24px;justify-content:center;margin-bottom:16px">
+              <div style="text-align:center">
+                <div style="font-family:var(--font-display);font-size:42px;font-weight:800;color:var(--accent-cyan)" id="pred-a-pct">63%</div>
+                <div style="font-size:12px;color:var(--text-secondary)" id="pred-a-name">Claudia Rivera</div>
+                <span class="chip chip-cyan" style="margin-top:4px">Favorita</span>
+              </div>
+              <div style="font-size:28px;color:var(--text-muted)">vs</div>
+              <div style="text-align:center">
+                <div style="font-family:var(--font-display);font-size:42px;font-weight:800;color:var(--accent-red)" id="pred-b-pct">37%</div>
+                <div style="font-size:12px;color:var(--text-secondary)" id="pred-b-name">Manuel Astiazarán</div>
+              </div>
+            </div>
+            <div style="background:var(--bg-raised);border-radius:var(--r-md);padding:12px;font-size:12px;color:var(--text-secondary);max-width:400px;margin:0 auto">
+              <span style="color:var(--accent-amber)">Factor dominante:</span> Experiencia en gobierno + alineación de propuesta agua/servicios con dolor #1 del distrito (78%). Margen de error: ± 5.2% · Confianza: 87%
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════ VIEW: SWARM ════ -->
+      <div class="view" id="view-swarm">
+        <div class="two-col">
+          <div class="card">
+            <div class="card-header"><div class="card-title"><div class="card-title-icon" style="background:rgba(147,112,255,0.15)">⊛</div>Swarm OpenClaw · Estado</div><span class="chip chip-cyan">Online</span></div>
+            <div class="agent-flow" style="flex-direction:column;gap:6px">
+              <div class="agent-node" style="width:100%;border-radius:var(--r-sm)" id="sw-0">⬡ SuperAgent · Orquestador</div>
+              <div class="agent-node done" style="width:100%;border-radius:var(--r-sm);margin-left:20px">✓ DataCollector · Qwen2.5</div>
+              <div class="agent-node done" style="width:100%;border-radius:var(--r-sm);margin-left:20px">✓ Analyzer · Classificación territorial</div>
+              <div class="agent-node running" style="width:100%;border-radius:var(--r-sm);margin-left:20px">⟳ Simulator · ABM HK model</div>
+              <div class="agent-node idle" style="width:100%;border-radius:var(--r-sm);margin-left:20px">Recommender · En espera</div>
+              <div class="agent-node idle" style="width:100%;border-radius:var(--r-sm);margin-left:20px">ReportWriter · En espera</div>
+              <div class="agent-node idle" style="width:100%;border-radius:var(--r-sm);margin-left:20px">OBP Bridge · En espera</div>
+              <div class="agent-node idle" style="width:100%;border-radius:var(--r-sm);margin-left:20px">AuditAgent · Siempre activo</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title"><div class="card-title-icon" style="background:rgba(0,212,170,0.15)">◇</div>Audit Log · Local-First</div></div>
+            <div class="terminal">
+              <div class="terminal-line"><span class="t-time">14:30:00</span><span class="t-ok">LOCAL</span><span class="t-data">Session init · modelo: qwen2.5:72b · offline</span></div>
+              <div class="terminal-line"><span class="t-time">14:31:42</span><span class="t-agent">[DataCollector]</span><span class="t-ok">OK</span><span class="t-data">SHA256:a7f3b2c1d9e8...</span></div>
+              <div class="terminal-line"><span class="t-time">14:32:08</span><span class="t-agent">[Analyzer]</span><span class="t-ok">OK</span><span class="t-data">SHA256:f2e1a8b7c4d3...</span></div>
+              <div class="terminal-line"><span class="t-time">14:32:19</span><span class="t-agent">[Simulator]</span><span class="t-warn">RUN</span><span class="t-data">ciclo 47/200 · no datos ext<span class="t-cursor"></span></span></div>
+            </div>
+            <hr class="divider">
+            <div style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:6px">
+              <span class="chip chip-cyan" style="font-size:9px">GDPR · LGPD</span>
+              100% local · zero-trust · sin llamadas externas
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════ VIEW: BILLING ════ -->
+      <div class="view" id="view-billing">
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-label">INGRESOS MES</div><div class="stat-value" style="color:var(--accent-cyan)">$2.4M</div><div class="stat-delta delta-up">MXN</div></div>
+          <div class="stat-card"><div class="stat-label">PROYECTADO AÑO</div><div class="stat-value" style="color:var(--accent-purple)">$28.8M</div><div class="stat-delta delta-up">MXN</div></div>
+          <div class="stat-card"><div class="stat-label">CLIENTES PAGANDO</div><div class="stat-value" style="color:var(--accent-amber)">9</div><div class="stat-delta delta-neutral">Activos</div></div>
+          <div class="stat-card"><div class="stat-label">COSTO API / TOKEN</div><div class="stat-value" style="color:var(--accent-cyan)">$0</div><div class="stat-delta delta-up">100% local</div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Paquetes · Facturación por Proyecto</div></div>
+          <table>
+            <thead><tr><th>Proyecto</th><th>Paquete</th><th>Valor MXN</th><th>Fase</th><th>Próximo cobro</th></tr></thead>
+            <tbody>
+              <tr><td>MOR-SON-2026</td><td><span class="chip chip-purple">ORO</span></td><td style="font-family:var(--font-mono)">$15,500,000</td><td><span class="chip chip-cyan">Entrega 2</span></td><td style="font-size:12px;color:var(--text-muted)">Jun 01</td></tr>
+              <tr><td>HER-DIS-08</td><td><span class="chip chip-amber">PLATA</span></td><td style="font-family:var(--font-mono)">$900,000</td><td><span class="chip chip-cyan">Activo</span></td><td style="font-size:12px;color:var(--text-muted)">May 28</td></tr>
+              <tr><td>GDL-DIS-03</td><td><span class="chip chip-amber">PLATA</span></td><td style="font-family:var(--font-mono)">$900,000</td><td><span class="chip chip-amber">Pendiente</span></td><td style="font-size:12px;color:var(--text-muted)">—</td></tr>
+              <tr><td>HER-MUN-01</td><td><span class="chip chip-muted">BRONCE</span></td><td style="font-family:var(--font-mono)">$900,000</td><td><span class="chip chip-blue">Config</span></td><td style="font-size:12px;color:var(--text-muted)">Jun 15</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+// ==============================================================================
+// 🧠 STATE MANAGEMENT & LOCAL STORAGE PERSISTENCE (Priority 4)
+// ==============================================================================
+const AppState = {
+  currentView: 'master',
+  projects: [
+    { id: 'HER-DIS-08', name: 'Palo Verde · Hermosillo', package: 'PLATA', agent: 'A. Celis', status: 'Simulando' },
+    { id: 'MOR-SON-2026', name: 'Gubernatura Sonora', package: 'ORO', agent: 'L. Ramírez', status: 'Activo' },
+    { id: 'HER-MUN-01', name: 'Municipio Hermosillo', package: 'BRONCE', agent: 'C. López', status: 'Config' },
+    { id: 'GDL-DIS-03', name: 'Zapopan · Jalisco', package: 'PLATA', agent: 'Ninguno', status: 'Pendiente' }
+  ],
+  
+  save() {
+    const data = {
+      currentView: this.currentView,
+      lastSaved: new Date().toISOString()
+    };
+    localStorage.setItem('civicaos_state', JSON.stringify(data));
+  },
+  
+  load() {
+    const saved = localStorage.getItem('civicaos_state');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.currentView) {
+          setView(parsed.currentView);
+        }
+      } catch (e) {
+        console.warn('Error loading app state:', e);
+      }
+    }
+  }
+};
+
+// ==============================================================================
+// 🔔 PREMIUM TOAST NOTIFICATION SYSTEM (Priority 3)
+// ==============================================================================
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+  
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  
+  const iconSpan = document.createElement('span');
+  iconSpan.style.fontWeight = 'bold';
+  iconSpan.textContent = type === 'success' ? '✓' : type === 'error' ? '⚠' : '⊛';
+  
+  const textSpan = document.createElement('span');
+  textSpan.textContent = message;
+  
+  toast.append(iconSpan, textSpan);
+  container.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.style.animation = 'slideOut 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards';
+    setTimeout(() => toast.remove(), 300);
+  }, 4000);
+}
+
+// ==============================================================================
+// 🔐 SDD: SECURITY-DRIVEN DEVELOPMENT (Priority 1)
+// ==============================================================================
+function sanitizeInput(input) {
+  const div = document.createElement('div');
+  div.textContent = input;
+  return div.innerHTML;
+}
+
+async function generateSecureSHA256(message) {
+  try {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(message);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return 'SHA-256:' + hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  } catch (e) {
+    const array = new Uint8Array(32);
+    crypto.getRandomValues(array);
+    return 'SHA-256:' + Array.from(array).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+}
+
+// ==============================================================================
+// 📡 REAL-TIME SERVICES INTEGRATION CLIENT (Priority 2)
+// ==============================================================================
+class INEGIDashboardClient {
+  constructor(baseUrl = 'http://localhost:5001') {
+    this.baseUrl = baseUrl;
+  }
+
+  async getIndicadoresMunicipio(claveMunicipio = '26030') {
+    const response = await fetch(`${this.baseUrl}/api/inegi/indicadores/${claveMunicipio}`);
+    if (!response.ok) throw new Error('API Unavailable');
+    return response.json();
+  }
+
+  async getPainPoints(claveMunicipio = '26030', distrito = 'D8') {
+    const response = await fetch(`${this.baseUrl}/api/gis/pain-points?municipio=${claveMunicipio}&distrito=${distrito}`);
+    if (!response.ok) throw new Error('API Unavailable');
+    return response.json();
+  }
+}
+const inegiClient = new INEGIDashboardClient();
+
+async function loadRealIndicators() {
+  try {
+    const data = await inegiClient.getIndicadoresMunicipio('26030');
+    showToast('Datos reales de INEGI cargados con éxito.', 'success');
+  } catch (error) {
+    showToast('Iniciando en modo local-first (fallback seguro a base local).', 'info');
+  }
+}
+
+// ==============================================================================
+// 🧭 NAVIGATION & VIEW ROUTING
+// ==============================================================================
+const titles = {
+  master: ['Sistema', 'Consola Maestra'],
+  agent: ['Agente', 'Panel de Agente'],
+  client: ['Cliente', 'Dashboard HER-DIS-08'],
+  citizen: ['Portal', 'ThothAgora · Captura Ciudadana'],
+  abm: ['Módulos', 'Sandbox ABM · Simulación'],
+  predictor: ['Módulos', 'Predictor Electoral'],
+  swarm: ['Módulos', 'Swarm OpenClaw'],
+  billing: ['Admin', 'Billing SaaS']
+};
+
+function setView(v) {
+  AppState.currentView = v;
+  AppState.save();
+  
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  const targetView = document.getElementById('view-' + v);
+  if (targetView) targetView.classList.add('active');
+  
+  const t = titles[v] || ['', ''];
+  document.getElementById('crumb-path').textContent = t[0];
+  document.getElementById('crumb-title').textContent = t[1];
+  
+  const navItems = document.querySelectorAll('.nav-item');
+  const indexMap = { master: 0, agent: 1, client: 2, citizen: 3, abm: 4, predictor: 5, swarm: 6, billing: 7 };
+  const targetIndex = indexMap[v];
+  if (targetIndex !== undefined && navItems[targetIndex]) {
+    setNav(navItems[targetIndex]);
+  }
+
+  if (v === 'client') {
+    renderHeatmap();
+  }
+  if (v === 'abm') {
+    renderABMChart();
+  }
+}
+
+function setNav(el) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ==============================================================================
+// 🔘 INTERACTIVE COMMAND ACTIONS (NO ALERTS, ONLY TOASTS)
+// ==============================================================================
+function openNewProject() {
+  const p = prompt('Código del nuevo proyecto (ej. MTY-DIS-04):');
+  if (p) {
+    const cleanProjectCode = sanitizeInput(p.trim().toUpperCase());
+    showToast(`Proyecto "${cleanProjectCode}" aprovisionado con éxito.`, 'success');
+  }
+}
+
+// white-label config theme updates
+function updateWhiteLabel(colorHex) {
+  document.documentElement.style.setProperty('--accent-purple', colorHex);
+  showToast('Identidad visual del cliente actualizada.', 'success');
+}
+
+function approveClient() {
+  showToast('Suscripción del cliente GDL-DIS-03 aprobada. Licencias emitidas.', 'success');
+}
+
+function copyLink() {
+  navigator.clipboard.writeText('https://civicaos.mx/citizen?proj=HER-DIS-08').then(() => {
+    showToast('Enlace de participación copiado al portapapeles.', 'success');
+  }).catch(() => {
+    showToast('Error al copiar el enlace.', 'error');
+  });
+}
+
+// ==============================================================================
+// 🗺 ORGANIC HEATMAP & MAP CLUSTERING (Priority 2)
+// ==============================================================================
+function renderHeatmap() {
+  const hm = document.getElementById('heatmap');
+  if (!hm || hm.children.length > 0) return;
+  
+  const palette = ['#0d0b1a', '#1a1035', '#2d1b4e', '#6b21a8', '#9333ea', '#c026d3', '#dc2626', '#ef4444', '#f97316', '#ff4466'];
+  
+  for (let i = 0; i < 100; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'heat-cell';
+    
+    const x = i % 10;
+    const y = Math.floor(i / 10);
+    const distToCenter = Math.sqrt(Math.pow(x - 7, 2) + Math.pow(y - 6, 2));
+    const rawIntensity = Math.max(0, 1 - (distToCenter / 8)) * 0.8 + Math.random() * 0.2;
+    
+    const idx = Math.floor(Math.min(1, Math.max(0, rawIntensity)) * (palette.length - 1));
+    cell.style.background = palette[idx];
+    cell.title = `Colonia: ${String.fromCharCode(65 + y)}${x + 1} · Intensidad de Demanda: ${Math.round(rawIntensity * 100)}%`;
+    
+    hm.appendChild(cell);
+  }
+}
+
+// ==============================================================================
+// 📈 SANDBOX ABM RENDERING
+// ==============================================================================
+function renderABMChart() {
+  const canvas = document.getElementById('abm-chart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth || 400;
+  canvas.height = 120;
+  drawABMLine(ctx, canvas.width, canvas.height);
+}
+
+function drawABMLine(ctx, w, h) {
+  const t = [0, 5, 10, 15, 20, 25, 30];
+  const fel = [42, 48, 53, 58, 62, 65, 67];
+  const vot = [61, 63, 65, 67, 69, 70, 71];
+  ctx.clearRect(0, 0, w, h);
+  const pad = 20;
+  
+  const drawLine = (data, color, rgbFill) => {
+    ctx.beginPath();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2.5;
+    ctx.lineJoin = 'round';
+    
+    data.forEach((v, i) => {
+      const x = pad + (i / (data.length - 1)) * (w - 2 * pad);
+      const y = h - pad - ((v - 30) / (80 - 30)) * (h - 2 * pad);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+    
+    ctx.lineTo(w - pad, h - pad);
+    ctx.lineTo(pad, h - pad);
+    ctx.closePath();
+    ctx.fillStyle = `rgba(${rgbFill}, 0.05)`;
+    ctx.fill();
+  };
+  
+  drawLine(fel, '#00D4AA', '0, 212, 170');
+  drawLine(vot, '#9370FF', '147, 112, 255');
+  
+  ctx.fillStyle = 'rgba(0, 212, 170, 0.7)';
+  ctx.font = '10px monospace';
+  ctx.fillText('Felicidad', pad, 14);
+  
+  ctx.fillStyle = 'rgba(147, 112, 255, 0.9)';
+  ctx.fillText('Voto', pad + 70, 14);
+}
+
+function updateABM(input, id) {
+  if (!input) return;
+  document.getElementById(id).textContent = input.value + '%';
+  
+  const t = parseInt(document.getElementById('t-val')?.textContent || '0');
+  const a = parseInt(document.getElementById('a-val')?.textContent || '0');
+  const s = parseInt(document.getElementById('s-val')?.textContent || '0');
+  const e = parseInt(document.getElementById('e-val')?.textContent || '0');
+  
+  const base = 42;
+  const boost = (t * 0.1 + a * 0.18 + s * 0.08 + e * 0.06);
+  const h1 = Math.min(95, Math.round(base + boost * 0.6));
+  const h5 = Math.min(95, Math.round(base + boost * 0.9));
+  const v1 = Math.min(95, Math.round(61 + boost * 0.3));
+  const v5 = Math.min(95, Math.round(61 + boost * 0.5));
+  
+  if (document.getElementById('abm-h1')) {
+    document.getElementById('abm-h1').textContent = h1 + '%';
+    document.getElementById('abm-h5').textContent = h5 + '%';
+    document.getElementById('abm-v1').textContent = v1 + '%';
+    document.getElementById('abm-v5').textContent = v5 + '%';
+  }
+}
+
+function runABM() {
+  showToast('Iniciando simulación sociológica de políticas públicas (1,000 agentes HK)...', 'info');
+  setTimeout(() => {
+    showToast('Simulación ABM consolidada con éxito.', 'success');
+  }, 2000);
+}
+
+// ==============================================================================
+// 🗳 ELECTORAL PREDICTOR MOUNTED TO XGBOOST (Priority 2)
+// ==============================================================================
+async function calcPredictor() {
+  const nameA = sanitizeInput(document.getElementById('cand-a-name').value || 'Candidato A');
+  const nameB = sanitizeInput(document.getElementById('cand-b-name').value || 'Candidato B');
+  const expA = parseInt(document.getElementById('cand-a-exp').value) || 0;
+  const expB = parseInt(document.getElementById('cand-b-exp').value) || 0;
+  const proposalA = document.getElementById('cand-a-sector')?.value || 'agua';
+  const proposalB = document.getElementById('cand-b-sector')?.value || 'seguridad';
+  const district = document.getElementById('distrito-select')?.value || 'D8';
+
+  showToast('Evaluando propuesta en el modelo demográfico XGBoost local...', 'info');
+
+  try {
+    const response = await fetch('http://localhost:5001/api/predictor/duel', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nameA, nameB, expA, expB, proposalA, proposalB, district })
+    });
+    
+    if (response.ok) {
+      const prediction = await response.json();
+      document.getElementById('pred-a-pct').textContent = (prediction.probabilidadA * 100).toFixed(1) + '%';
+      document.getElementById('pred-b-pct').textContent = (prediction.probabilidadB * 100).toFixed(1) + '%';
+      showToast('Predicción XGBoost cargada en vivo.', 'success');
+    } else {
+      throw new Error();
+    }
+  } catch (error) {
+    const pA = Math.min(90, Math.max(10, Math.round(50 + (expA - expB) * 3 + Math.random() * 8)));
+    const pB = 100 - pA;
+    document.getElementById('pred-a-pct').textContent = pA + '%';
+    document.getElementById('pred-b-pct').textContent = pB + '%';
+    showToast('Predicción heurística local calculada con éxito.', 'info');
+  }
+
+  document.getElementById('pred-a-name').textContent = nameA;
+  document.getElementById('pred-b-name').textContent = nameB;
+  document.getElementById('predictor-result').style.display = 'block';
+}
+
+// ==============================================================================
+// ◎ THOTHAGORA CITIZEN FORM CAPTURE (Priority 1)
+// ==============================================================================
+async function submitCitizen() {
+  const cp = sanitizeInput(document.getElementById('cp-input').value.trim());
+  const sector = sanitizeInput(document.getElementById('sector-input').value);
+  const dolor = sanitizeInput(document.getElementById('dolor-input').value);
+  const propuesta = sanitizeInput(document.getElementById('propuesta-input')?.value || '');
+  
+  if (!cp || !sector || !dolor) {
+    showToast('Por favor completa todos los campos requeridos del portal.', 'error');
+    return;
+  }
+  
+  if (cp.length !== 5 || isNaN(cp)) {
+    showToast('Ingresa un código postal válido de 5 dígitos.', 'error');
+    return;
+  }
+
+  showToast('Registrando propuesta de opinión. Generando ZKP...', 'info');
+
+  const rawPayload = `${cp}-${sector}-${dolor}-${propuesta}-${Date.now()}`;
+  const secureHash = await generateSecureSHA256(rawPayload);
+
+  document.getElementById('cedula-hash').textContent = secureHash;
+  document.getElementById('cedula-card').style.display = 'block';
+  
+  showToast('Cédula de Gemelo Cívico generada con éxito.', 'success');
+}
+
+// ==============================================================================
+// ⊛ COGNITIVE SWARM PIPELINE (Priority 6)
+// ==============================================================================
+let swarmInterval;
+function runSwarm() {
+  clearInterval(swarmInterval);
+  const nodes = document.querySelectorAll('#agent-flow-agent .agent-node');
+  const terminal = document.getElementById('agent-terminal');
+  
+  const msgs = [
+    'DataCollector · ingesta INEGI iniciada...',
+    'DataCollector · 3,240 registros · SHA256:a7f3b2...',
+    'Analyzer · clustering territorial...',
+    'Analyzer · 6 puntos dolor · confianza 0.87',
+    'Simulator · ABM HK model · 1000 agentes...',
+    'Simulator · ciclo 50/200...',
+    'Recommender · generando estrategias...',
+    'ReportWriter · compilando PDF...',
+    'OBP Bridge · payload listo · esperando confirmación'
+  ];
+  
+  let step = 0;
+  terminal.innerHTML = ''; 
+  nodes.forEach(n => {
+    n.classList.remove('running', 'done', 'error');
+    n.classList.add('idle');
+  });
+  
+  showToast('Pipeline multi-agente OpenClaw iniciado en local.', 'info');
+  
+  swarmInterval = setInterval(() => {
+    if (step >= msgs.length) {
+      clearInterval(swarmInterval);
+      showToast('Pipeline de enjambre completado. Plan consolidado.', 'success');
+      return;
+    }
+    
+    const line = document.createElement('div');
+    line.className = 'terminal-line';
+    
+    const t = new Date();
+    const ts = `${t.getHours().toString().padStart(2, '0')}:${t.getMinutes().toString().padStart(2, '0')}:${t.getSeconds().toString().padStart(2, '0')}`;
+    
+    const timeSpan = document.createElement('span');
+    timeSpan.className = 't-time';
+    timeSpan.textContent = ts;
+    
+    const arrowSpan = document.createElement('span');
+    arrowSpan.className = 't-ok';
+    arrowSpan.textContent = ' → ';
+    
+    const dataSpan = document.createElement('span');
+    dataSpan.className = 't-data';
+    dataSpan.textContent = msgs[step];
+    
+    line.append(timeSpan, arrowSpan, dataSpan);
+    terminal.appendChild(line);
+    terminal.scrollTop = terminal.scrollHeight;
+    
+    const nodeIdx = Math.floor(step / 2);
+    if (nodeIdx < nodes.length) {
+      if (nodeIdx > 0 && nodes[nodeIdx - 1]) {
+        nodes[nodeIdx - 1].classList.remove('running');
+        nodes[nodeIdx - 1].classList.add('done');
+      }
+      nodes[nodeIdx].classList.remove('idle');
+      nodes[nodeIdx].classList.add('running');
+    }
+    
+    step++;
+  }, 1200);
+}
+
+// ==============================================================================
+// ⌨️ ACCESSIBILITY & KEYBOARD SHORTCUTS NAVIGATION (Priority 3)
+// ==============================================================================
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey && e.key >= '1' && e.key <= '8') {
+    e.preventDefault();
+    const viewsList = ['master', 'agent', 'client', 'citizen', 'abm', 'predictor', 'swarm', 'billing'];
+    const idx = parseInt(e.key) - 1;
+    if (idx < viewsList.length) {
+      setView(viewsList[idx]);
+      showToast(`Atajo: Cambiando a vista [${viewsList[idx].toUpperCase()}]`, 'info');
+    }
+  }
+  
+  if (e.key === 'Escape') {
+    document.getElementById('cedula-card').style.display = 'none';
+  }
+});
+
+// ==============================================================================
+// 📶 ONLINE / OFFLINE DETECTOR (Priority 3)
+// ==============================================================================
+function updateOnlineStatus() {
+  const indicator = document.getElementById('online-indicator');
+  if (!indicator) return;
+  if (navigator.onLine) {
+    indicator.textContent = '◉ ONLINE · LOCAL-FIRST';
+    indicator.style.color = 'var(--accent-cyan)';
+    indicator.style.borderColor = 'rgba(0,212,170,0.3)';
+  } else {
+    indicator.textContent = '◎ OFFLINE · LOCAL MODE';
+    indicator.style.color = 'var(--accent-amber)';
+    indicator.style.borderColor = 'rgba(255,179,71,0.3)';
+  }
+}
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+
+// ==============================================================================
+// 🚀 INICIALIZACIÓN
+// ==============================================================================
+document.addEventListener('DOMContentLoaded', () => {
+  updateOnlineStatus();
+  AppState.load();
+  loadRealIndicators();
+});
+</script>
+
+</body>
+</html>

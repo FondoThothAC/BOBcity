@@ -1,0 +1,36 @@
+┌─────────────────────────────────────────┐
+│ CAPA 1: RECOLECCIÓN ÉTICA               │
+│ - API oficial de Twitter/X (académica)  │
+│ - CrowdTangle (Meta) para FB/IG públicos│
+│ - Encuestas propias consentidas         │
+│ - Datos abiertos gubernamentales        │
+└──────────────┬──────────────────────────┘
+               ▼
+┌─────────────────────────────────────────┐
+│ CAPA 2: NLP Y ANÁLISIS DE SENTIMIENTO   │
+│ Transformers (Llama 3.1 / Qwen 2.5)     │
+│ Fine-tuned para español mexicano        │
+│ Clasificación de temas y sentimiento    │
+└──────────────┬──────────────────────────┘
+               ▼
+┌─────────────────────────────────────────┐
+│ CAPA 3: CONSTRUCCIÓN DE GRAFO SOCIAL    │
+│ NetworkX + Neo4j (on-premise)           │
+│ Nodos = usuarios/agentes               │
+│ Aristas = interacciones, menciones,     │
+│ co-ocurrencia de hashtags              │
+└──────────────┬──────────────────────────┘
+               ▼
+┌─────────────────────────────────────────┐
+│ CAPA 4: DETECCIÓN DE COMUNIDADES        │
+│ Louvain, GraphSAGE, GCN                │
+│ Identifica clústeres de opinión        │
+│ Mide polarización y puentes            │
+└──────────────┬──────────────────────────┘
+               ▼
+┌─────────────────────────────────────────┐
+│ CAPA 5: SEGMENTACIÓN PSICOGRÁFICA       │
+│ Modelo OCEAN inferido de texto público │
+│ + clustering comportamental            │
+│ → Perfiles ciudadanos para ABM         │
+└─────────────────────────────────────────┘

@@ -1,0 +1,23 @@
+┌─────────────────────────────────────────┐
+│ CAPA 1: INGESTA Y ETL (Python)          │
+│ GeoPandas + Fiona + Shapely             │
+│ Descarga shapefiles INEGI/INE,          │
+│ normaliza CRS (EPSG:6372 para México),   │
+│ limpia topología y une con datos        │
+│ electorales por sección                 │
+└──────────────┬──────────────────────────┘
+               ▼
+┌─────────────────────────────────────────┐
+│ CAPA 2: SERVIDOR DE MAPAS (PostGIS)     │
+│ PostgreSQL + PostGIS + pgRouting        │
+│ Almacena capas vectoriales optimizadas  │
+│ con índices espaciales (GiST)           │
+│ Sirve tiles vectoriales vía pg_tileserv │
+└──────────────┬──────────────────────────┘
+               ▼
+┌─────────────────────────────────────────┐
+│ CAPA 3: VISUALIZACIÓN (Frontend React)  │
+│ Leaflet + React-Leaflet + D3.js         │
+│ Mapas de calor, coropletas, clustering  │
+│ Filtros por tipo de dolor ciudadano     │
+└─────────────────────────────────────────┘

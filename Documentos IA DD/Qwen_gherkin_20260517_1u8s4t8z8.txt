@@ -1,0 +1,24 @@
+# features/electoral-prediction.feature (BDD)
+Feature: Predicción de Resultados Electorales por Distrito
+  Como estratega político
+  Quiero predecir la probabilidad de victoria de un candidato
+  Para asignar recursos de campaña de manera eficiente
+
+  Scenario Outline: Predicción con perfil de candidato y contexto distrital
+    Given un distrito "<districtName>" con índice socioeconómico <socioIndex>
+    And un candidato con perfil "<candidateType>" y score de sentimiento <sentiment>
+    When ejecuto el modelo predictivo con historial electoral de 3 ciclos
+    Then la probabilidad de victoria debe estar entre <minProb>% y <maxProb>%
+    And el informe debe incluir explicación SHAP de los 3 factores principales
+
+    Examples:
+      | districtName | socioIndex | candidateType | sentiment | minProb | maxProb |
+      | Hermosillo D8 | 65 | "ex-mayor-security" | 0.4 | 55 | 72 |
+      | Hermosillo D6 | 45 | "young-tech" | -0.2 | 28 | 41 |
+      | Centro Pyme | 78 | "business-owner" | 0.7 | 68 | 85 |
+
+  Scenario: Validación de privacidad en procesamiento local
+    Given datos sensibles de INEGI cargados en memoria local
+    When ejecuto una simulación ABM con 50k agentes
+    Then ningún dato crudo debe ser enviado a endpoints externos
+    And el log de auditoría debe contener hash SHA-256 del dataset procesado

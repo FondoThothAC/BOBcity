@@ -1,0 +1,15 @@
+/src/nlp/
+├── __init__.py
+├── config.py                    # Modelos, rutas, configuración
+├── sentiment_analyzer.py        # Análisis de sentimiento (SaBERT / RoBERTa)
+├── topic_classifier.py          # Clasificación de temas políticos
+├── ner_political.py             # Extracción de entidades: candidatos, partidos, distritos
+├── psychographic_profiler.py    # Perfilado OCEAN desde texto público
+├── network_builder.py           # Construcción de grafo social desde interacciones
+├── preprocessing.py             # Limpieza y normalización de texto mexicano
+├── models/                      # Modelos fine-tuned locales
+│   ├── sentiment/
+│   ├── topic/
+│   └── ner/
+├── data/                        # Datasets de entrenamiento locales
+└── tests/                       # Tests unitarios con TDD

@@ -1,0 +1,45 @@
+# src/integration/obp/webhook-spec.yaml (MDD)
+openapi: 3.0.3
+info:
+  title: CivicPulse → Open Business Plan Integration
+  version: 1.0.0
+  description: Payload exportable para generación de planes de negocio
+servers:
+  - url: https://localhost:8443/obp-webhook
+    description: Local mTLS endpoint (ADD: Security Gate)
+paths:
+  /v1/export:
+    post:
+      security:
+        - mTLS: []
+        - JWT: [obp:write]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OBPExportPayload'
+      responses:
+        '202':
+          description: Accepted - Processing started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jobId: { type: string, format: uuid }
+                  estimatedCompletion: { type: string, format: date-time }
+
+components:
+  schemas:
+    OBPExportPayload:
+      type: object
+      properties:
+        civicInitiativeId: { type: string }
+        district: { $ref: '#/components/schemas/DistrictSummary' }
+        candidateProfile: { $ref: '#/components/schemas/CandidateProfile' }
+        predictedOutcome: { $ref: '#/components/schemas/PredictionMetrics' }
+        recommendedSolutions: { type: array, items: { $ref: '#/components/schemas/Solution' } }
+        riskMatrix: { $ref: '#/components/schemas/RiskAssessment' }
+        implementationRoadmap: { $ref: '#/components/schemas/Roadmap' }
+        budgetEstimate: { $ref: '#/components/schemas/Budget' }
+        auditTrail: { type: array, items: { $ref: '#/components/schemas/AuditEntry' } }

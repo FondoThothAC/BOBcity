@@ -1,0 +1,28 @@
+/* Utilidades tipográficas para la consola */
+.font-mono {
+  font-family: 'Fira Code', 'Courier New', Courier, monospace;
+}
+
+/* Scrollbar estilizada para la terminal */
+.font-mono::-webkit-scrollbar {
+  width: 4px;
+}
+.font-mono::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+.font-mono::-webkit-scrollbar-thumb {
+  background: rgba(16, 185, 129, 0.3); /* Emerald match */
+  border-radius: 2px;
+}
+.font-mono::-webkit-scrollbar-thumb:hover {
+  background: rgba(16, 185, 129, 0.8);
+}
+
+/* Animaciones personalizadas */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}

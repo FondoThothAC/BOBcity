@@ -1,0 +1,36 @@
+# /features/dashboard.feature
+# language: es
+
+Característica: Dashboard CívicaOS para Master
+  Como administrador de CívicaOS
+  Quiero ver todos los proyectos y agentes activos
+  Para gestionar la operación del negocio
+
+  Escenario: Ver métricas principales al cargar el dashboard
+    Dado que soy un usuario con rol Master
+    Cuando accedo al dashboard
+    Entonces debo ver 5 stat cards con métricas
+    Y el valor de "PROYECTOS ACTIVOS" debe ser 12
+    Y el valor de "INGRESOS MES" debe mostrar formato MXN
+
+  Escenario: Crear un nuevo proyecto desde la Consola Maestra
+    Dado que estoy en la vista "Consola Maestra"
+    Cuando hago clic en "Nuevo proyecto"
+    Y ingreso el código "MTY-DIS-04"
+    Entonces el proyecto debe aparecer en la tabla de proyectos
+    Y debe mostrarse una notificación de éxito
+
+Característica: ThothAgora - Captura Ciudadana
+  Como ciudadano de Hermosillo
+  Quiero reportar un problema en mi colonia
+  Para que el gobierno municipal lo atienda
+
+  Escenario: Reportar falta de agua exitosamente
+    Dado que estoy en el portal ThothAgora
+    Cuando ingreso mi código postal "83200"
+    Y selecciono sector "Comerciante"
+    Y selecciono problema "Agua / suministro"
+    Y escribo mi propuesta "Reparar tubería principal"
+    Y hago clic en "Enviar propuesta"
+    Entonces debo ver mi cédula digital con un hash SHA-256
+    Y el hash debe ser único e irreversible

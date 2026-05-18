@@ -1,0 +1,4 @@
+Intensidad_dolor(municipio, tipo) = 
+  0.4 * (tasa_objetiva_del_problema) +
+  0.35 * (sentimiento_negativo_redes) +
+  0.25 * (encuestas_directas)
