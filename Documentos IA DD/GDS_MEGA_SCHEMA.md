@@ -145,5 +145,26 @@ Para validar esta arquitectura de 1000+ parámetros en producción, el sistema a
 
 ---
 
+## 6. Calibración de Parámetros Físicos y Acoplamientos No Lineales (Actualización Mayo 2026)
+
+Con el fin de elevar la fidelidad del Gemelo GDS-MEGA a los estándares de micro-simulación geohash de 2026 (siguiendo los principios de Project Sid de Altera), se han incorporado dos nuevos parámetros físicos y una regla de acoplamiento de caos cívico:
+
+### 6.1 Nuevos Parámetros de Primeros Principios Físicos
+* **☀️ Radiación Solar Directa ($I_{sol}$ - `CLI_ENV_RAD`):**
+  * *Rango:* $100 \text{ a } 1000 \text{ W/m}^2$.
+  * *Impacto:* Modula la eficiencia de amortiguación térmica de paneles solares mediante el factor de irradiancia $\text{radFactor} = I_{sol} / 600$. Afecta la mitigación de sobrecargas de la red eléctrica.
+* **🚰 Presión de Tandeo Hídrico ($P_{hyd}$ - `INF_ENG_PRES`):**
+  * *Rango:* $10\% \text{ a } 100\%$ (Equivalente en PSI micro-predio: $8 \text{ a } 80 \text{ PSI}$).
+  * *Impacto:* Modula de forma no lineal los tiempos de desabasto local. Presiones inferiores al $50\%$ incrementan el estrés hídrico de los hogares en un factor acelerado de colapso de red.
+
+### 6.2 Ecuación de Acoplamiento y Retroalimentación de Caos Social
+Cuando la **Polarización y Desintegración Social** ($\text{polarizacionVal}$) cruza el umbral crítico del $80\%$, se activa un acoplamiento exponencial de caos cívico que modela el vandalismo autónomo no-lineal:
+
+$$\text{disturbiosVal} \gets \text{disturbiosVal} + (\text{polarizacionVal} - 80) \times 1.8$$
+
+Esta amplificación de doble bucle retroalimenta a la felicidad y descontento en los pasos subsecuentes de la evolución, reflejando de forma precisa dinámicas emergentes de desobediencia civil.
+
+---
+
 > [!IMPORTANT]
 > Este documento de diseño conceptual (`GDS-MEGA`) sirve como el estándar rector de modelado de datos y desarrollo de algoritmos en el VPS. Todos los scripts de población y síntesis de agentes en Python o C/C++ deben alinearse con esta ontología de parámetros y dinámicas multi-capa.

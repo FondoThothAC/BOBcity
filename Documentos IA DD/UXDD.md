@@ -122,6 +122,26 @@ A continuación se presenta un wireframe conceptual detallado de la consola cent
 +------------------------------------------------------------------------------------------------------------------------------------+
 ```
 
+### 4.1 Consola de Restricciones Físicas y de Primeros Principios
+
+Para elevar la fidelidad táctil y el realismo en el modelado del entorno estival de Sonora, la sección de **Restricciones de Primeros Principios** en la interfaz se estructuró con 5 controles deslizantes ("sliders") de alta densidad visual con colorización dinámica condicional (HSL tailored neon colors):
+
+1. **🌡️ Temperatura Ambiente (°C):** Rango $15 \text{ a } 50^\circ\text{C}$.
+   * *Código de Color:* Verde normal ($\le 35^\circ\text{C}$), Ámbar de calentamiento ($\le 42^\circ\text{C}$), Coral neón en ola de calor extrema ($> 42^\circ\text{C}$).
+2. **⚡ Factor de Subsidio CFE ($/kWh):** Rango $\$0.50 \text{ a } \$3.00$.
+   * *Código de Color:* Verde subsidio robusto ($\ge \$1.60$), Ámbar amortiguación mínima ($\ge \$1.00$), Coral de desamparo financiero ($< \$1.00$).
+3. **💧 Presupuesto Red Hídrica (MD USD):** Rango $\$5\text{M a } \$50\text{M}$.
+   * *Código de Color:* Verde normal ($\ge \$25\text{M}$), Ámbar de cautela ($\ge \$15\text{M}$), Coral de déficit crítico ($< \$15\text{M}$).
+4. **☀️ Radiación Solar Directa (W/m²):** Rango $100 \text{ a } 1000 \text{ W/m}^2$.
+   * *Código de Color:* Verde generación confortable ($\le 500 \text{ W/m}^2$), Ámbar Sonora estival ($\le 800 \text{ W/m}^2$), Coral de estruendo térmico y radiación extrema ($> 800 \text{ W/m}^2$).
+5. **🚰 Presión de Tandeo Hídrico (%):** Rango $10\% \text{ a } 100\%$ ($8 \text{ a } 80 \text{ PSI}$).
+   * *Código de Color:* Verde flujo óptimo ($\ge 70\%$), Ámbar flujo intermitente ($\ge 50\%$), Coral de desabasto micro-predio ($< 50\%$).
+
+### 4.2 Indicadores Micro-Geográficos del Ciudadano (Inspector de Agentes)
+Cuando el usuario selecciona un agente sintético individual, el panel de detalles demográficos (Micro-Inspector) despliega información física en tiempo real acoplada al entorno geográfico del predio del agente:
+* **Radiación Local (Predio):** Irradiancia local ajustada por sombreado geográfico local de Geohash-9 ($\text{sandboxRadiacion} \pm \Delta_{local} \text{ W/m}^2$).
+* **Presión Hidráulica (Predio):** Presión calculada de flujo en PSI y porcentaje al final de la manzana o bloque de distribución urbana ($\text{sandboxPresionAgua} - \Delta_{geohash\_drop}\%$).
+
 ---
 
 *Documento UXDD actualizado: 2026-05-18*  

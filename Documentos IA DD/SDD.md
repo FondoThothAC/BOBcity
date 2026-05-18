@@ -988,6 +988,16 @@ CREATE INDEX IF NOT EXISTS idx_mega_geohash_res ON synthetic_agents_mega(geohash
 CREATE INDEX IF NOT EXISTS idx_mega_resentment ON synthetic_agents_mega(accumulated_resentment DESC);
 ```
 
+### 7.3 Calibración de Parámetros Físicos y Acoplamientos No Lineales (Actualización Mayo 2026)
+
+Para elevar la fidelidad del modelado a escala micro-geográfica en Hermosillo, el motor ABM acopla directamente los parámetros físicos globales con el comportamiento social dinámico:
+
+* **☀️ Radiación Solar Directa (`CLI_ENV_RAD`):** Incorpora un rango de irradiancia de $100 \text{ a } 1000 \text{ W/m}^2$, el cual multiplica la eficiencia del mecanismo de mitigación de paneles solares mediante `radFactor = radiacion / 600`.
+* **🚰 Presión de Tandeo Hídrico (`INF_ENG_PRES`):** Modula la velocidad de acumulación de fallas y desabasto local de $10\% \text{ a } 100\%$ ($8 \text{ a } 80 \text{ PSI}$). Caídas bajo el $50\%$ inician un colapso acelerado del flujo hidráulico.
+* **💥 Acoplamiento Crítico de Polarización Social y Vandalismo/Disturbios:**
+  Cuando la Polarización supera el umbral del $80\%$, se activa un bucle exponencial no lineal:
+  $$\text{disturbiosVal} \gets \text{disturbiosVal} + (\text{polarizacionVal} - 80) \times 1.8$$
+
 ---
 
 *Documento SDD actualizado con especificación de persistencia GDS-MEGA: 2026-05-18*

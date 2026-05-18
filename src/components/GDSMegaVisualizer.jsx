@@ -331,10 +331,19 @@ export default function GDSMegaVisualizer({ agents, setAgents }) {
       if (apagonesVal > 50) {
         disturbiosVal += (apagonesVal - 50) * 0.8; // Grid failure triggers urban arson risk
       }
+
+      // Estimate initial polarization to capture ambient social tension
+      let polarizacionVal = basePolarizacion + (step * 2.5) + (disturbiosVal * 0.3) - (mechanisms.solarSubsidio || mechanisms.flatTarif ? step * 0.8 : 0);
+      polarizacionVal = Math.max(10, Math.min(99, Math.round(polarizacionVal)));
+
+      // Non-linear feedback loop coupling: If polarization exceeds 80%, it triggers a massive spike in vandalism/urban rage (1.8x)
+      if (polarizacionVal > 80) {
+        disturbiosVal += (polarizacionVal - 80) * 1.8;
+      }
       disturbiosVal = Math.max(1, Math.min(98, Math.round(disturbiosVal)));
 
-      // 3. Social Decay / Polarization: Escalates as distress and eco chambers consolidate
-      let polarizacionVal = basePolarizacion + (step * 2.5) + (disturbiosVal * 0.3) - (mechanisms.solarSubsidio || mechanisms.flatTarif ? step * 0.8 : 0);
+      // Re-update polarization to reflect the amplified vandalism/arson spike
+      polarizacionVal = basePolarizacion + (step * 2.5) + (disturbiosVal * 0.3) - (mechanisms.solarSubsidio || mechanisms.flatTarif ? step * 0.8 : 0);
       polarizacionVal = Math.max(10, Math.min(99, Math.round(polarizacionVal)));
 
       // 4. Stabilized Collective Happiness: Decays due to the other stress parameters
