@@ -140,6 +140,15 @@ Entonces la simulación proyecta que la "Desintegración y Polarización Social"
 And el "Riesgo de Vandalismo / Disturbios" se dispara exponencialmente superando el 95% debido al acoplamiento de doble bucle no lineal (Ajuste B)  
 And el "Historial de Corridas y Simulaciones Archivadas" registra de forma exitosa la corrida "SIM-HIST-02" para consulta  
 
+**Escenario: Entrevista cognitiva conversacional con un ciudadano sintético**  
+Dado que he seleccionado al agente sintético individual "Agente 2" en el micro-inspector  
+Cuando selecciono la pregunta "💧 ¿Cómo te afecta el tandeo y la presión hidráulica en tu manzana?"  
+And hago clic en el botón "Entrevistar"  
+Entonces el sistema muestra un indicador de carga conversacional "Consultando cognición del agente..."  
+And tras 1.2 segundos muestra la respuesta del ciudadano sintético formateada en itálica  
+And la respuesta contiene expresiones típicas de Sonora como "¡Qué bárbaro con este calorón!"  
+And la respuesta detalla la presión exacta en PSI del predio del agente adaptada de forma condicional  
+
 ---
 
 ### 2.3 Feature: Predicción Electoral por Distrito

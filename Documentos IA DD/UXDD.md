@@ -142,6 +142,18 @@ Cuando el usuario selecciona un agente sintético individual, el panel de detall
 * **Radiación Local (Predio):** Irradiancia local ajustada por sombreado geográfico local de Geohash-9 ($\text{sandboxRadiacion} \pm \Delta_{local} \text{ W/m}^2$).
 * **Presión Hidráulica (Predio):** Presión calculada de flujo en PSI y porcentaje al final de la manzana o bloque de distribución urbana ($\text{sandboxPresionAgua} - \Delta_{geohash\_drop}\%$).
 
+### 4.3 Panel de Entrevista Cognitiva y Chat de Agente (Ajuste C)
+El Micro-Inspector incorpora una consola conversacional interactiva para entrevistar a los ciudadanos sintéticos y evaluar la percepción subjetiva de las crisis ambientales e infraestructurales:
+* **Estructura del Componente:**
+  - **Encabezado Neon:** Título de sección con icono `MessageSquare` (`hsl(188, 86%, 53%)`) y subtítulo monoespaciado que indica el LLM local (`Qwen-2.5-72B`).
+  - **Selector de Preguntas Frecuentes:** Dropdown premium con opciones pre-programadas para interrogar sobre la presión de agua, tarifas de luz de la CFE, apoyo a movilizaciones y cortes de bulevar.
+  - **Input Dinámico:** Input de texto visible únicamente cuando se selecciona "Pregunta personalizada", permitiendo un interrogatorio libre.
+  - **Botón Táctil "Entrevistar":** Dispara una animación de carga conectando con la cognición simulada.
+* **Estilo del Globo de Respuesta:**
+  - **Fondo:** Translúcido profundo (`rgba(0,0,0,0.4)`) con borde izquierdo acentuado en color cian neón de 3px.
+  - **Tipografía de Respuesta:** Cita en itálica en fuente **Inter** para diferenciar la voz del ciudadano sintético del texto técnico del sistema.
+  - **Persona e Idioma:** Respuestas calibradas con modismos hermosillenses ("calorón", "tinaco", "de la patada", "truenan", "de veras", "oiga") y condicionales lógicos que adaptan el discurso del agente según su felicidad, su ingreso mensual ($), la presión de agua (PSI) y la radiación real en su predio geohash.
+
 ---
 
 *Documento UXDD actualizado: 2026-05-18*  

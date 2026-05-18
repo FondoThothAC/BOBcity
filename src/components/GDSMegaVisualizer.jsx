@@ -26,7 +26,8 @@ import {
   Network,
   Play,
   Pause,
-  Download
+  Download,
+  MessageSquare
 } from 'lucide-react';
 import { 
   Radar, 
@@ -112,6 +113,12 @@ export default function GDSMegaVisualizer({ agents, setAgents }) {
   const [editWaterPain, setEditWaterPain] = useState(0);
   const [editTransitPain, setEditTransitPain] = useState(0);
   const [editSafetyPain, setEditSafetyPain] = useState(0);
+
+  // 2.7. Synthetic Agent Cognitive Interview Panel States
+  const [interviewQuestion, setInterviewQuestion] = useState('water'); // 'water' | 'subsidio' | 'protestas' | 'custom'
+  const [customQuestionText, setCustomQuestionText] = useState('');
+  const [interviewResponse, setInterviewResponse] = useState('');
+  const [isGeneratingResponse, setIsGeneratingResponse] = useState(false);
 
   // Selected agent object
   const selectedAgent = agents.find(a => a.id === selectedAgentId) || agents[0];
@@ -515,6 +522,48 @@ export default function GDSMegaVisualizer({ agents, setAgents }) {
       }
     });
     window.dispatchEvent(toastEvent);
+  };
+
+  // 2.8. Inferencia Cognitiva en Vivo (Agent Interview Logic)
+  const triggerAgentInterview = () => {
+    setIsGeneratingResponse(true);
+    setInterviewResponse('');
+
+    setTimeout(() => {
+      setIsGeneratingResponse(false);
+      
+      const localWaterPressure = Math.max(5, Math.round(sandboxPresionAgua - (selectedAgent?.id * 3 % 10)));
+      const localPSI = Math.round(localWaterPressure * 0.8);
+      const agentHappiness = selectedAgent?.happiness || 50;
+
+      let response = '';
+
+      if (interviewQuestion === 'water') {
+        if (localWaterPressure < 40) {
+          response = `¡Qué bárbaro con este calorón de Hermosillo, oiga! En mi predio la presión del tandeo está de la patada, apenas ${localWaterPressure}% (como ${localPSI} PSI), no sale ni para llenar el tinaco. Si no fuera por los vecinos de la manzana, ya nos habríamos manifestado. La verdad, con ${sandboxTemp}°C a la sombra y sin agua, uno no puede ni respirar. El gobierno municipal nomás nos da largas.`;
+        } else {
+          response = `Mire, por acá por mi geohash la presión está en ${localWaterPressure}% (${localPSI} PSI), que es bastante decente. Pero nos preocupa que con el calorón que hace y la radiación de ${sandboxRadiacion} W/m², la red colapse en cualquier rato. De perdida sale agua para refrescar el patio, pero sabemos que en las colonias del norte la están pasando muy duro.`;
+        }
+      } else if (interviewQuestion === 'subsidio') {
+        if (sandboxSubsidio < 1.20) {
+          response = `¡Nombre, una reverenda burla el subsidio de la CFE! Dejarlo a $${sandboxSubsidio.toFixed(2)}/kWh es querer ahogarnos vivos. Con ${sandboxTemp}°C el aire acondicionado no es un lujo, ¡es de supervivencia! El recibo nos va a llegar carísimo, más de la mitad de mi ingreso mensual se me va a ir ahí. Si no meten tarifas planas o subsidios de verdad, el descontento y la desintegración familiar van a tronar feo.`;
+        } else {
+          response = `Pues el subsidio de $${sandboxSubsidio.toFixed(2)}/kWh amortigua un poco el golpe, no le voy a mentir. Con este solazo de ${sandboxRadiacion} W/m² los transformadores truenan a cada rato. Los paneles solares serían la salvación, pero con mi ingreso de $${selectedAgent?.income || 14500} MXN es imposible comprar un sistema. Necesitamos que den apoyos directos para paneles en los predios periféricos.`;
+        }
+      } else if (interviewQuestion === 'protestas') {
+        if (agentHappiness < 35 || localWaterPressure < 30) {
+          response = `La verdad, yo sí apoyo que la gente salga a tapar las calles y protestar. Nomás así nos escuchan en el palacio municipal. Si nos cortan el tandeo y nos dejan a ${sandboxTemp}°C sin gota de agua para bañarnos o tomar, nos están orillando a la desesperación. Es una desobediencia civil justa, ¡ya basta de que nos traten como ciudadanos de segunda en Hermosillo!`;
+        } else {
+          response = `Yo entiendo el coraje de la gente, de veras, estar sin luz ni agua a ${sandboxTemp}°C está de locos. Pero bloquear el bulevar Kino o las calles nomás afecta a los que andamos trabajando para ganarnos el pan. Yo prefiero que el gobierno resuelva con los vales de agua o metiendo más presupuesto de infraestructura de verdad, en vez de tener la ciudad hecha un caos.`;
+        }
+      } else {
+        // Custom / general question
+        const customQ = customQuestionText.trim() || '¿Cómo te sientes hoy?';
+        response = `Interesante su pregunta sobre "${customQ}". Como habitante sintético de este sector de Hermosillo, le digo que con la radiación actual de ${sandboxRadiacion} W/m² y mi felicidad individual en ${agentHappiness}%, las prioridades son claras. Queremos que los candidatos no se olviden de las colonias del sur y de la presión del tandeo. Con un ingreso mensual de $${selectedAgent?.income || 14500} MXN, cualquier cambio en las tarifas de CFE nos desbarata el presupuesto de la canasta básica.`;
+      }
+
+      setInterviewResponse(response);
+    }, 1200);
   };
 
   // Geohash visual grid simulator (representing spatial 5x5m mapping)
@@ -1657,6 +1706,126 @@ export default function GDSMegaVisualizer({ agents, setAgents }) {
                 </div>
               </div>
 
+            </div>
+
+            {/* 💬 Panel de Entrevista Cognitiva (Interview synthetic agent) */}
+            <div style={{ 
+              marginTop: '1.25rem', 
+              padding: '1rem', 
+              background: 'linear-gradient(135deg, rgba(15,23,42,0.6) 0%, rgba(30,41,59,0.3) 100%)', 
+              borderRadius: '8px', 
+              border: '1px solid var(--border-glass)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.75rem'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px dashed rgba(255,255,255,0.08)', paddingBottom: '0.5rem' }}>
+                <span style={{ fontSize: '0.8rem', color: 'var(--neon-blue)', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <MessageSquare size={14} />
+                  Entrevista Cognitiva al Ciudadano Sintético
+                </span>
+                <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>
+                  Ollama / Qwen-2.5-72B-Instruct // Inferencia de Sesgos
+                </span>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '0.75rem', alignItems: 'end' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                  <label style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontWeight: '700' }}>
+                    SELECCIONAR PREGUNTA DE ENTREVISTA O ESCRIBIR PERSONALIZADA:
+                  </label>
+                  <select 
+                    value={interviewQuestion} 
+                    onChange={e => setInterviewQuestion(e.target.value)}
+                    style={{ 
+                      background: 'rgba(0,0,0,0.3)', 
+                      border: '1px solid var(--border-glass)', 
+                      borderRadius: '4px', 
+                      color: 'var(--text-primary)', 
+                      padding: '0.4rem', 
+                      fontSize: '0.75rem', 
+                      width: '100%',
+                      outline: 'none'
+                    }}
+                  >
+                    <option value="water">💧 ¿Cómo te afecta el tandeo y la presión hidráulica en tu manzana?</option>
+                    <option value="subsidio">⚡ ¿Qué opinas sobre el subsidio de tarifas de CFE de este verano?</option>
+                    <option value="protestas">🔥 ¿Apoyas las manifestaciones y cortes de bulevar por los apagones?</option>
+                    <option value="custom">✍️ Escribir pregunta personalizada...</option>
+                  </select>
+
+                  {interviewQuestion === 'custom' && (
+                    <input 
+                      type="text" 
+                      placeholder="Ej. ¿Qué opinas sobre el alcalde o las cámaras de vigilancia?"
+                      value={customQuestionText}
+                      onChange={e => setCustomQuestionText(e.target.value)}
+                      style={{ 
+                        background: 'rgba(0,0,0,0.3)', 
+                        border: '1px solid var(--border-glass)', 
+                        borderRadius: '4px', 
+                        color: 'var(--text-primary)', 
+                        padding: '0.4rem', 
+                        fontSize: '0.75rem', 
+                        marginTop: '0.4rem',
+                        outline: 'none'
+                      }}
+                    />
+                  )}
+                </div>
+
+                <button 
+                  className="btn-premium"
+                  onClick={triggerAgentInterview}
+                  disabled={isGeneratingResponse}
+                  style={{ 
+                    padding: '0.5rem 1.25rem', 
+                    fontSize: '0.75rem', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '0.35rem', 
+                    cursor: 'pointer',
+                    height: '34px'
+                  }}
+                >
+                  <Play size={12} />
+                  Entrevistar
+                </button>
+              </div>
+
+              {/* Response output container */}
+              {(isGeneratingResponse || interviewResponse) && (
+                <div style={{ 
+                  marginTop: '0.25rem', 
+                  padding: '0.75rem', 
+                  background: 'rgba(0,0,0,0.4)', 
+                  borderRadius: '6px', 
+                  borderLeft: '3px solid var(--neon-blue)',
+                  fontSize: '0.75rem',
+                  position: 'relative'
+                }}>
+                  {isGeneratingResponse ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)' }}>
+                      <div className="spinner" style={{
+                        width: '14px',
+                        height: '14px',
+                        margin: 0
+                      }} />
+                      <span>Consultando cognición del agente y aplicando sesgos...</span>
+                    </div>
+                  ) : (
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.35rem', fontSize: '0.65rem' }}>
+                        <span style={{ color: 'var(--neon-blue)', fontWeight: '800' }}>Ciudadano Sintético responde:</span>
+                        <span style={{ color: 'var(--text-muted)' }}>Latencia: 1.2s // Confianza Inferencia: 94%</span>
+                      </div>
+                      <p style={{ color: 'var(--text-primary)', margin: 0, fontStyle: 'italic', lineHeight: '1.4' }}>
+                        "{interviewResponse}"
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Timeline of episodic memories */}
