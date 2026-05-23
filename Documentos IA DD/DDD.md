@@ -1109,6 +1109,8 @@ En la convergencia de Gobernanza y Economía Local (2026-05-23), el Contexto Del
     *   *Fórmula en Dominio:* $R_{v,t} = \text{Tasa de Concreción de Ventas} \cdot 0.6 + \text{Calificación Promedio} \cdot 0.4$. Prioriza la visibilidad en el feed social y en los algoritmos de recomendación cívico-económica al priorizar a los agentes con mayor índice de confianza y validación de CURP.
 4.  **Sincronización Macroeconómica (MacroSyncService - Domain Service):**
     *   *Propósito:* Envío de flujos financieros locales (gastos, ingresos y facturación de IVA/ISR) de forma anonimizada al motor de CívicaOS para enriquecer el modelo del Gemelo Digital con datos económicos reales.
+5.  **Acoplamiento de Gestión Financiera y ERP (ERPFinancialSync - Domain Service):**
+    *   *Propósito:* Mapeo y valuación del inventario local bajo la norma **NIF C-4 (Costo Promedio Ponderado)**, integración de estados financieros bajo **NIF B-3 (Resultado Integral)** y **NIF B-2 (Flujos de Efectivo)**, y sincronización en tiempo real vía API JSON-RPC con **Odoo ERP** para automatizar el ciclo de almacén y resurtido B2B.
 
 ---
 

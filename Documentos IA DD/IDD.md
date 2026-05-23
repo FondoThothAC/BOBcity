@@ -689,10 +689,12 @@ La vista del simulador ABM muestra el gemelo digital social con controles para c
 | Vista / Dashboard | Componentes Específicos | Comportamiento Responsivo | Interconexión CívicaOS |
 |-------------------|-------------------------|--------------------------|------------------------|
 | **Matriz de Permisos (Capa Dios)** | Tabla interactiva de 10 niveles con switches booleanos. | Adaptable a móvil mediante scroll horizontal, prioriza la vista compacta. | Sincronización automática a la base de datos de usuarios para alterar el estado operativo del cliente. |
-| **POS Táctil (Caja Registradora)** | Grid de productos rápido, calculadora de efectivo con billetes de MXN ($20, $50, $100, $200, $500, $1000), simulador de terminal de chip/NFC y emisor de tickets de WhatsApp. | Doble columna fija en Desktop/Tablet para agilizar el cobro y catálogo, optimizado para interacción táctil. | Registro directo del total de facturación en efectivo/tarjeta e impuestos trasladados a CívicaOS. |
+| **POS Táctil (Caja Registradora)** | Grid de productos rápido, calculadora de efectivo con billetes de MXN ($20, $50, $100, $200, $500, $1000), selector de mesas de restaurante/barra, selector PayPal/Stripe, y emisor de tickets de WhatsApp. | Doble columna fija en Desktop/Tablet para agilizar el cobro y catálogo, optimizado para interacción táctil. | Registro directo del total de facturación en efectivo/tarjeta/PayPal e impuestos trasladados a CívicaOS. |
 | **Logística (Repartidor / Courier)** | Panel de zonas de entrega, selector de horario/turnos, selector de vehículo, mapa nacional/mundial descargable y botón SOS de emergencia. | Formulario colapsable optimizado para el uso con una mano en motocicletas/bicicletas. | Trasmisión de GPS activa al clúster de seguridad e inicio automático de escolta algorítmica para evitar delincuencia. |
+| **Finanzas NIF (Gestión de Capital)** | Pestañas interactivas de Resumen, Estado de Resultados (NIF B-3) y Estado de Flujos de Efectivo (NIF B-2) con desgloses detallados de gastos e impuestos. | Gráficos adaptables y tablas compactas auto-ajustables con desgloses financieros y alertas de rentabilidad. | Envío de flujos contables desglosados y reservas fiscales en tiempo real para análisis macroeconómico. |
+| **Conector Odoo ERP & Almacén NIF C-4** | Panel de credenciales Odoo (URL, DB, API Key), visor de logs de consola de sincronización en caliente, y editor de Costos Promedio unitarios. | Layout de dos columnas (Configuración y Consola de logs) en desktop, colapsable a columna única en tablet/móvil. | Importación automática de stock e inventario físico desde Odoo y reabastecimiento B2B logístico cívico. |
 
 ---
 
-*Documento IDD actualizado con especificaciones de CositasApp, POS táctil y Panel de Logística: 2026-05-23*
+*Documento IDD actualizado con especificaciones de CositasApp, POS táctil, Panel de Logística, Finanzas NIF y Odoo ERP: 2026-05-23*
 *Próxima revisión programada: 2026-06-23*
