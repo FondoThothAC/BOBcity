@@ -257,5 +257,56 @@ Como director de proyecto, quiero que las recomendaciones de cívicaOS se convie
 
 ---
 
-*Documento ATDD actualizado: 2026-05-18*
-*Próxima revisión programada: 2026-06-18*
+## 5. Criterios de Aceptación — CositasApp Marketplace Multi-Nivel
+
+### 5.1 Aceptación: POS Táctil con Mesas de Restaurante
+
+**Historia de Usuario:**
+Como dueño de un restaurante o puesto de comida, quiero un punto de venta táctil que me permita gestionar múltiples mesas simultáneamente y cobrar con diferentes métodos de pago para agilizar mi operación.
+
+**Criterios de Aceptación:**
+
+| ID | Escenario | Dado | Cuando | Entonces | Verificable por |
+|----|-----------|------|--------|----------|-----------------|
+| AC-POS-001 | Apertura de mesa | Tengo el POS abierto con mesas habilitadas | Selecciono Mesa 2 | Se abre una cuenta nueva para Mesa 2 con ícono visual de "ocupada" | Usuario verifica visualmente |
+| AC-POS-002 | Multi-mesa simultánea | Tengo Mesa 1 y Mesa 2 abiertas | Cambio entre mesas | Cada mesa conserva sus ítems y subtotal sin pérdida | Cajero verifica datos |
+| AC-POS-003 | Cobro con PayPal | Mesa con $155 de consumo | Selecciono PayPal como método de pago | Se muestra simulador de autorización, al confirmar la mesa se libera | Cajero completa flujo |
+| AC-POS-004 | Ticket por WhatsApp | Venta completada | Presiono "Compartir por WhatsApp" | Se abre WhatsApp con el detalle de ítems, precios y total | Cajero verifica mensaje |
+
+### 5.2 Aceptación: Contabilidad NIF México
+
+| ID | Escenario | Dado | Cuando | Entonces | Verificable por |
+|----|-----------|------|--------|----------|-----------------|
+| AC-NIF-001 | Estado de Resultados B-3 | Tengo 50+ transacciones del mes | Abro pestaña "Estado de Resultados" | Se muestran: Ingresos Netos, Costo de Ventas, Utilidad Bruta, Gastos, Utilidad Neta | Contador verifica |
+| AC-NIF-002 | Flujos de Efectivo B-2 | Transacciones clasificadas | Abro pestaña "Flujos de Efectivo" | Clasificación correcta en Operación, Inversión y Financiamiento | Contador verifica |
+| AC-NIF-003 | Valuación NIF C-4 | Inventario con compras a diferentes costos | Abro sección Almacén | Costo unitario promedio ponderado calculado y mostrado | Contador verifica fórmula |
+
+### 5.3 Aceptación: Sistema de 10 Niveles
+
+| ID | Escenario | Dado | Cuando | Entonces | Verificable por |
+|----|-----------|------|--------|----------|-----------------|
+| AC-LVL-001 | Invitado sin acceso | roleLevel = 1 | Intento acceder al POS | ModuleGuard muestra "Función bloqueada. Nivel mínimo: 2.5" | Usuario ve mensaje |
+| AC-LVL-002 | Vendedor Independiente | roleLevel = 4 | Accedo a Inventario, POS y B2B | Los 3 módulos cargan correctamente | Vendedor opera sin error |
+| AC-LVL-003 | Admin con todos los accesos | roleLevel = 7 | Accedo a cualquier sección | Todos los módulos están habilitados | Admin verifica cada sección |
+
+### 5.4 Checklist de Aceptación CositasApp
+
+| Item | Descripción | Estado |
+|------|-------------|--------|
+| CS-001 | Feed social carga publicaciones | ☐ |
+| CS-002 | Login con Google y Email/Password funciona | ☐ |
+| CS-003 | Carrito multi-tienda opera correctamente | ☐ |
+| CS-004 | POS táctil gestiona mesas y cobra | ☐ |
+| CS-005 | Contabilidad NIF muestra B-3 y B-2 | ☐ |
+| CS-006 | Inventario calcula NIF C-4 | ☐ |
+| CS-007 | Odoo ERP sincroniza catálogo | ☐ |
+| CS-008 | Bob Bot responde preguntas | ☐ |
+| CS-009 | Mapa Leaflet muestra tiendas | ☐ |
+| CS-010 | Dashboard repartidor funciona | ☐ |
+| CS-011 | Sistema de niveles bloquea/desbloquea | ☐ |
+| CS-012 | Chat en tiempo real opera | ☐ |
+
+---
+
+*Documento ATDD actualizado: 2026-05-23*  
+*Próxima revisión programada: 2026-06-23*

@@ -145,5 +145,77 @@ La deuda técnica de pruebas se monitorea y gestiona activamente. Pruebas flaky 
 
 ---
 
-*Documento TDD actualizado: 2026-05-18*
-*Próxima revisión programada: 2026-06-18*
+## 7. Pruebas Unitarias de CositasApp — Marketplace Social Multi-Nivel
+
+### 7.1 Pruebas del Sistema de Roles y Niveles (useRole.js)
+
+| ID de Prueba | Descripción | Entrada | Salida Esperada | Criterio de Aceptación |
+|--------------|-------------|---------|-----------------|------------------------|
+| ROLE-001 | Nivel 1 (Invitado) sin permisos | roleLevel: 1 | Todos los permisos en false | canBuy, canChat, canSell todos false |
+| ROLE-002 | Nivel 2 (Comprador) puede comprar y chatear | roleLevel: 2 | buy: true, chat: true | canBuy y canChat true, el resto false |
+| ROLE-003 | Nivel 2.5 (Cajero) puede usar POS | roleLevel: 2.5 | pos: true, sell: true | canUsePOS y canSell true, canBuy false |
+| ROLE-004 | Nivel 4 (Vendedor Independiente) permisos combinados | roleLevel: 4 | buy, chat, pos, inventory, sell, b2b_buy: true | 6 permisos activos, taxes false |
+| ROLE-005 | Nivel 7 (Admin) todos los permisos | roleLevel: 7+ | Todos los permisos en true | Los 10 permisos activos |
+| ROLE-006 | Matriz de permisos personalizada desde localStorage | JSON personalizado en localStorage | Permisos reflejan cambios | La lectura del localStorage prevalece sobre INITIAL_PERMISSIONS |
+| ROLE-007 | Normalización de roles en mayúsculas | rawRole: 'VENDEDOR' | role: 'vendor' | Normalizado independiente del caso |
+
+### 7.2 Pruebas del Punto de Venta (POSView.jsx)
+
+| ID de Prueba | Descripción | Entrada | Salida Esperada | Criterio de Aceptación |
+|--------------|-------------|---------|-----------------|------------------------|
+| POS-001 | Agregar producto al ticket | Producto con precio $50 | Ticket con 1 ítem, total $50 | Total recalculado correctamente |
+| POS-002 | Modificar cantidad de producto | Incrementar cantidad a 3 | Total = $150 | Multiplicación correcta precio × cantidad |
+| POS-003 | Abrir cuenta de mesa | Mesa 2 | Cuenta de mesa 2 creada con estado 'abierta' | Mesa asociada al ticket activo |
+| POS-004 | Cambiar entre mesas | Seleccionar Mesa 1, luego Mesa 3 | Ticket de mesa 1 guardado, ticket de mesa 3 cargado | Sin pérdida de datos al cambiar |
+| POS-005 | Cobrar con efectivo | Pago = $200, Total = $150 | Cambio = $50 | Cálculo de cambio correcto |
+| POS-006 | Cobrar con PayPal | Total = $150 | Modal de PayPal simulado, estado 'pagado' | Transacción registrada con método 'paypal' |
+| POS-007 | Generar ticket WhatsApp | Venta completada | URL de WhatsApp con resumen de ticket | Formato de texto correcto con ítems y total |
+| POS-008 | Cobrar mesa completa | Mesa con 5 ítems | Ticket cerrado, mesa liberada | Mesa disponible para nueva cuenta |
+
+### 7.3 Pruebas de Contabilidad NIF (AccountingDashboard.jsx)
+
+| ID de Prueba | Descripción | Entrada | Salida Esperada | Criterio de Aceptación |
+|--------------|-------------|---------|-----------------|------------------------|
+| NIF-B3-001 | Cálculo de Ingresos Netos | Transacciones de tipo 'income' | Suma correcta de ingresos | Incluye solo transacciones confirmadas |
+| NIF-B3-002 | Cálculo de Costo de Ventas | Productos vendidos con costo promedio | Costo × unidades vendidas | Usa costo promedio NIF C-4 |
+| NIF-B3-003 | Utilidad Bruta | Ingresos $10,000, Costo $4,000 | Utilidad Bruta = $6,000 | Resta correcta |
+| NIF-B3-004 | Utilidad Neta | Gastos de operación $2,000 | Utilidad Neta = $4,000 | Descuenta gastos administrativos y de ventas |
+| NIF-B2-001 | Flujos de Operación | Ventas en mostrador | Flujo positivo categorizado como 'operación' | Solo transacciones de venta directa |
+| NIF-B2-002 | Flujos de Inversión | Compra de equipo | Flujo negativo categorizado como 'inversión' | Compras de activos fijos |
+| NIF-B2-003 | Flujos de Financiamiento | Préstamo recibido | Flujo positivo categorizado como 'financiamiento' | Aportaciones de capital |
+| NIF-C4-001 | Costo Promedio Ponderado | 100 unidades a $10, 50 unidades a $15 | Costo promedio = $11.67 | (100×10 + 50×15) / 150 |
+| NIF-C4-002 | Actualización de costo tras compra | Stock previo + nueva compra | Nuevo costo promedio recalculado | No sobreescribe sino que promedia |
+
+### 7.4 Pruebas de Integración Odoo ERP (InventoryDashboard.jsx)
+
+| ID de Prueba | Descripción | Entrada | Salida Esperada | Criterio de Aceptación |
+|--------------|-------------|---------|-----------------|------------------------|
+| ODOO-001 | Configuración de credenciales | URL, DB, usuario, API key | Configuración guardada en estado | Campos validados como no vacíos |
+| ODOO-002 | Sincronización de catálogo | Botón sincronizar | Log de éxito con conteo de productos | Productos mapeados a formato CositasApp |
+| ODOO-003 | Exportación de orden de venta | Venta completada en POS | sale.order creado en Odoo (simulado) | Payload JSON-RPC válido |
+| ODOO-004 | Manejo de error de conexión | URL Odoo inválida | Mensaje de error claro | No bloquea la interfaz, muestra alerta |
+
+### 7.5 Pruebas de Bob Bot IA (FeedPost.jsx)
+
+| ID de Prueba | Descripción | Entrada | Salida Esperada | Criterio de Aceptación |
+|--------------|-------------|---------|-----------------|------------------------|
+| BOB-001 | Consulta con clave API configurada | Pregunta + API key en localStorage | Respuesta de Gemini 1.5 Flash | Llamada REST exitosa con prompt contextualizado |
+| BOB-002 | Consulta sin clave API | Pregunta sin clave | Respuesta del motor algorítmico local | Fallback sin error visible |
+| BOB-003 | Prompt contextualizado | Post del feed + pregunta | Prompt incluye contexto del post | El prompt envía título y contenido del post |
+| BOB-004 | Manejo de error de API | API key inválida o cuota agotada | Mensaje de error amigable + fallback | No crash, degrada graciosamente |
+
+### 7.6 Pruebas del Carrito Multi-Tienda (CartContext.jsx)
+
+| ID de Prueba | Descripción | Entrada | Salida Esperada | Criterio de Aceptación |
+|--------------|-------------|---------|-----------------|------------------------|
+| CART-001 | Agregar producto al carrito | Producto de tienda A | Carrito con 1 ítem de tienda A | Producto asociado a su tienda |
+| CART-002 | Agregar productos de múltiples tiendas | 2 productos de tienda A, 1 de tienda B | 3 ítems agrupados por tienda | Agrupación correcta por businessId |
+| CART-003 | Modificar cantidad | Cantidad de 1 a 5 | Ítem con quantity: 5 | Total actualizado |
+| CART-004 | Eliminar producto | Eliminar ítem | Carrito sin ese ítem | Recálculo de total |
+| CART-005 | Limpiar carrito | clearCart() | Carrito vacío | Todos los ítems eliminados |
+| CART-006 | Aplicar descuento por puntos | 500 puntos = $50 descuento | Total reducido en $50 | pointsDiscount aplicado correctamente |
+
+---
+
+*Documento TDD actualizado: 2026-05-23*  
+*Próxima revisión programada: 2026-06-23*

@@ -351,8 +351,128 @@ El conjunto de pruebas BDD de CívicaOS está catalogado mediante etiquetas para
 *   `@regression`: Flujo completo que cubre simulaciones ABM y predicciones. Se ejecuta de forma obligatoria antes de cada lanzamiento formal (release).
 *   `@integration`: Pruebas que validan la conexión local real con las APIs de INE, INEGI u Open Business Plan. Requiere entornos locales activos y certificados mTLS válidos.
 *   `@mock`: Escenarios rápidos de visualización UI que utilizan datos locales inyectados de simulación (no requiere backend activo).
+*   `@cositas`: Escenarios del marketplace CositasApp que requieren Firebase Emulator activo.
 
 ---
 
-*Documento BDD actualizado: 2026-05-18*  
-*Próxima revisión programada: 2026-06-18*  
+## 6. Features de CositasApp — Marketplace Social Multi-Nivel
+
+### 6.1 Feature: Flujo de Compra Completo
+
+**Narrativa:**  
+Como comprador (Nivel 2),  
+necesito navegar el feed, explorar tiendas, agregar productos al carrito y completar mi pedido  
+para recibir mis productos en casa o recogerlos en tienda.
+
+**Escenario: Compra exitosa con confirmación WhatsApp**  
+Dado que estoy autenticado como Comprador (Nivel 2)  
+Y existe la tienda "Tacos El Güero" con 5 productos publicados  
+Cuando navego al feed y selecciono la tienda "Tacos El Güero"  
+Entonces veo el catálogo con los 5 productos disponibles con precios en MXN  
+Cuando agrego "3 Tacos de Asada" ($45) y "1 Refresco" ($25) al carrito  
+Entonces el ícono del carrito muestra "2 ítems" y el total "$70.00"  
+Cuando procedo al checkout y selecciono "Pago por WhatsApp"  
+Entonces se genera un mensaje de WhatsApp con el resumen: "3x Tacos de Asada ($45), 1x Refresco ($25) — Total: $70.00"  
+And se crea una orden en Firestore con estado "pendiente"  
+And el vendedor recibe notificación de nuevo pedido  
+
+**Escenario: Compra con puntos de lealtad**  
+Dado que tengo 500 puntos de lealtad acumulados (equivalente a $50 MXN de descuento)  
+Y mi carrito tiene un total de $120  
+Cuando aplico mis puntos de lealtad en el checkout  
+Entonces el total se reduce a $70 y los puntos se descuentan de mi saldo  
+
+### 6.2 Feature: Punto de Venta Táctil con Mesas
+
+**Narrativa:**  
+Como cajero POS (Nivel 2.5),  
+necesito operar el punto de venta con soporte para mesas de restaurante  
+para gestionar múltiples cuentas simultáneamente y cobrar con diferentes métodos de pago.
+
+**Escenario: Gestión completa de mesa de restaurante**  
+Dado que estoy en el POS táctil con las mesas habilitadas  
+Cuando selecciono "Mesa 2" del panel de mesas  
+Entonces se abre una cuenta nueva para Mesa 2 con estado "Abierta"  
+Cuando agrego "2 Enchiladas" ($80) y "1 Agua de Horchata" ($30)  
+Entonces el subtotal de Mesa 2 muestra "$110.00"  
+Cuando cambio a "Mostrador" para atender otro cliente  
+Entonces la cuenta de Mesa 2 se guarda automáticamente  
+Cuando regreso a "Mesa 2" y agrego "1 Postre de Flan" ($45)  
+Entonces el subtotal actualizado muestra "$155.00"  
+Cuando el cliente pide la cuenta y selecciono "Cobrar con PayPal"  
+Entonces se muestra el simulador de autorización PayPal  
+And al confirmar, la mesa se libera y queda disponible para nuevos clientes  
+And se genera un ticket compartible por WhatsApp  
+
+### 6.3 Feature: Progresión de Niveles del Vendedor
+
+**Narrativa:**  
+Como vendedor en crecimiento,  
+necesito que el sistema desbloquee funcionalidades conforme mi negocio crece  
+para acceder a herramientas más avanzadas sin pagar licencias adicionales.
+
+```gherkin
+Scenario Outline: Verificación de desbloqueo de funcionalidades por nivel
+  Given estoy autenticado con roleLevel <nivel>
+  When accedo a la sección "<seccion>"
+  Then el módulo debe estar "<estado>"
+
+  Examples:
+    | nivel | seccion             | estado       |
+    | 1     | Feed Social         | Habilitado   |
+    | 1     | Punto de Venta      | Bloqueado    |
+    | 2     | Carrito de Compras  | Habilitado   |
+    | 2.5   | Punto de Venta      | Habilitado   |
+    | 2.6   | Gestión de Almacén  | Habilitado   |
+    | 2.8   | Panel de Entregas   | Habilitado   |
+    | 3     | Publicar Productos  | Habilitado   |
+    | 4     | Compras B2B         | Habilitado   |
+    | 5     | Contabilidad NIF    | Habilitado   |
+    | 6     | Ventas B2B          | Habilitado   |
+    | 7     | Panel Admin         | Habilitado   |
+```
+
+### 6.4 Feature: Bob Bot — Asistente de IA
+
+**Narrativa:**  
+Como usuario de la plataforma,  
+necesito un asistente inteligente que responda mis preguntas sobre el marketplace  
+para obtener ayuda sin esperar a soporte humano.
+
+**Escenario: Consulta con Gemini API activa**  
+Dado que tengo una clave API de Google AI Studio configurada en mi perfil  
+Y estoy viendo una publicación del feed sobre "Promoción de Tacos 2x1"  
+Cuando le pregunto a Bob "¿Cuál es el horario de esta promoción?"  
+Entonces Bob muestra un indicador de carga "Consultando Bob Bot..."  
+And tras 1-3 segundos muestra la respuesta contextualizada en español  
+And la respuesta incluye información relevante del post  
+
+**Escenario: Fallback algorítmico sin API**  
+Dado que no tengo clave API de Gemini configurada  
+Cuando le pregunto a Bob "¿Cómo puedo publicar un producto?"  
+Entonces Bob responde con su motor algorítmico local  
+And la respuesta contiene instrucciones útiles predefinidas  
+And no se muestra ningún error de API al usuario  
+
+### 6.5 Feature: Dashboard de Repartidor
+
+**Narrativa:**  
+Como repartidor (Nivel 2.8),  
+necesito ver los pedidos asignados en un mapa en vivo  
+para optimizar mis rutas de entrega y actualizar el estado de cada pedido.
+
+**Escenario: Flujo de entrega completo**  
+Dado que estoy autenticado como repartidor con 3 pedidos asignados  
+Cuando abro el Dashboard de Entregas  
+Entonces veo los 3 pedidos listados con dirección, productos y monto  
+And el mapa Leaflet muestra los 3 puntos de entrega marcados  
+Cuando selecciono el pedido #001 y presiono "En camino"  
+Entonces el estado cambia a "En tránsito" y el comprador recibe notificación  
+Cuando llego al destino y presiono "Entregado"  
+Entonces el pedido se marca como completado en Firestore  
+And mi comisión se calcula y registra automáticamente  
+
+---
+
+*Documento BDD actualizado: 2026-05-23*  
+*Próxima revisión programada: 2026-06-23*  

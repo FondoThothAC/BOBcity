@@ -1,0 +1,236 @@
+/* ============================================================================
+   Malacopa - Sistema de Diseño CSS Global
+   ============================================================================
+   Estilo Premium Oscuro con Glassmorphism y Acentos Neón
+   ============================================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --fuente-principal: 'Outfit', sans-serif;
+  
+  /* Paleta de Colores de Entretenimiento (Malacopa) */
+  --color-fondo: #0a0712;
+  --color-fondo-tarjeta: rgba(20, 15, 35, 0.65);
+  --color-borde-glass: rgba(255, 255, 255, 0.08);
+  
+  --color-neon-morado: #8a2be2;
+  --color-neon-magenta: #ff007f;
+  --color-neon-cian: #00f3ff;
+  
+  --color-texto-principal: #f5f4f9;
+  --color-texto-secundario: #a39fb5;
+  --color-texto-apagado: #6e6a82;
+  
+  /* Degradados Premium */
+  --degradado-neon: linear-gradient(135deg, var(--color-neon-magenta), var(--color-neon-morado));
+  --degradado-fondo: radial-gradient(circle at 50% 0%, #1a1235 0%, var(--color-fondo) 75%);
+  --degradado-tarjeta: linear-gradient(180deg, rgba(30, 24, 54, 0.4) 0%, rgba(15, 11, 28, 0.6) 100%);
+  
+  /* Sombras y Filtros */
+  --sombra-neon: 0 0 15px rgba(255, 0, 127, 0.4);
+  --sombra-caja: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  --filtro-desenfoque: blur(16px);
+  
+  --transicion-suave: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Reseteo y Estilos Base */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-neon-morado) var(--color-fondo);
+}
+
+body {
+  font-family: var(--fuente-principal);
+  background: var(--color-fondo);
+  background-image: var(--degradado-fondo);
+  color: var(--color-texto-principal);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Barras de Desplazamiento Personalizadas */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-fondo);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-neon-morado);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-neon-magenta);
+}
+
+/* Tipografía */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-texto-principal);
+}
+
+a {
+  color: var(--color-neon-cian);
+  text-decoration: none;
+  transition: var(--transicion-suave);
+}
+
+a:hover {
+  color: var(--color-neon-magenta);
+  text-shadow: 0 0 8px rgba(255, 0, 127, 0.3);
+}
+
+/* Utilidades de Glassmorphism */
+.efecto-glass {
+  background: var(--color-fondo-tarjeta);
+  backdrop-filter: var(--filtro-desenfoque);
+  -webkit-backdrop-filter: var(--filtro-desenfoque);
+  border: 1px solid var(--color-borde-glass);
+  border-radius: 16px;
+  box-shadow: var(--sombra-caja);
+}
+
+.tarjeta-premium {
+  background: var(--degradado-tarjeta);
+  backdrop-filter: var(--filtro-desenfoque);
+  -webkit-backdrop-filter: var(--filtro-desenfoque);
+  border: 1px solid var(--color-borde-glass);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: var(--sombra-caja);
+  transition: var(--transicion-suave);
+}
+
+.tarjeta-premium:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 0, 127, 0.25);
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.5), 0 0 20px rgba(138, 43, 226, 0.15);
+}
+
+/* Botones Premium */
+.btn-neon {
+  background: var(--degradado-neon);
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  font-weight: 600;
+  border-radius: 30px;
+  cursor: pointer;
+  box-shadow: var(--sombra-neon);
+  transition: var(--transicion-suave);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--fuente-principal);
+}
+
+.btn-neon:hover {
+  transform: scale(1.03);
+  box-shadow: 0 0 25px rgba(255, 0, 127, 0.65), 0 0 10px rgba(138, 43, 226, 0.4);
+}
+
+.btn-neon:active {
+  transform: scale(0.98);
+}
+
+.btn-secundario {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--color-texto-principal);
+  border: 1px solid var(--color-borde-glass);
+  padding: 12px 24px;
+  font-weight: 600;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: var(--transicion-suave);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--fuente-principal);
+}
+
+.btn-secundario:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--color-neon-cian);
+  box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
+}
+
+/* Inputs Premium */
+.input-premium {
+  background: rgba(10, 7, 18, 0.6);
+  border: 1px solid var(--color-borde-glass);
+  color: var(--color-texto-principal);
+  padding: 14px 18px;
+  border-radius: 12px;
+  outline: none;
+  font-family: var(--fuente-principal);
+  font-size: 15px;
+  transition: var(--transicion-suave);
+  width: 100%;
+}
+
+.input-premium:focus {
+  border-color: var(--color-neon-morado);
+  box-shadow: 0 0 15px rgba(138, 43, 226, 0.25);
+  background: rgba(20, 15, 35, 0.8);
+}
+
+/* Badges y Etiquetas */
+.badge-neon {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: inline-block;
+}
+
+.badge-morado {
+  background: rgba(138, 43, 226, 0.15);
+  color: #c084fc;
+  border: 1px solid rgba(138, 43, 226, 0.3);
+}
+
+.badge-magenta {
+  background: rgba(255, 0, 127, 0.15);
+  color: #ff77bc;
+  border: 1px solid rgba(255, 0, 127, 0.3);
+}
+
+.badge-cian {
+  background: rgba(0, 243, 255, 0.15);
+  color: #67e8f9;
+  border: 1px solid rgba(0, 243, 255, 0.3);
+}
+
+/* Animaciones y Efectos de Carga */
+@keyframes rotar {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.cargador {
+  animation: rotar 1s linear infinite;
+  color: var(--color-neon-magenta);
+}
+
+@keyframes pulso {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.efecto-pulso {
+  animation: pulso 2s infinite ease-in-out;
+}

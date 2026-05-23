@@ -1,0 +1,245 @@
+/* ============================================================================
+   Malacopa - Estilos Específicos de Pantallas y Componentes
+   ============================================================================ */
+
+.contenedor-principal {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.cabecera-app {
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--color-borde-glass);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(10, 7, 18, 0.8);
+  backdrop-filter: var(--filtro-desenfoque);
+}
+
+.cuerpo-app {
+  flex: 1;
+  padding: 24px;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Diseños Grid y Contenedores */
+.grid-dashboard {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+@media (min-width: 992px) {
+  .grid-dashboard {
+    grid-template-columns: 280px 1fr;
+  }
+}
+
+.panel-lateral {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.panel-contenido {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Feed de Shows / Tarjetas */
+.feed-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+@media (min-width: 768px) {
+  .feed-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1200px) {
+  .feed-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Tabs */
+.tabs-navegacion {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid var(--color-borde-glass);
+  padding-bottom: 12px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+}
+
+.tab-link {
+  background: none;
+  border: none;
+  color: var(--color-texto-secundario);
+  padding: 8px 16px;
+  cursor: pointer;
+  font-weight: 500;
+  font-family: var(--fuente-principal);
+  font-size: 15px;
+  border-radius: 8px;
+  transition: var(--transicion-suave);
+  white-space: nowrap;
+}
+
+.tab-link:hover {
+  color: var(--color-texto-principal);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.tab-link.activo {
+  color: #fff;
+  background: var(--degradado-neon);
+  box-shadow: 0 0 10px rgba(255, 0, 127, 0.3);
+}
+
+/* Contenedor del Mapa */
+.contenedor-mapa {
+  height: 350px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--color-borde-glass);
+  box-shadow: var(--sombra-caja);
+  z-index: 1;
+}
+
+/* Tabla Financiera */
+.tabla-contenedor {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid var(--color-borde-glass);
+}
+
+.tabla-nif {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.tabla-nif th {
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--color-texto-secundario);
+  padding: 14px 18px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--color-borde-glass);
+}
+
+.tabla-nif td {
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  color: var(--color-texto-principal);
+  font-size: 15px;
+}
+
+.tabla-nif tr:last-child td {
+  border-bottom: none;
+}
+
+.tabla-nif tr:hover td {
+  background: rgba(255, 255, 255, 0.01);
+}
+
+.fila-total {
+  font-weight: 700;
+  background: rgba(138, 43, 226, 0.05);
+}
+
+.fila-total td {
+  color: var(--color-neon-cian) !important;
+  border-top: 2px solid var(--color-borde-glass);
+}
+
+/* Estilos de Chats y Bob Bot */
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 450px;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.chat-messages {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: rgba(10, 7, 18, 0.4);
+}
+
+.message-bubble {
+  max-width: 75%;
+  padding: 12px 16px;
+  border-radius: 16px;
+  font-size: 14.5px;
+  line-height: 1.4;
+}
+
+.message-bubble.sent {
+  align-self: flex-end;
+  background: var(--degradado-neon);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+  box-shadow: 0 4px 12px rgba(255, 0, 127, 0.2);
+}
+
+.message-bubble.received {
+  align-self: flex-start;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-texto-principal);
+  border-bottom-left-radius: 4px;
+  border: 1px solid var(--color-borde-glass);
+}
+
+.chat-input-area {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  background: rgba(20, 15, 35, 0.8);
+  border-top: 1px solid var(--color-borde-glass);
+}
+
+/* Playlist / Setlist interactivo */
+.setlist-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.setlist-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--color-borde-glass);
+  border-radius: 10px;
+  transition: var(--transicion-suave);
+}
+
+.setlist-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--color-neon-morado);
+}
+
+.setlist-item.activo {
+  border-color: var(--color-neon-cian);
+  background: rgba(0, 243, 255, 0.05);
+}
