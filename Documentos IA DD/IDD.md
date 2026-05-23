@@ -684,7 +684,15 @@ La vista del simulador ABM muestra el gemelo digital social con controles para c
 | wide | 1440px - 1920px | Wide | 4 |
 | ultra | > 1920px | 4K | 6 |
 
+### 4.4 Especificación de Componentes de CositasApp (Marketplace)
+
+| Vista / Dashboard | Componentes Específicos | Comportamiento Responsivo | Interconexión CívicaOS |
+|-------------------|-------------------------|--------------------------|------------------------|
+| **Matriz de Permisos (Capa Dios)** | Tabla interactiva de 10 niveles con switches booleanos. | Adaptable a móvil mediante scroll horizontal, prioriza la vista compacta. | Sincronización automática a la base de datos de usuarios para alterar el estado operativo del cliente. |
+| **POS Táctil (Caja Registradora)** | Grid de productos rápido, calculadora de efectivo con billetes de MXN ($20, $50, $100, $200, $500, $1000), simulador de terminal de chip/NFC y emisor de tickets de WhatsApp. | Doble columna fija en Desktop/Tablet para agilizar el cobro y catálogo, optimizado para interacción táctil. | Registro directo del total de facturación en efectivo/tarjeta e impuestos trasladados a CívicaOS. |
+| **Logística (Repartidor / Courier)** | Panel de zonas de entrega, selector de horario/turnos, selector de vehículo, mapa nacional/mundial descargable y botón SOS de emergencia. | Formulario colapsable optimizado para el uso con una mano en motocicletas/bicicletas. | Trasmisión de GPS activa al clúster de seguridad e inicio automático de escolta algorítmica para evitar delincuencia. |
+
 ---
 
-*Documento IDD actualizado: 2026-05-18*
-*Próxima revisión programada: 2026-06-18*
+*Documento IDD actualizado con especificaciones de CositasApp, POS táctil y Panel de Logística: 2026-05-23*
+*Próxima revisión programada: 2026-06-23*

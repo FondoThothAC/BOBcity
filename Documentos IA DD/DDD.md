@@ -1097,7 +1097,20 @@ El GDS-MEGA expone un conjunto integrado de KPIs de Dominio para alimentar la in
         $$S_i = \text{felicidad} \cdot 0.2 + \text{afinidad} \cdot 0.3 + \text{experiencia} \cdot 0.2 + \text{proposalMatch} \cdot 0.3$$
     *   *Categoría:* Oráculo Predictivo de Voto.
 
+### 6.3 Acoplamiento con el Dominio del Marketplace (CositasApp)
+
+En la convergencia de Gobernanza y Economía Local (2026-05-23), el Contexto Delimitado de **Inteligencia Cívica** se acopla directamente con **CositasApp** a través de:
+
+1.  **CURP / KYC (IdentityVerification - Value Object):**
+    *   *Fórmula en Dominio:* Validación criptográfica de 18 caracteres y mapeo biométrico mediante OCR. Garantiza la unicidad del agente en el territorio para evitar la creación de múltiples identidades ficticias y fraudes comerciales.
+2.  **Matriz Jerárquica de 10 Niveles (GovernanceMatrix - Value Object):**
+    *   *Fórmula en Dominio:* Mapeo del nivel de rol del usuario ($L \in [1, 7]$) a los permisos operativos específicos de compras, ventas, reparto y administración central de la base de datos de CívicaOS.
+3.  **Reputación Loop ($R_{v,t}$):**
+    *   *Fórmula en Dominio:* $R_{v,t} = \text{Tasa de Concreción de Ventas} \cdot 0.6 + \text{Calificación Promedio} \cdot 0.4$. Prioriza la visibilidad en el feed social y en los algoritmos de recomendación cívico-económica al priorizar a los agentes con mayor índice de confianza y validación de CURP.
+4.  **Sincronización Macroeconómica (MacroSyncService - Domain Service):**
+    *   *Propósito:* Envío de flujos financieros locales (gastos, ingresos y facturación de IVA/ISR) de forma anonimizada al motor de CívicaOS para enriquecer el modelo del Gemelo Digital con datos económicos reales.
+
 ---
 
-*Documento DDD actualizado con arquitectura GDS-MEGA y calibración Logit Softmax: 2026-05-19*
-*Próxima revisión programada: 2026-06-18*
+*Documento DDD actualizado con arquitectura GDS-MEGA, calibración Logit Softmax y acoplamiento CositasApp: 2026-05-23*
+*Próxima revisión programada: 2026-06-23*
