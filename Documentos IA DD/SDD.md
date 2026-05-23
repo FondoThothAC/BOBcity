@@ -1014,7 +1014,21 @@ El sistema de entrevistas utiliza un simulador de capa semántica asíncrono par
    - **Latencia de Inferencia:** ~1.2 segundos simulados para sincronizarse con el refresco visual de React.
    - **Precisión de Simulación de Sesgo:** 94% de concordancia semántica con respuestas crudas de LLMs instructivos locales.
 
+### 7.5 Resiliencia Cartográfica Nacional y Prevención de Ciclos Infinitos (Actualización Mayo 2026)
+
+Para robustecer la visualización geográfica y el rendimiento del gemelo digital, se implementan las siguientes políticas de diseño a nivel de infraestructura:
+
+1. **Patrón de Tolerancia a Fallos en Cascada (GeoJSON Nacional):**
+   * El cliente frontend (`PainPointsMap.jsx`) consume de forma prioritaria el endpoint autónomo `/api/estados` provisto por el servidor de simulación en Python (puerto 5001).
+   * Este endpoint calcula de forma determinista y poligonal los contornos simplificados de los 32 estados de México basándose en coordenadas geográficas base reales para asegurar la interactividad sin conectividad a internet.
+   * Si el endpoint local no está disponible, el sistema escala recursivamente a:
+     * Una URL de respaldo en GitHub (CDN geodésico).
+     * Un generador procedural interno que traza celdas geodésicas en memoria (fallback local-first).
+2. **Aislamiento de Ciclos Infinitos en Ciclos de Actualización React-Leaflet:**
+   * Para evitar el desbordamiento de la pila de llamadas (`Maximum update depth exceeded`) causado por re-cálculos del centro y del zoom de Leaflet durante re-renderizados de componentes React, se implementa la memorización estricta del viewport del mapa (`mapViewport`) usando `useMemo`.
+   * Las llamadas de sincronización de datos con capas externas (como la búsqueda de escuelas del DENUE/INEGI) se enlazan exclusivamente a dependencias atómicas primitivas (`mapCenter[0]`, `mapCenter[1]`) en lugar de arrays o referencias de objetos mutables.
+
 ---
 
-*Documento SDD actualizado con especificación de persistencia GDS-MEGA: 2026-05-18*
-*Próxima revisión programada: 2026-06-18*
+*Documento SDD actualizado con especificación de persistencia GDS-MEGA y resiliencia GIS: 2026-05-19*
+*Próxima revisión programada: 2026-06-19*

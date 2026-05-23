@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { calculateElectionProbability } from '../models/dataModel';
-import { Shield, Award, Landmark, HelpCircle, CheckCircle } from 'lucide-react';
+import { Shield, Award, Landmark, HelpCircle, CheckCircle, TrendingUp, User, Vote } from 'lucide-react';
 
 export default function PredictorEngine({ agents }) {
   // Parámetros de los candidatos configurables
@@ -31,21 +31,31 @@ export default function PredictorEngine({ agents }) {
     setElectionResult(result);
   }, [candidateA, candidateB, agents]);
 
-  // Contar votos por distrito
+  // Contar votos reales por distrito (mapeados desde los códigos postales de la población sintética de Hermosillo)
   const getVotesByDistrict = () => {
-    const d6 = agents.filter(a => a.districtId === "D6_NORTE");
-    const d8 = agents.filter(a => a.districtId === "D8_SUR");
-    const d9 = agents.filter(a => a.districtId === "D9_CENTRO");
+    // Si no hay agentes, regresamos distritos simulados por defecto
+    if (!agents || agents.length === 0) {
+      return [
+        { id: "D6", name: "Distrito 6 (Norte - Pitic)", A: 50, B: 50 },
+        { id: "D8", name: "Distrito 8 (Sur - Palo Verde)", A: 50, B: 50 },
+        { id: "D9", name: "Distrito 9 (Poniente y Centro)", A: 50, B: 50 }
+      ];
+    }
+
+    const d6 = agents.filter(a => a.districtId === "CP_83150" || a.districtId === "CP_83100");
+    const d8 = agents.filter(a => a.districtId === "CP_83280" || a.districtId === "CP_83240");
+    const d9 = agents.filter(a => a.districtId === "CP_83200");
 
     const voteShare = (list) => {
+      if (list.length === 0) return 50;
       const vA = list.filter(a => a.voteIntention === "Candidato_A").length;
-      return list.length === 0 ? 50 : Math.round((vA / list.length) * 100);
+      return Math.round((vA / list.length) * 100);
     };
 
     return [
-      { id: "D6", name: "Distrito 6 (Norte)", A: voteShare(d6), B: 100 - voteShare(d6) },
-      { id: "D8", name: "Distrito 8 (Sur)", A: voteShare(d8), B: 100 - voteShare(d8) },
-      { id: "D9", name: "Distrito 9 (Centro)", A: voteShare(d9), B: 100 - voteShare(d9) }
+      { id: "D6", name: "Distrito 6 (Norte - Pitic y San Benito)", A: voteShare(d6), B: 100 - voteShare(d6) },
+      { id: "D8", name: "Distrito 8 (Sur - Palo Verde y Altares)", A: voteShare(d8), B: 100 - voteShare(d8) },
+      { id: "D9", name: "Distrito 9 (Poniente y Centro Histórico)", A: voteShare(d9), B: 100 - voteShare(d9) }
     ];
   };
 
@@ -55,25 +65,36 @@ export default function PredictorEngine({ agents }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       
       {/* Selector de Perfiles del Candidato */}
-      <div className="glass-card">
-        <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Landmark size={18} color="var(--neon-blue)" />
-          Configurador de Perfiles de Candidatos (Head-to-Head)
+      <div className="glass-card glow-purple" style={{ padding: '2rem' }}>
+        <h2 style={{ fontSize: '1.3rem', fontWeight: '800', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+          <Landmark size={22} className="neon-icon" style={{ color: 'var(--neon-purple)' }} />
+          Configurador de Perfiles Electorales (Duelo Cara a Cara)
         </h2>
-        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-          El motor predictivo de CivicPulse cruza la demografía territorial con los atributos individuales del candidato para modelar su viabilidad electoral.
+        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.75rem' }}>
+          Ajusta la experiencia ejecutiva y la solidez ideológica de las candidaturas para calibrar el comportamiento del modelo matemático en tiempo real.
         </p>
 
-        <div className="workspace-grid-1-1">
+        <div className="workspace-grid-1-1" style={{ gap: '1.5rem' }}>
           
-          {/* Perfil A */}
-          <div style={{ background: 'rgba(59, 130, 246, 0.05)', padding: '1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(59, 130, 246, 0.15)' }}>
-            <h3 style={{ fontSize: '0.95rem', color: 'var(--neon-blue)', marginBottom: '1rem', fontWeight: '700' }}>Candidato A (Incumbente / Línea Social)</h3>
+          {/* Perfil Candidato A */}
+          <div style={{ 
+            background: 'rgba(59, 130, 246, 0.03)', 
+            padding: '1.5rem', 
+            borderRadius: '12px', 
+            border: '1px solid rgba(59, 130, 246, 0.15)',
+            boxShadow: 'inset 0 0 15px rgba(59, 130, 246, 0.05)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
+              <span style={{ fontSize: '1.2rem' }}>👩‍💼</span>
+              <h3 style={{ fontSize: '0.95rem', color: 'var(--neon-blue)', fontWeight: '800', margin: 0 }}>
+                Incumbente / Línea Social
+              </h3>
+            </div>
             
-            <div className="slider-group">
-              <div className="slider-label">
-                <span>Años de Experiencia en Gobierno</span>
-                <span>{candidateA.experienceYears} Años</span>
+            <div className="slider-group" style={{ marginBottom: '1.25rem' }}>
+              <div className="slider-label" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
+                <span>Experiencia Gubernamental</span>
+                <span style={{ color: '#fff', fontWeight: 'bold' }}>{candidateA.experienceYears} Años</span>
               </div>
               <input 
                 type="range" 
@@ -82,13 +103,14 @@ export default function PredictorEngine({ agents }) {
                 max="25" 
                 value={candidateA.experienceYears}
                 onChange={(e) => setCandidateA({ ...candidateA, experienceYears: parseInt(e.target.value) })}
+                style={{ accentColor: 'var(--neon-blue)', width: '100%' }}
               />
             </div>
 
             <div className="slider-group">
-              <div className="slider-label">
+              <div className="slider-label" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
                 <span>Coherencia Discurso (Propuestas)</span>
-                <span>{candidateA.proposalMatch}%</span>
+                <span style={{ color: '#fff', fontWeight: 'bold' }}>{candidateA.proposalMatch}%</span>
               </div>
               <input 
                 type="range" 
@@ -97,18 +119,30 @@ export default function PredictorEngine({ agents }) {
                 max="100" 
                 value={candidateA.proposalMatch}
                 onChange={(e) => setCandidateA({ ...candidateA, proposalMatch: parseInt(e.target.value) })}
+                style={{ accentColor: 'var(--neon-blue)', width: '100%' }}
               />
             </div>
           </div>
 
-          {/* Perfil B */}
-          <div style={{ background: 'rgba(239, 68, 68, 0.05)', padding: '1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(239, 68, 68, 0.15)' }}>
-            <h3 style={{ fontSize: '0.95rem', color: 'var(--neon-rose)', marginBottom: '1rem', fontWeight: '700' }}>Candidato B (Oposición / Línea Comercial)</h3>
+          {/* Perfil Candidato B */}
+          <div style={{ 
+            background: 'rgba(239, 68, 68, 0.03)', 
+            padding: '1.5rem', 
+            borderRadius: '12px', 
+            border: '1px solid rgba(239, 68, 68, 0.15)',
+            boxShadow: 'inset 0 0 15px rgba(239, 68, 68, 0.05)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
+              <span style={{ fontSize: '1.2rem' }}>👨‍💼</span>
+              <h3 style={{ fontSize: '0.95rem', color: 'var(--neon-rose)', fontWeight: '800', margin: 0 }}>
+                Oposición / Línea Comercial
+              </h3>
+            </div>
             
-            <div className="slider-group">
-              <div className="slider-label">
-                <span>Años de Experiencia en Gobierno</span>
-                <span>{candidateB.experienceYears} Años</span>
+            <div className="slider-group" style={{ marginBottom: '1.25rem' }}>
+              <div className="slider-label" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
+                <span>Experiencia Gubernamental</span>
+                <span style={{ color: '#fff', fontWeight: 'bold' }}>{candidateB.experienceYears} Años</span>
               </div>
               <input 
                 type="range" 
@@ -117,13 +151,14 @@ export default function PredictorEngine({ agents }) {
                 max="25" 
                 value={candidateB.experienceYears}
                 onChange={(e) => setCandidateB({ ...candidateB, experienceYears: parseInt(e.target.value) })}
+                style={{ accentColor: 'var(--neon-rose)', width: '100%' }}
               />
             </div>
 
             <div className="slider-group">
-              <div className="slider-label">
+              <div className="slider-label" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
                 <span>Coherencia Discurso (Propuestas)</span>
-                <span>{candidateB.proposalMatch}%</span>
+                <span style={{ color: '#fff', fontWeight: 'bold' }}>{candidateB.proposalMatch}%</span>
               </div>
               <input 
                 type="range" 
@@ -132,6 +167,7 @@ export default function PredictorEngine({ agents }) {
                 max="100" 
                 value={candidateB.proposalMatch}
                 onChange={(e) => setCandidateB({ ...candidateB, proposalMatch: parseInt(e.target.value) })}
+                style={{ accentColor: 'var(--neon-rose)', width: '100%' }}
               />
             </div>
           </div>
@@ -139,93 +175,147 @@ export default function PredictorEngine({ agents }) {
         </div>
       </div>
 
-      {/* Duel Arena (Enfrentamiento y Probabilidades) */}
-      <div className="duel-card">
-        
+      {/* Arena de Duelo (Enfrentamiento y Probabilidades) */}
+      <div className="duel-card" style={{
+        background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.65) 0%, rgba(30, 41, 59, 0.45) 100%)',
+        backdropFilter: 'blur(12px)',
+        border: '1px solid var(--border-glass)',
+        padding: '2.5rem 2rem',
+        borderRadius: '16px',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+        display: 'flex',
+        justifyContent: 'space-around',
+        alignItems: 'center',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
         {/* Lado A */}
-        <div className="duel-side">
-          <div className="candidate-avatar blue">👩‍💼</div>
-          <h3 style={{ fontSize: '1rem', fontWeight: '700' }}>{candidateA.name}</h3>
+        <div className="duel-side" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.85rem', width: '40%', textAlign: 'center' }}>
+          <div className="candidate-avatar blue" style={{ width: '70px', height: '70px', borderRadius: '50%', background: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.2rem', border: '2px solid var(--neon-blue)', boxShadow: '0 0 15px rgba(59, 130, 246, 0.4)' }}>👩‍💼</div>
+          <h3 style={{ fontSize: '1.05rem', fontWeight: '800', color: '#fff', margin: 0 }}>{candidateA.name}</h3>
           
-          <div style={{ marginTop: '1rem' }}>
-            <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Intención de Voto Directa</span>
-            <div style={{ fontSize: '2.5rem', fontWeight: '800', color: 'var(--neon-blue)' }}>{electionResult.votesPercentA}%</div>
+          <div style={{ marginTop: '0.5rem' }}>
+            <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', display: 'block', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Voto Directo Real</span>
+            <div style={{ fontSize: '2.8rem', fontWeight: '900', color: 'var(--neon-blue)', textShadow: '0 0 10px rgba(59,130,246,0.3)' }}>{electionResult.votesPercentA}%</div>
           </div>
 
-          <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '0.5rem 1rem', borderRadius: '50px', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
-            <span style={{ fontSize: '0.8rem', fontWeight: '700' }}>Probabilidad Victoria: {electionResult.winProbabilityA}%</span>
+          <div style={{ 
+            background: 'rgba(59, 130, 246, 0.08)', 
+            padding: '0.4rem 1.2rem', 
+            borderRadius: '50px', 
+            border: '1px solid rgba(59, 130, 246, 0.25)',
+            boxShadow: '0 0 10px rgba(59, 130, 246, 0.1)'
+          }}>
+            <span style={{ fontSize: '0.8rem', fontWeight: '800', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <TrendingUp size={14} style={{ color: 'var(--neon-blue)' }} />
+              Probabilidad Victoria: {electionResult.winProbabilityA}%
+            </span>
           </div>
         </div>
 
         {/* VS */}
-        <div className="duel-vs">VS</div>
+        <div className="duel-vs" style={{ 
+          fontSize: '1.4rem', 
+          fontWeight: '900', 
+          background: 'linear-gradient(135deg, var(--neon-blue) 0%, var(--neon-rose) 100%)', 
+          WebkitBackgroundClip: 'text', 
+          WebkitTextFillColor: 'transparent',
+          padding: '0.8rem', 
+          borderRadius: '50%',
+          border: '1px solid var(--border-glass)',
+          backgroundClip: 'text',
+          boxShadow: '0 0 15px rgba(255, 255, 255, 0.05)',
+          zIndex: 2
+        }}>VS</div>
 
         {/* Lado B */}
-        <div className="duel-side">
-          <div className="candidate-avatar red">👨‍💼</div>
-          <h3 style={{ fontSize: '1rem', fontWeight: '700' }}>{candidateB.name}</h3>
+        <div className="duel-side" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.85rem', width: '40%', textAlign: 'center' }}>
+          <div className="candidate-avatar red" style={{ width: '70px', height: '70px', borderRadius: '50%', background: 'linear-gradient(135deg, #7f1d1d 0%, #ef4444 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.2rem', border: '2px solid var(--neon-rose)', boxShadow: '0 0 15px rgba(239, 68, 68, 0.4)' }}>👨‍💼</div>
+          <h3 style={{ fontSize: '1.05rem', fontWeight: '800', color: '#fff', margin: 0 }}>{candidateB.name}</h3>
           
-          <div style={{ marginTop: '1rem' }}>
-            <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Intención de Voto Directa</span>
-            <div style={{ fontSize: '2.5rem', fontWeight: '800', color: 'var(--neon-rose)' }}>{electionResult.votesPercentB}%</div>
+          <div style={{ marginTop: '0.5rem' }}>
+            <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', display: 'block', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Voto Directo Real</span>
+            <div style={{ fontSize: '2.8rem', fontWeight: '900', color: 'var(--neon-rose)', textShadow: '0 0 10px rgba(239,68,68,0.3)' }}>{electionResult.votesPercentB}%</div>
           </div>
 
-          <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '0.5rem 1rem', borderRadius: '50px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-            <span style={{ fontSize: '0.8rem', fontWeight: '700' }}>Probabilidad Victoria: {electionResult.winProbabilityB}%</span>
+          <div style={{ 
+            background: 'rgba(239, 68, 68, 0.08)', 
+            padding: '0.4rem 1.2rem', 
+            borderRadius: '50px', 
+            border: '1px solid rgba(239, 68, 68, 0.25)',
+            boxShadow: '0 0 10px rgba(239, 68, 68, 0.1)'
+          }}>
+            <span style={{ fontSize: '0.8rem', fontWeight: '800', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <TrendingUp size={14} style={{ color: 'var(--neon-rose)' }} />
+              Probabilidad Victoria: {electionResult.winProbabilityB}%
+            </span>
           </div>
         </div>
 
       </div>
 
       {/* Rationale de IA & Desglose por Distrito */}
-      <div className="workspace-grid-2">
+      <div className="workspace-grid-2" style={{ gap: '1.5rem' }}>
         
         {/* Rationale Explicable (XAI) */}
         <div className="glass-card">
-          <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <CheckCircle size={16} color="var(--neon-emerald)" />
-            Análisis de Causalidad Electorales (¿Por qué gana?)
+          <h3 style={{ fontSize: '1.05rem', fontWeight: '800', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <CheckCircle size={18} color="var(--neon-emerald)" />
+            Causalidades Electorales Proyectadas
           </h3>
 
-          <div className="info-list">
-            <div className="info-row" style={{ display: 'block', paddingBottom: '1rem' }}>
-              <strong style={{ color: 'var(--neon-blue)', fontSize: '0.85rem' }}>Fortaleza Territorial del Candidato A:</strong>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginTop: '0.25rem' }}>
-                Lidera principalmente en los sectores de Jóvenes y Hogares Asalariados debido a la satisfacción con las políticas de subsidios e inversión en la red de agua. Su ventaja es muy fuerte en el Distrito 8 (Sur).
+          <div className="info-list" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <div style={{ paddingBottom: '0.75rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+              <strong style={{ color: 'var(--neon-blue)', fontSize: '0.85rem', display: 'block', marginBottom: '0.2rem' }}>Fortaleza Territorial del Incumbente (A):</strong>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', lineHeight: '1.4', margin: 0 }}>
+                Lidera principalmente en los sectores de Jóvenes y Hogares Asalariados debido a la satisfacción con las políticas de subsidios e inversión en la red de agua. Su ventaja es muy sólida en el Distrito 8 (Sur).
               </p>
             </div>
 
-            <div className="info-row" style={{ display: 'block', paddingBottom: '1rem' }}>
-              <strong style={{ color: 'var(--neon-rose)', fontSize: '0.85rem' }}>Fortaleza Territorial del Candidato B:</strong>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginTop: '0.25rem' }}>
+            <div style={{ paddingBottom: '0.75rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+              <strong style={{ color: 'var(--neon-rose)', fontSize: '0.85rem', display: 'block', marginBottom: '0.2rem' }}>Fortaleza Territorial de la Oposición (B):</strong>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', lineHeight: '1.4', margin: 0 }}>
                 Consolida el voto del sector de Pequeños Comerciantes. Resuena fuertemente su discurso contra los incrementos al impuesto comercial, liderando en el Distrito 9 (Centro) y secciones del Distrito 6 (Pitic).
               </p>
             </div>
 
-            <div className="info-row" style={{ display: 'block', paddingBottom: '0.5rem' }}>
-              <strong style={{ color: 'var(--neon-amber)', fontSize: '0.85rem' }}>Punto de Inflexión (Margen Estrecho):</strong>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginTop: '0.25rem' }}>
-                Si el presupuesto de seguridad aumenta más del 70%, el Candidato B pierde su principal argumento temático, provocando un flujo de votantes independientes hacia el Candidato A.
+            <div>
+              <strong style={{ color: 'var(--neon-amber)', fontSize: '0.85rem', display: 'block', marginBottom: '0.2rem' }}>Efecto de la Experiencia y Propuestas (XAI):</strong>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', lineHeight: '1.4', margin: 0 }}>
+                La variación de los atributos del candidato simula un ajuste de la ponderación psicológica de los electores indecisos. Una mayor coherencia ideológica (discurso) estabiliza la simpatía del CP e incrementa el voto leal.
               </p>
             </div>
           </div>
         </div>
 
         {/* Desglose por Distrito de Hermosillo */}
-        <div className="glass-card">
-          <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>Desglose por Distrito Electoral</h3>
+        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <h3 style={{ fontSize: '1.05rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
+            <Vote size={18} style={{ color: 'var(--neon-blue)' }} />
+            Desglose de Preferencias por Distrito Real
+          </h3>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', marginTop: '0.5rem' }}>
             {districtVotes.map((district) => (
-              <div key={district.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', fontWeight: '600' }}>
-                  <span>{district.name}</span>
-                  <span>A: {district.A}% | B: {district.B}%</span>
+              <div key={district.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', fontWeight: '700' }}>
+                  <span style={{ color: '#fff' }}>{district.name}</span>
+                  <span>
+                    <strong style={{ color: 'var(--neon-blue)' }}>A: {district.A}%</strong> | <strong style={{ color: 'var(--neon-rose)' }}>B: {district.B}%</strong>
+                  </span>
                 </div>
                 {/* Bar Stacked */}
-                <div style={{ display: 'flex', height: '10px', borderRadius: '5px', overflow: 'hidden', border: '1px solid var(--border-glass)' }}>
-                  <div style={{ width: `${district.A}%`, background: 'var(--neon-blue)' }}></div>
-                  <div style={{ width: `${district.B}%`, background: 'var(--neon-rose)' }}></div>
+                <div style={{ display: 'flex', height: '12px', borderRadius: '6px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+                  <div style={{ 
+                    width: `${district.A}%`, 
+                    background: 'linear-gradient(90deg, #1e3a8a 0%, var(--neon-blue) 100%)',
+                    transition: 'width 0.4s ease'
+                  }}></div>
+                  <div style={{ 
+                    width: `${district.B}%`, 
+                    background: 'linear-gradient(90deg, var(--neon-rose) 0%, #7f1d1d 100%)',
+                    transition: 'width 0.4s ease'
+                  }}></div>
                 </div>
               </div>
             ))}

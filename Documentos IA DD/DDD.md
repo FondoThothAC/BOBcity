@@ -1090,9 +1090,14 @@ El GDS-MEGA expone un conjunto integrado de KPIs de Dominio para alimentar la in
     *   *Categoría:* Dinámica de Opinión y Cámaras de Eco.
 3.  **Probabilidad Electoral Softmax ($P(V_{i,t} = K)$):**
     *   *Fórmula en Dominio:* Logit Multinomial basado en coincidencia ideológica, felicidad e influencia clientelar.
+    *   *Calibración del Algoritmo (2026-05-19):*
+        Para evitar probabilidades fuera del rango $[0, 100]\%$ o valores indeterminados ante bonificaciones extremas de campaña (como experiencia o compatibilidad de propuestas), se implementa un modelo Softmax con temperatura $T = 20.0$:
+        $$P(V_i) = \frac{e^{S_i / T}}{\sum_{j} e^{S_j / T}}$$
+        Donde el score de utilidad del candidato $S_i$ se calcula como:
+        $$S_i = \text{felicidad} \cdot 0.2 + \text{afinidad} \cdot 0.3 + \text{experiencia} \cdot 0.2 + \text{proposalMatch} \cdot 0.3$$
     *   *Categoría:* Oráculo Predictivo de Voto.
 
 ---
 
-*Documento DDD actualizado con arquitectura GDS-MEGA: 2026-05-18*
+*Documento DDD actualizado con arquitectura GDS-MEGA y calibración Logit Softmax: 2026-05-19*
 *Próxima revisión programada: 2026-06-18*

@@ -207,7 +207,7 @@ export default function OrchestratorConsole() {
   // Estados de configuración local persistente
   const [ollamaUrl, setOllamaUrl] = useState(() => localStorage.getItem('cp:ollama_url') || 'http://localhost:11434');
   const [ollamaModel, setOllamaModel] = useState(() => localStorage.getItem('cp:ollama_model') || 'qwen2.5:14b');
-  const [pythonApiUrl, setPythonApiUrl] = useState(() => localStorage.getItem('cp:python_api_url') || 'http://localhost:5001');
+  const [pythonApiUrl, setPythonApiUrl] = useState(() => localStorage.getItem('cp:python_api_url') || `http://${window.location.hostname}:5001`);
   const [obpUrl, setObpUrl] = useState(() => localStorage.getItem('cp:obp_url') || 'http://localhost:8443/obp-webhook');
 
   const [ollamaStatus, setOllamaStatus] = useState('checking'); // 'connected' | 'disconnected' | 'checking'
@@ -594,7 +594,7 @@ export default function OrchestratorConsole() {
                   type="text" 
                   value={pythonApiUrl} 
                   onChange={(e) => saveConfig('cp:python_api_url', e.target.value, setPythonApiUrl)}
-                  placeholder="http://localhost:5000"
+                  placeholder={`http://${window.location.hostname}:5001`}
                   style={{
                     background: 'rgba(0,0,0,0.3)',
                     border: '1px solid var(--border-glass)',

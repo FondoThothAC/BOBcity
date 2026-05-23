@@ -1,0 +1,462 @@
+127.0.0.1 - - [21/May/2026 16:30:30] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [21/May/2026 16:30:30] "GET / HTTP/1.1" 200 -
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 52105)
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 52106)
+Traceback (most recent call last):
+Traceback (most recent call last):
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 697, in process_request_thread
+    self.finish_request(request, client_address)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 697, in process_request_thread
+    self.finish_request(request, client_address)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 362, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 766, in __init__
+    self.handle()
+    ~~~~~~~~~~~^^
+  File "/opt/anaconda3/lib/python3.13/http/server.py", line 436, in handle
+    self.handle_one_request()
+    ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/anaconda3/lib/python3.13/http/server.py", line 424, in handle_one_request
+    method()
+    ~~~~~~^^
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 362, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Volumes/SSD1TB/plataforma/simulation/api_server.py", line 250, in do_GET
+    for code, (lat, lon) in estado_coords.items():
+                            ^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 766, in __init__
+    self.handle()
+    ~~~~~~~~~~~^^
+  File "/opt/anaconda3/lib/python3.13/http/server.py", line 436, in handle
+    self.handle_one_request()
+    ~~~~~~~~~~~~~~~~~~~~~~~^^
+NameError: name 'estado_coords' is not defined. Did you mean: 'estado_nombres'?
+  File "/opt/anaconda3/lib/python3.13/http/server.py", line 424, in handle_one_request
+    method()
+    ~~~~~~^^
+----------------------------------------
+  File "/Volumes/SSD1TB/plataforma/simulation/api_server.py", line 250, in do_GET
+    for code, (lat, lon) in estado_coords.items():
+                            ^^^^^^^^^^^^^
+NameError: name 'estado_coords' is not defined. Did you mean: 'estado_nombres'?
+----------------------------------------
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 52107)
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 52108)
+Traceback (most recent call last):
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 697, in process_request_thread
+    self.finish_request(request, client_address)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+Traceback (most recent call last):
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 362, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 697, in process_request_thread
+    self.finish_request(request, client_address)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 766, in __init__
+    self.handle()
+    ~~~~~~~~~~~^^
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 362, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.13/http/server.py", line 436, in handle
+    self.handle_one_request()
+    ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 766, in __init__
+    self.handle()
+    ~~~~~~~~~~~^^
+  File "/opt/anaconda3/lib/python3.13/http/server.py", line 424, in handle_one_request
+    method()
+    ~~~~~~^^
+  File "/opt/anaconda3/lib/python3.13/http/server.py", line 436, in handle
+    self.handle_one_request()
+    ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/Volumes/SSD1TB/plataforma/simulation/api_server.py", line 250, in do_GET
+    for code, (lat, lon) in estado_coords.items():
+                            ^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.13/http/server.py", line 424, in handle_one_request
+    method()
+    ~~~~~~^^
+NameError: name 'estado_coords' is not defined. Did you mean: 'estado_nombres'?
+  File "/Volumes/SSD1TB/plataforma/simulation/api_server.py", line 250, in do_GET
+    for code, (lat, lon) in estado_coords.items():
+                            ^^^^^^^^^^^^^
+----------------------------------------
+NameError: name 'estado_coords' is not defined. Did you mean: 'estado_nombres'?
+----------------------------------------
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 52109)
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 52110)
+Traceback (most recent call last):
+Traceback (most recent call last):
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 697, in process_request_thread
+    self.finish_request(request, client_address)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 697, in process_request_thread
+    self.finish_request(request, client_address)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 362, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 766, in __init__
+    self.handle()
+    ~~~~~~~~~~~^^
+  File "/opt/anaconda3/lib/python3.13/http/server.py", line 436, in handle
+    self.handle_one_request()
+    ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/anaconda3/lib/python3.13/http/server.py", line 424, in handle_one_request
+    method()
+    ~~~~~~^^
+  File "/Volumes/SSD1TB/plataforma/simulation/api_server.py", line 250, in do_GET
+    for code, (lat, lon) in estado_coords.items():
+                            ^^^^^^^^^^^^^
+NameError: name 'estado_coords' is not defined. Did you mean: 'estado_nombres'?
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 362, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------------------
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 766, in __init__
+    self.handle()
+    ~~~~~~~~~~~^^
+  File "/opt/anaconda3/lib/python3.13/http/server.py", line 436, in handle
+    self.handle_one_request()
+    ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/anaconda3/lib/python3.13/http/server.py", line 424, in handle_one_request
+    method()
+    ~~~~~~^^
+  File "/Volumes/SSD1TB/plataforma/simulation/api_server.py", line 250, in do_GET
+    for code, (lat, lon) in estado_coords.items():
+                            ^^^^^^^^^^^^^
+NameError: name 'estado_coords' is not defined. Did you mean: 'estado_nombres'?
+----------------------------------------
+----------------------------------------
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 52112)
+Exception occurred during processing of request from ('127.0.0.1', 52111)
+Traceback (most recent call last):
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 697, in process_request_thread
+    self.finish_request(request, client_address)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 362, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 766, in __init__
+    self.handle()
+    ~~~~~~~~~~~^^
+  File "/opt/anaconda3/lib/python3.13/http/server.py", line 436, in handle
+    self.handle_one_request()
+    ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/anaconda3/lib/python3.13/http/server.py", line 424, in handle_one_request
+    method()
+    ~~~~~~^^
+  File "/Volumes/SSD1TB/plataforma/simulation/api_server.py", line 250, in do_GET
+    for code, (lat, lon) in estado_coords.items():
+                            ^^^^^^^^^^^^^
+NameError: name 'estado_coords' is not defined. Did you mean: 'estado_nombres'?
+----------------------------------------
+Traceback (most recent call last):
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 697, in process_request_thread
+    self.finish_request(request, client_address)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 362, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 766, in __init__
+    self.handle()
+    ~~~~~~~~~~~^^
+  File "/opt/anaconda3/lib/python3.13/http/server.py", line 436, in handle
+    self.handle_one_request()
+    ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/anaconda3/lib/python3.13/http/server.py", line 424, in handle_one_request
+    method()
+    ~~~~~~^^
+  File "/Volumes/SSD1TB/plataforma/simulation/api_server.py", line 250, in do_GET
+    for code, (lat, lon) in estado_coords.items():
+                            ^^^^^^^^^^^^^
+NameError: name 'estado_coords' is not defined. Did you mean: 'estado_nombres'?
+----------------------------------------
+127.0.0.1 - - [21/May/2026 16:30:45] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [21/May/2026 16:30:45] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [21/May/2026 16:30:45] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [21/May/2026 16:31:00] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [21/May/2026 16:31:15] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [21/May/2026 16:31:30] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 16:37:17] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 16:37:17] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 16:37:32] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 16:37:47] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 16:41:22] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 16:41:37] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 16:41:52] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 16:42:07] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 16:42:23] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 16:42:39] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 16:42:55] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 16:43:11] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 16:43:27] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 16:43:43] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 16:43:59] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 16:44:15] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 16:44:31] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 16:44:47] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 16:45:03] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 16:45:19] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 16:45:35] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 16:45:51] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 16:46:07] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 16:46:23] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 16:46:39] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 16:46:55] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 16:47:11] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 16:47:27] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 16:47:43] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 16:47:59] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 16:48:15] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 16:48:31] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 16:48:47] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 16:49:03] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 16:49:19] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 17:27:40] "GET / HTTP/1.1" 200 -
+----------------------------------------
+Exception occurred during processing of request from ('192.168.1.10', 55869)
+Traceback (most recent call last):
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 697, in process_request_thread
+    self.finish_request(request, client_address)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 362, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 766, in __init__
+    self.handle()
+    ~~~~~~~~~~~^^
+  File "/opt/anaconda3/lib/python3.13/http/server.py", line 436, in handle
+    self.handle_one_request()
+    ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/anaconda3/lib/python3.13/http/server.py", line 424, in handle_one_request
+    method()
+    ~~~~~~^^
+  File "/Volumes/SSD1TB/plataforma/simulation/api_server.py", line 250, in do_GET
+    for code, (lat, lon) in estado_coords.items():
+                            ^^^^^^^^^^^^^
+NameError: name 'estado_coords' is not defined. Did you mean: 'estado_nombres'?
+----------------------------------------
+----------------------------------------
+Exception occurred during processing of request from ('192.168.1.10', 55871)
+Traceback (most recent call last):
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 697, in process_request_thread
+    self.finish_request(request, client_address)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 362, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 766, in __init__
+    self.handle()
+    ~~~~~~~~~~~^^
+  File "/opt/anaconda3/lib/python3.13/http/server.py", line 436, in handle
+    self.handle_one_request()
+    ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/anaconda3/lib/python3.13/http/server.py", line 424, in handle_one_request
+    method()
+    ~~~~~~^^
+  File "/Volumes/SSD1TB/plataforma/simulation/api_server.py", line 250, in do_GET
+    for code, (lat, lon) in estado_coords.items():
+                            ^^^^^^^^^^^^^
+NameError: name 'estado_coords' is not defined. Did you mean: 'estado_nombres'?
+----------------------------------------
+----------------------------------------
+Exception occurred during processing of request from ('192.168.1.10', 55872)
+Traceback (most recent call last):
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 697, in process_request_thread
+    self.finish_request(request, client_address)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 362, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------------------
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 766, in __init__
+    self.handle()
+    ~~~~~~~~~~~^^
+Exception occurred during processing of request from ('192.168.1.10', 55873)
+  File "/opt/anaconda3/lib/python3.13/http/server.py", line 436, in handle
+    self.handle_one_request()
+    ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/anaconda3/lib/python3.13/http/server.py", line 424, in handle_one_request
+    method()
+    ~~~~~~^^
+  File "/Volumes/SSD1TB/plataforma/simulation/api_server.py", line 250, in do_GET
+    for code, (lat, lon) in estado_coords.items():
+                            ^^^^^^^^^^^^^
+Traceback (most recent call last):
+NameError: name 'estado_coords' is not defined. Did you mean: 'estado_nombres'?
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 697, in process_request_thread
+    self.finish_request(request, client_address)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 362, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------------------
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 766, in __init__
+    self.handle()
+    ~~~~~~~~~~~^^
+  File "/opt/anaconda3/lib/python3.13/http/server.py", line 436, in handle
+    self.handle_one_request()
+    ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/anaconda3/lib/python3.13/http/server.py", line 424, in handle_one_request
+    method()
+    ~~~~~~^^
+  File "/Volumes/SSD1TB/plataforma/simulation/api_server.py", line 250, in do_GET
+    for code, (lat, lon) in estado_coords.items():
+                            ^^^^^^^^^^^^^
+NameError: name 'estado_coords' is not defined. Did you mean: 'estado_nombres'?
+----------------------------------------
+----------------------------------------
+Exception occurred during processing of request from ('192.168.1.10', 55874)
+----------------------------------------
+Exception occurred during processing of request from ('192.168.1.10', 55875)
+Traceback (most recent call last):
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 697, in process_request_thread
+    self.finish_request(request, client_address)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 362, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 766, in __init__
+    self.handle()
+    ~~~~~~~~~~~^^
+  File "/opt/anaconda3/lib/python3.13/http/server.py", line 436, in handle
+    self.handle_one_request()
+    ~~~~~~~~~~~~~~~~~~~~~~~^^
+Traceback (most recent call last):
+  File "/opt/anaconda3/lib/python3.13/http/server.py", line 424, in handle_one_request
+    method()
+    ~~~~~~^^
+  File "/Volumes/SSD1TB/plataforma/simulation/api_server.py", line 250, in do_GET
+    for code, (lat, lon) in estado_coords.items():
+                            ^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 697, in process_request_thread
+    self.finish_request(request, client_address)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 362, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 766, in __init__
+    self.handle()
+    ~~~~~~~~~~~^^
+  File "/opt/anaconda3/lib/python3.13/http/server.py", line 436, in handle
+    self.handle_one_request()
+    ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/anaconda3/lib/python3.13/http/server.py", line 424, in handle_one_request
+    method()
+    ~~~~~~^^
+NameError: name 'estado_coords' is not defined. Did you mean: 'estado_nombres'?
+  File "/Volumes/SSD1TB/plataforma/simulation/api_server.py", line 250, in do_GET
+    for code, (lat, lon) in estado_coords.items():
+                            ^^^^^^^^^^^^^
+NameError: name 'estado_coords' is not defined. Did you mean: 'estado_nombres'?
+----------------------------------------
+----------------------------------------
+----------------------------------------
+Exception occurred during processing of request from ('192.168.1.10', 55877)
+----------------------------------------
+Exception occurred during processing of request from ('192.168.1.10', 55878)
+Traceback (most recent call last):
+Traceback (most recent call last):
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 697, in process_request_thread
+    self.finish_request(request, client_address)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 697, in process_request_thread
+    self.finish_request(request, client_address)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 362, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 766, in __init__
+    self.handle()
+    ~~~~~~~~~~~^^
+  File "/opt/anaconda3/lib/python3.13/http/server.py", line 436, in handle
+    self.handle_one_request()
+    ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/anaconda3/lib/python3.13/http/server.py", line 424, in handle_one_request
+    method()
+    ~~~~~~^^
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 362, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Volumes/SSD1TB/plataforma/simulation/api_server.py", line 250, in do_GET
+    for code, (lat, lon) in estado_coords.items():
+                            ^^^^^^^^^^^^^
+NameError: name 'estado_coords' is not defined. Did you mean: 'estado_nombres'?
+  File "/opt/anaconda3/lib/python3.13/socketserver.py", line 766, in __init__
+    self.handle()
+    ~~~~~~~~~~~^^
+  File "/opt/anaconda3/lib/python3.13/http/server.py", line 436, in handle
+    self.handle_one_request()
+    ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/anaconda3/lib/python3.13/http/server.py", line 424, in handle_one_request
+    method()
+    ~~~~~~^^
+  File "/Volumes/SSD1TB/plataforma/simulation/api_server.py", line 250, in do_GET
+    for code, (lat, lon) in estado_coords.items():
+                            ^^^^^^^^^^^^^
+NameError: name 'estado_coords' is not defined. Did you mean: 'estado_nombres'?
+----------------------------------------
+----------------------------------------
+192.168.1.10 - - [21/May/2026 17:27:54] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 17:28:09] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 17:28:29] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 17:28:51] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 17:29:25] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 17:29:55] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 17:31:05] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 17:32:02] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 17:33:38] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 17:33:53] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 17:34:10] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 17:34:31] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 17:34:46] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 17:35:03] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 17:35:20] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 17:35:43] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 17:36:18] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 17:37:32] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 17:38:54] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [21/May/2026 17:39:10] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [21/May/2026 17:39:10] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [21/May/2026 17:39:10] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [21/May/2026 17:39:10] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 17:41:13] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 17:42:33] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 17:42:33] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [21/May/2026 17:43:14] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 17:43:14] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [21/May/2026 17:43:14] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 17:43:15] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 17:43:15] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [21/May/2026 17:43:15] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [21/May/2026 17:43:15] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [21/May/2026 17:43:15] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [21/May/2026 17:43:15] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [21/May/2026 17:46:55] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [21/May/2026 17:46:55] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 17:46:55] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [21/May/2026 17:46:57] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [21/May/2026 17:46:57] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 17:46:57] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [21/May/2026 17:46:57] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [21/May/2026 17:46:57] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [21/May/2026 17:46:57] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [21/May/2026 17:49:59] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [21/May/2026 17:50:14] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [21/May/2026 21:08:52] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [22/May/2026 22:07:43] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [22/May/2026 22:07:44] "GET / HTTP/1.1" 200 -
+192.168.1.10 - - [22/May/2026 22:07:44] "GET / HTTP/1.1" 200 -

@@ -1,0 +1,115 @@
+/* =====================
+   Projects Section
+   ===================== */
+.projects-section {
+  position: relative;
+}
+
+.projects-tabs {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+
+.projects-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.4rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-bg-glass);
+  backdrop-filter: blur(8px);
+  color: var(--color-text-secondary);
+  font-family: var(--font-heading);
+  font-weight: 500;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.projects-tab:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  color: var(--color-text-primary);
+}
+
+.projects-tab.active {
+  color: var(--color-text-primary);
+}
+
+.projects-tab--cyan.active { border-color: var(--color-cyan); box-shadow: var(--shadow-glow-cyan); }
+.projects-tab--purple.active { border-color: var(--color-purple); box-shadow: var(--shadow-glow-purple); }
+.projects-tab--gold.active { border-color: var(--color-gold); box-shadow: 0 0 20px var(--color-gold-glow); }
+
+.tab-icon {
+  font-size: 1.2rem;
+}
+
+/* Detalle del proyecto */
+.project-detail {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2.5rem;
+}
+
+.project-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.25rem;
+}
+
+.project-detail-header h3 {
+  margin-top: 0.75rem;
+  font-size: 1.5rem;
+}
+
+.project-icon-large {
+  font-size: 3rem;
+  opacity: 0.8;
+}
+
+.project-description {
+  font-size: 1.05rem;
+  line-height: 1.8;
+  margin-bottom: 1.5rem;
+}
+
+.project-tech {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.project-tech-tag {
+  padding: 0.3rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--color-text-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+@media (max-width: 600px) {
+  .projects-tabs {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .tab-name {
+    flex: 1;
+    text-align: left;
+  }
+
+  .project-detail-header {
+    flex-direction: column;
+  }
+
+  .project-icon-large {
+    font-size: 2rem;
+    margin-top: 0.5rem;
+  }
+}

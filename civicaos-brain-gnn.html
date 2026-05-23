@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CívicaOS Brain — Knowledge Graph + LLM Wiki</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+:root {
+  --bg: #03020a;
+  --surface: rgba(255,255,255,0.04);
+  --raised: rgba(255,255,255,0.07);
+  --border: rgba(255,255,255,0.09);
+  --purple: #9370FF;
+  --cyan: #00D4AA;
+  --amber: #FFB347;
+  --red: #FF4466;
+  --blue: #4488FF;
+  --green: #22C55E;
+  --text: rgba(255,255,255,0.92);
+  --muted: rgba(255,255,255,0.45);
+  --dim: rgba(255,255,255,0.22);
+  --ff-head: 'Syne', sans-serif;
+  --ff-body: 'DM Sans', sans-serif;
+  --ff-mono: 'JetBrains Mono', monospace;
+  --r: 10px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--ff-body);
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── TOPBAR ── */
+.topbar {
+  height: 50px; display: flex; align-items: center; gap: 12px;
+  padding: 0 16px; border-bottom: 1px solid var(--border);
+  background: rgba(3,2,10,0.8); backdrop-filter: blur(16px);
+  flex-shrink: 0; z-index: 100; position: relative;
+}
+.logo { font-family: var(--ff-head); font-size: 16px; font-weight: 800; }
+.logo span { color: var(--purple); }
+.tb-tag {
+  font-size: 9px; font-family: var(--ff-mono);
+  background: rgba(147,112,255,0.12); color: var(--purple);
+  border: 1px solid rgba(147,112,255,0.25);
+  padding: 2px 8px; border-radius: 20px; letter-spacing: 0.06em;
+}
+.tb-sep { color: var(--dim); }
+.tb-right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.tb-btn {
+  font-size: 11px; font-family: var(--ff-mono);
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--muted); padding: 5px 12px; border-radius: 6px;
+  cursor: pointer; transition: all 0.15s; letter-spacing: 0.03em;
+}
+.tb-btn:hover, .tb-btn.active { background: var(--raised); color: var(--text); border-color: rgba(255,255,255,0.16); }
+.tb-btn.active-mode { background: rgba(147,112,255,0.15); color: var(--purple); border-color: rgba(147,112,255,0.3); }
+
+/* ── WORKSPACE ── */
+.workspace { flex: 1; display: flex; overflow: hidden; }
+
+/* ── LEFT PANEL — Wiki / Brain ── */
+.left-panel {
+  width: 300px; flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  background: rgba(3,2,10,0.6); backdrop-filter: blur(12px);
+  overflow: hidden;
+}
+.panel-head {
+  padding: 12px 14px 10px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px;
+}
+.panel-title { font-family: var(--ff-head); font-size: 12px; font-weight: 700; letter-spacing: 0.04em; }
+.panel-badge { margin-left: auto; font-size: 9px; font-family: var(--ff-mono); color: var(--dim); }
+
+/* Tabs inside panel */
+.ptabs { display: flex; border-bottom: 1px solid var(--border); }
+.ptab {
+  flex: 1; padding: 8px; text-align: center; font-size: 10px;
+  font-family: var(--ff-mono); color: var(--muted); cursor: pointer;
+  border-bottom: 2px solid transparent; transition: all 0.15s;
+  letter-spacing: 0.05em;
+}
+.ptab:hover { color: var(--text); }
+.ptab.active { color: var(--purple); border-bottom-color: var(--purple); }
+
+.panel-body { flex: 1; overflow-y: auto; padding: 10px; }
+.panel-body::-webkit-scrollbar { width: 3px; }
+.panel-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+
+/* ── NODE LIST ── */
+.node-item {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 8px 10px; border-radius: 8px; cursor: pointer;
+  border: 1px solid transparent; margin-bottom: 4px;
+  transition: all 0.15s;
+}
+.node-item:hover { background: var(--raised); }
+.node-item.selected { background: rgba(147,112,255,0.1); border-color: rgba(147,112,255,0.25); }
+.node-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+.node-info { min-width: 0; }
+.node-name { font-size: 12px; font-weight: 500; color: var(--text); margin-bottom: 2px; }
+.node-type { font-size: 10px; font-family: var(--ff-mono); color: var(--muted); }
+.node-links { font-size: 10px; color: var(--dim); margin-top: 2px; }
+
+/* ── GNN DETECTION PANEL ── */
+.gnn-section { margin-bottom: 12px; }
+.gnn-label {
+  font-size: 9px; font-family: var(--ff-mono); color: var(--dim);
+  letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px;
+}
+.gnn-cluster {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 10px; margin-bottom: 6px;
+}
+.gnn-cluster-name { font-size: 11px; font-weight: 500; margin-bottom: 4px; }
+.gnn-cluster-score { font-size: 10px; font-family: var(--ff-mono); color: var(--dim); }
+.gnn-bar { height: 3px; background: rgba(255,255,255,0.08); border-radius: 2px; margin-top: 5px; overflow: hidden; }
+.gnn-fill { height: 100%; border-radius: 2px; transition: width 1s ease; }
+
+/* ── WIKI NOTE ── */
+.wiki-note { display: none; }
+.wiki-note.active { display: block; }
+.wiki-title { font-family: var(--ff-head); font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+.wiki-meta { font-size: 10px; font-family: var(--ff-mono); color: var(--muted); margin-bottom: 12px; }
+.wiki-body { font-size: 12px; line-height: 1.7; color: var(--muted); }
+.wiki-body p { margin-bottom: 8px; }
+.wiki-link {
+  color: var(--purple); text-decoration: none; cursor: pointer;
+  border-bottom: 1px solid rgba(147,112,255,0.3);
+  transition: border-color 0.15s;
+}
+.wiki-link:hover { border-color: var(--purple); }
+.wiki-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 10px; }
+.wiki-tag {
+  font-size: 9px; font-family: var(--ff-mono);
+  background: rgba(255,255,255,0.06); color: var(--dim);
+  padding: 2px 7px; border-radius: 20px;
+}
+.wiki-back { font-size: 10px; color: var(--purple); cursor: pointer; margin-bottom: 10px; display: flex; align-items: center; gap: 4px; }
+
+/* ── INGEST ── */
+.ingest-area {
+  font-family: var(--ff-mono); font-size: 11px;
+  background: rgba(0,0,0,0.4); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px; width: 100%;
+  min-height: 80px; color: var(--text); resize: vertical; outline: none;
+  line-height: 1.6;
+}
+.ingest-area:focus { border-color: rgba(147,112,255,0.35); }
+.ingest-btn {
+  margin-top: 8px; width: 100%; padding: 8px;
+  background: rgba(147,112,255,0.15); border: 1px solid rgba(147,112,255,0.3);
+  color: var(--purple); border-radius: 8px; font-family: var(--ff-mono);
+  font-size: 11px; cursor: pointer; transition: all 0.15s;
+}
+.ingest-btn:hover { background: rgba(147,112,255,0.25); }
+.ingest-log {
+  margin-top: 8px; font-family: var(--ff-mono); font-size: 10px;
+  color: var(--cyan); line-height: 2;
+}
+
+/* ── CANVAS AREA ── */
+.canvas-area { flex: 1; position: relative; overflow: hidden; }
+#graph-canvas { display: block; width: 100%; height: 100%; }
+
+/* ── OVERLAY INFO ── */
+.graph-overlay {
+  position: absolute; top: 14px; left: 14px; right: 14px;
+  display: flex; gap: 10px; pointer-events: none;
+}
+.overlay-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 10px; font-family: var(--ff-mono);
+  background: rgba(3,2,10,0.75); backdrop-filter: blur(8px);
+  border: 1px solid var(--border); padding: 5px 10px; border-radius: 20px;
+  color: var(--muted);
+}
+.chip-dot { width: 6px; height: 6px; border-radius: 50%; }
+.chip-val { color: var(--text); margin-left: 2px; }
+
+/* ── NODE TOOLTIP ── */
+.tooltip {
+  position: absolute; pointer-events: none; display: none;
+  background: rgba(10,8,25,0.92); backdrop-filter: blur(12px);
+  border: 1px solid var(--border); border-radius: 10px;
+  padding: 10px 14px; min-width: 180px; z-index: 50;
+}
+.tt-name { font-family: var(--ff-head); font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+.tt-type { font-size: 10px; font-family: var(--ff-mono); margin-bottom: 6px; }
+.tt-links { font-size: 11px; color: var(--muted); }
+.tt-cluster { font-size: 10px; font-family: var(--ff-mono); margin-top: 5px; }
+
+/* ── RIGHT PANEL — Controls ── */
+.right-panel {
+  width: 220px; flex-shrink: 0;
+  border-left: 1px solid var(--border);
+  background: rgba(3,2,10,0.6); backdrop-filter: blur(12px);
+  overflow-y: auto; padding: 12px 10px;
+}
+.right-panel::-webkit-scrollbar { width: 3px; }
+.rp-section { margin-bottom: 16px; }
+.rp-label {
+  font-size: 9px; font-family: var(--ff-mono); color: var(--dim);
+  letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px;
+}
+.rp-slider { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.rp-slider-label { font-size: 11px; color: var(--muted); flex: 1; }
+input[type=range].rslider {
+  width: 70px; -webkit-appearance: none; height: 3px;
+  background: rgba(255,255,255,0.1); border-radius: 2px; outline: none;
+}
+input[type=range].rslider::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 12px; height: 12px;
+  border-radius: 50%; background: var(--purple); cursor: pointer;
+}
+.rslider-val { font-size: 10px; font-family: var(--ff-mono); color: var(--purple); min-width: 24px; text-align: right; }
+
+.rp-btn {
+  display: block; width: 100%; padding: 7px; text-align: center;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; font-size: 11px; font-family: var(--ff-mono);
+  color: var(--muted); cursor: pointer; transition: all 0.15s; margin-bottom: 6px;
+}
+.rp-btn:hover { background: var(--raised); color: var(--text); }
+.rp-btn.primary { background: rgba(147,112,255,0.13); color: var(--purple); border-color: rgba(147,112,255,0.28); }
+.rp-btn.primary:hover { background: rgba(147,112,255,0.22); }
+
+.legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; font-size: 11px; color: var(--muted); }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── BOTTOM STATUS ── */
+.statusbar {
+  height: 24px; display: flex; align-items: center; gap: 16px;
+  padding: 0 14px; border-top: 1px solid var(--border);
+  background: rgba(3,2,10,0.85);
+  font-size: 10px; font-family: var(--ff-mono); color: var(--dim);
+  flex-shrink: 0;
+}
+.status-item { display: flex; align-items: center; gap: 5px; }
+.status-ok { color: var(--cyan); }
+.status-run { color: var(--purple); animation: blink 1.5s step-end infinite; }
+@keyframes blink { 50%{opacity:0.3;} }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo">Cívica<span>OS</span></div>
+  <span class="tb-tag">BRAIN · GNN · WIKI</span>
+  <span class="tb-sep">·</span>
+  <span style="font-size:11px;color:var(--muted)">Knowledge Graph 3D · LLM Wiki Local</span>
+  <div class="tb-right">
+    <button class="tb-btn active-mode" onclick="setMode('graph',this)">⬡ Grafo 3D</button>
+    <button class="tb-btn" onclick="setMode('wiki',this)">◎ Wiki</button>
+    <button class="tb-btn" onclick="setMode('gnn',this)">⊛ GNN</button>
+    <button class="tb-btn" onclick="setMode('ingest',this)">+ Ingestar nota</button>
+  </div>
+</div>
+
+<!-- WORKSPACE -->
+<div class="workspace">
+
+  <!-- LEFT PANEL -->
+  <div class="left-panel">
+    <div class="panel-head">
+      <span class="panel-title">BRAIN</span>
+      <span style="font-size:10px;color:var(--dim);font-family:var(--ff-mono)">brain/index.md</span>
+      <span class="panel-badge" id="node-count">47 nodos</span>
+    </div>
+    <div class="ptabs">
+      <div class="ptab active" onclick="setTab('nodes',this)">NODOS</div>
+      <div class="ptab" onclick="setTab('gnn',this)">GNN</div>
+      <div class="ptab" onclick="setTab('ingest',this)">INGEST</div>
+    </div>
+
+    <!-- NODES TAB -->
+    <div class="panel-body" id="tab-nodes">
+      <div id="node-list"></div>
+    </div>
+
+    <!-- GNN TAB -->
+    <div class="panel-body" id="tab-gnn" style="display:none">
+      <div class="gnn-section">
+        <div class="gnn-label">Clusters detectados por GNN</div>
+        <div id="gnn-clusters"></div>
+      </div>
+      <div class="gnn-section">
+        <div class="gnn-label">Comunidades</div>
+        <div id="gnn-communities"></div>
+      </div>
+      <div class="gnn-section">
+        <div class="gnn-label">Nodos hub (PageRank)</div>
+        <div id="gnn-hubs"></div>
+      </div>
+    </div>
+
+    <!-- INGEST TAB -->
+    <div class="panel-body" id="tab-ingest" style="display:none">
+      <div class="gnn-label">Nueva nota / concepto</div>
+      <textarea class="ingest-area" id="ingest-text" placeholder="Escribe o pega aquí una nota sobre CívicaOS...
+
+Ej: El Modelo Hegselmann-Krause (HK) simula cómo los agentes actualizan sus opiniones dentro de un umbral de confianza epsilon. Se usa en el Sandbox ABM para modelar consenso y polarización ciudadana."></textarea>
+      <button class="ingest-btn" onclick="ingestNote()">⊛ Extraer conceptos · Ollama local</button>
+      <div class="ingest-log" id="ingest-log"></div>
+    </div>
+
+    <!-- WIKI NOTE VIEW -->
+    <div class="panel-body" id="tab-wiki" style="display:none">
+      <div class="wiki-back" onclick="backToNodes()">← volver al índice</div>
+      <div id="wiki-content"></div>
+    </div>
+  </div>
+
+  <!-- GRAPH CANVAS -->
+  <div class="canvas-area">
+    <canvas id="graph-canvas"></canvas>
+
+    <div class="graph-overlay">
+      <div class="overlay-chip">
+        <div class="chip-dot" style="background:var(--cyan)"></div>
+        Nodos: <span class="chip-val" id="stat-nodes">47</span>
+      </div>
+      <div class="overlay-chip">
+        <div class="chip-dot" style="background:var(--purple)"></div>
+        Aristas: <span class="chip-val" id="stat-edges">89</span>
+      </div>
+      <div class="overlay-chip">
+        <div class="chip-dot" style="background:var(--amber)"></div>
+        Clusters GNN: <span class="chip-val" id="stat-clusters">5</span>
+      </div>
+      <div class="overlay-chip">
+        <div class="chip-dot" style="background:var(--green)"></div>
+        <span class="chip-val" id="stat-model">qwen2.5:72b</span>
+      </div>
+    </div>
+
+    <div class="tooltip" id="tooltip">
+      <div class="tt-name" id="tt-name"></div>
+      <div class="tt-type" id="tt-type"></div>
+      <div class="tt-links" id="tt-links"></div>
+      <div class="tt-cluster" id="tt-cluster"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+    <div class="rp-section">
+      <div class="rp-label">Vista 3D</div>
+      <div class="rp-slider">
+        <span class="rp-slider-label">Rotación</span>
+        <input type="range" class="rslider" min="0" max="10" value="3" id="rot-speed" oninput="updateRot(this)">
+        <span class="rslider-val" id="rot-val">3</span>
+      </div>
+      <div class="rp-slider">
+        <span class="rp-slider-label">Fuerza</span>
+        <input type="range" class="rslider" min="1" max="20" value="8" id="force-val" oninput="document.getElementById('fv').textContent=this.value">
+        <span class="rslider-val" id="fv">8</span>
+      </div>
+      <div class="rp-slider">
+        <span class="rp-slider-label">Zoom</span>
+        <input type="range" class="rslider" min="2" max="30" value="12" oninput="camera.position.z=this.value*15;document.getElementById('zv').textContent=this.value">
+        <span class="rslider-val" id="zv">12</span>
+      </div>
+      <button class="rp-btn" onclick="resetCamera()">Reset cámara</button>
+    </div>
+
+    <div class="rp-section">
+      <div class="rp-label">Filtrar por tipo</div>
+      <button class="rp-btn primary" onclick="filterNodes('all')">Todos los nodos</button>
+      <button class="rp-btn" onclick="filterNodes('concepto')">Conceptos</button>
+      <button class="rp-btn" onclick="filterNodes('modulo')">Módulos</button>
+      <button class="rp-btn" onclick="filterNodes('agente')">Agentes IA</button>
+      <button class="rp-btn" onclick="filterNodes('dato')">Datos / fuentes</button>
+      <button class="rp-btn" onclick="filterNodes('entidad')">Entidades</button>
+    </div>
+
+    <div class="rp-section">
+      <div class="rp-label">GNN Detection</div>
+      <button class="rp-btn primary" onclick="runGNN()">⊛ Ejecutar GNN</button>
+      <button class="rp-btn" onclick="showCommunities()">Ver comunidades</button>
+      <button class="rp-btn" onclick="showHubs()">Resaltar hubs</button>
+    </div>
+
+    <div class="rp-section">
+      <div class="rp-label">Leyenda</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#9370FF"></div>Concepto</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#00D4AA"></div>Módulo</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#FFB347"></div>Agente IA</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#4488FF"></div>Dato / fuente</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#FF4466"></div>Entidad</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#22C55E"></div>Proceso</div>
+    </div>
+
+    <div class="rp-section">
+      <div class="rp-label">Ollama · Local</div>
+      <div style="font-size:10px;font-family:var(--ff-mono);color:var(--cyan);margin-bottom:6px">● qwen2.5:72b online</div>
+      <div style="font-size:10px;font-family:var(--ff-mono);color:var(--dim)">localhost:11434<br>zero cloud · local-first</div>
+    </div>
+  </div>
+</div>
+
+<!-- STATUSBAR -->
+<div class="statusbar">
+  <div class="status-item"><span class="status-ok">●</span> Local-first</div>
+  <div class="status-item"><span class="status-run">⟳</span> GNN activo</div>
+  <div class="status-item">brain/ · 47 nodos · 89 aristas</div>
+  <div class="status-item">Último ingest: hace 4 min</div>
+  <div class="status-item" style="margin-left:auto">CívicaOS Engine v1.0 · FondoThothAC</div>
+</div>
+
+<script>
+// ════════════════════════════════════
+// DATA — Knowledge Graph de CívicaOS
+// ════════════════════════════════════
+const NODE_TYPES = {
+  concepto: { color: 0x9370FF, label: 'Concepto' },
+  modulo:   { color: 0x00D4AA, label: 'Módulo' },
+  agente:   { color: 0xFFB347, label: 'Agente IA' },
+  dato:     { color: 0x4488FF, label: 'Dato / fuente' },
+  entidad:  { color: 0xFF4466, label: 'Entidad' },
+  proceso:  { color: 0x22C55E, label: 'Proceso' },
+};
+
+const NODES = [
+  // CONCEPTOS
+  { id:0,  name:'ABM / Agentes Sintéticos', type:'concepto', cluster:0, wiki:'El Modelado Basado en Agentes (ABM) simula poblaciones virtuales donde cada ciudadano es un agente con atributos. Usa el modelo Hegselmann-Krause (HK) de confianza acotada.', tags:['simulacion','matematica','HK'] },
+  { id:1,  name:'Modelo HK (Hegselmann-Krause)', type:'concepto', cluster:0, wiki:'Dinámica de opinión donde los agentes convergen si |opinión_i - opinión_j| < ε. Parámetro epsilon controla la tolerancia a diferencias de opinión.', tags:['opinion','matematica','epsilon'] },
+  { id:2,  name:'Gemelo Digital Social', type:'concepto', cluster:0, wiki:'Réplica virtual de la sociedad construida con datos del INEGI y censos. Permite simular escenarios before de implementarlos en la realidad.', tags:['simulacion','digital-twin'] },
+  { id:3,  name:'Población Sintética', type:'concepto', cluster:0, wiki:'Conjunto de agentes generados estadísticamente para representar la demografía real de un municipio. Preserva privacidad al no usar datos individuales reales.', tags:['privacidad','censo','INEGI'] },
+  { id:4,  name:'GNN (Graph Neural Network)', type:'concepto', cluster:1, wiki:'Red neuronal que opera sobre grafos. Detecta comunidades, hubs y patrones de influencia entre nodos del conocimiento cívico.', tags:['IA','grafo','deteccion'] },
+  { id:5,  name:'Privacidad Diferencial', type:'concepto', cluster:1, wiki:'Técnica matemática que agrega ruido calibrado a los datos para que sea imposible inferir información de individuos específicos.', tags:['privacidad','matematica','GDPR'] },
+  { id:6,  name:'ZKP (Zero Knowledge Proof)', type:'concepto', cluster:1, wiki:'Protocolo criptográfico que permite demostrar conocimiento sin revelar el dato. Planeado para Fase 2 de CívicaOS.', tags:['criptografia','privacidad','Fase2'] },
+  { id:7,  name:'Blackboard Pattern', type:'concepto', cluster:2, wiki:'Arquitectura donde los agentes comparten un estado global (pizarra SQLite). Los LLMs solo leen resúmenes compactos de 4-16KB, reduciendo costo a casi cero.', tags:['arquitectura','SQLite','eficiencia'] },
+  { id:8,  name:'Local-First', type:'concepto', cluster:2, wiki:'Paradigma donde todo el procesamiento ocurre en el hardware del cliente. Zero cloud, sin costos de API, cumplimiento LGPD/GDPR automático.', tags:['privacidad','arquitectura','offline'] },
+  { id:9,  name:'Predicción Electoral', type:'concepto', cluster:3, wiki:'Motor que combina XGBoost + regresión multinivel para estimar probabilidad de victoria. Usa features: experiencia, propuestas, sentimiento y contexto territorial.', tags:['electoral','ML','XGBoost'] },
+  { id:10, name:'Análisis de Sentimiento NLP', type:'concepto', cluster:3, wiki:'Procesamiento de lenguaje natural sobre propuestas ciudadanas, redes sociales y discursos para extraer índices de sentimiento por tema y zona.', tags:['NLP','texto','sentimiento'] },
+  { id:11, name:'Swing Votes', type:'concepto', cluster:3, wiki:'Votantes indecisos identificados a nivel de sección electoral. Principal objetivo de las campañas quirúrgicas de CívicaOS.', tags:['electoral','segmentacion'] },
+  // MÓDULOS
+  { id:12, name:'Dashboard Admin', type:'modulo', cluster:2, wiki:'Consola maestra con acceso total. Gestión de proyectos, agentes, temas white-label, billing SaaS y logs del swarm OpenClaw.', tags:['UI','admin','master'] },
+  { id:13, name:'Dashboard Agente', type:'modulo', cluster:2, wiki:'Panel del empleado asignado. Aprueba solicitudes, verifica pagos, lanza simulaciones y entrega reportes al cliente.', tags:['UI','agente','workflow'] },
+  { id:14, name:'Dashboard Cliente', type:'modulo', cluster:2, wiki:'Vista white-label del cliente. Muestra resumen ejecutivo, mapa GIS, sandbox ABM y predictor electoral con tema personalizado.', tags:['UI','cliente','white-label'] },
+  { id:15, name:'ThothAgora', type:'modulo', cluster:4, wiki:'Portal de captura ciudadana libre de claves. Genera cédula digital soberana con hash SHA-256 y código QR. Protege identidad (CURP ofuscada).', tags:['ciudadano','captura','privacidad'] },
+  { id:16, name:'Sandbox ABM', type:'modulo', cluster:0, wiki:'Interfaz interactiva para simular políticas públicas. Sliders de subsidio, agua, seguridad y empleo muestran impacto a 1, 5 y 10 años.', tags:['simulacion','UI','politica'] },
+  { id:17, name:'Predictor Engine', type:'modulo', cluster:3, wiki:'Módulo head-to-head de candidatos. Calcula probabilidad de victoria cruzando perfil del candidato con características del distrito.', tags:['electoral','candidatos'] },
+  { id:18, name:'OBP Bridge', type:'modulo', cluster:2, wiki:'Conector hacia Open Business Plan. Exporta payload JSON anonimizado vía mTLS local con consentimiento explícito del usuario.', tags:['OBP','integracion','mTLS'] },
+  { id:19, name:'Mapa de Calor GIS', type:'modulo', cluster:4, wiki:'Visualización geoespacial de puntos de dolor por colonia y código postal. Capas filtrables: agua, seguridad, baches, transporte, economía.', tags:['GIS','mapa','dolor'] },
+  { id:20, name:'Brain Wiki', type:'modulo', cluster:1, wiki:'Base de conocimiento local estilo Obsidian. Nodos interconectados con [[wikilinks]], índice denso y log append-only de sesiones.', tags:['wiki','knowledge','Obsidian'] },
+  // AGENTES IA
+  { id:21, name:'SuperAgent (Orquestador)', type:'agente', cluster:2, wiki:'Agente raíz del swarm OpenClaw. Recibe la iniciativa cívica y distribuye tareas a los agentes especializados.', tags:['OpenClaw','swarm','orquestacion'] },
+  { id:22, name:'DataCollector', type:'agente', cluster:4, wiki:'Ingesta y limpia datos del INE, INEGI y PREP. Genera hash SHA-256 de cada lote y lo registra en el audit log local.', tags:['datos','INE','INEGI'] },
+  { id:23, name:'Analyzer', type:'agente', cluster:4, wiki:'Clasifica demandas territoriales. Usa clustering geoespacial para identificar puntos de dolor con confianza ≥ 0.87.', tags:['NLP','clustering','territorial'] },
+  { id:24, name:'Simulator', type:'agente', cluster:0, wiki:'Ejecuta el motor ABM con el modelo HK. Corre N ciclos sobre la población sintética y reporta evolución de felicidad e intención de voto.', tags:['ABM','HK','simulacion'] },
+  { id:25, name:'Recommender', type:'agente', cluster:3, wiki:'Genera recomendaciones de política pública basadas en los resultados del simulador. Prioriza por impacto/costo.', tags:['politica','recomendacion'] },
+  { id:26, name:'ReportWriter', type:'agente', cluster:2, wiki:'Compila el reporte ejecutivo en PDF y dashboard interactivo. Incluye mapas, gráficas de tendencia y plan de 3 fases.', tags:['reporte','PDF'] },
+  { id:27, name:'AuditAgent', type:'agente', cluster:1, wiki:'Siempre activo. Registra cada operación del swarm en el audit log inmutable con timestamp, hash SHA-256 y flag local=true.', tags:['auditoria','privacidad','SHA256'] },
+  { id:28, name:'SelfImprover', type:'agente', cluster:1, wiki:'Evalúa el rendimiento de los demás agentes y propone ajustes. Requiere validación humana antes de aplicar cambios a producción.', tags:['auto-mejora','validacion'] },
+  // DATOS / FUENTES
+  { id:29, name:'INE PREP 2024', type:'dato', cluster:3, wiki:'Programa de Resultados Electorales Preliminares. Cobertura: 500+ distritos, 2460+ municipios, 32 entidades. Machine-readable desde 2018.', tags:['electoral','INE','datos'] },
+  { id:30, name:'INEGI Censo 2020', type:'dato', cluster:4, wiki:'Datos censales: demografía, ingreso, vivienda, educación. Base para construir la Población Sintética con representatividad estadística.', tags:['censo','INEGI','demografia'] },
+  { id:31, name:'cositasApp', type:'dato', cluster:4, wiki:'App móvil de captura ciudadana. Recopila demandas por CP de forma orgánica durante mítines y brigadas de tierra.', tags:['captura','movil','CP'] },
+  { id:32, name:'SQLite Blackboard', type:'dato', cluster:2, wiki:'Bus intermedio donde los agentes comparten estado. Los LLMs leen resúmenes de 4-16KB en lugar de datasets completos.', tags:['SQLite','arquitectura','eficiencia'] },
+  { id:33, name:'Vector DB Local (pgvector)', type:'dato', cluster:1, wiki:'Base de datos vectorial local para búsqueda semántica sobre los embeddings de propuestas ciudadanas.', tags:['embeddings','semantica','local'] },
+  // ENTIDADES
+  { id:34, name:'Municipio (Hermosillo)', type:'entidad', cluster:4, wiki:'Caso de uso piloto de CívicaOS. 18 distritos electorales, foco inicial en D8 (Palo Verde) por alta concentración de puntos de dolor.', tags:['Hermosillo','Sonora','piloto'] },
+  { id:35, name:'FondoThothAC', type:'entidad', cluster:2, wiki:'Ecosistema propietario de Roberto Celis. Integra CívicaOS Engine, Open Business Plan y cositasApp como plataformas complementarias.', tags:['ecosistema','negocio'] },
+  { id:36, name:'Open Business Plan', type:'entidad', cluster:2, wiki:'Plataforma downstream que recibe el payload de CívicaOS y genera hojas de ruta financieras y operativas para ejecutar soluciones cívicas.', tags:['OBP','downstream','negocio'] },
+  { id:37, name:'Partido / Candidato', type:'entidad', cluster:3, wiki:'Cliente principal de CívicaOS. Paquetes Bronce ($900K), Plata ($15.5M) y Oro ($150M MXN) según alcance electoral.', tags:['cliente','electoral','pricing'] },
+  // PROCESOS
+  { id:38, name:'Flujo de Análisis Cívico', type:'proceso', cluster:2, wiki:'Pipeline completo: captura → ingesta → análisis → simulación → predicción → reporte → OBP. Ejecutado por el swarm OpenClaw.', tags:['pipeline','flujo','swarm'] },
+  { id:39, name:'Aprovisionamiento White-Label', type:'proceso', cluster:2, wiki:'El admin crea proyecto, asigna tema visual de 10 plantillas, genera código único (ej. HER-DIS-08) y activa el mundo gemelo.', tags:['admin','white-label','temas'] },
+  { id:40, name:'Onboarding Cliente', type:'proceso', cluster:2, wiki:'Registro, selección de servicio, cotización, pago, verificación por agente y activación de acceso al dashboard analítico.', tags:['cliente','pago','workflow'] },
+  { id:41, name:'Ingest · LLM Wiki', type:'proceso', cluster:1, wiki:'Pipeline: nota markdown → Ollama extrae conceptos → genera [[wikilinks]] → actualiza índice brain/ → actualiza grafo GNN.', tags:['wiki','LLM','Ollama'] },
+  { id:42, name:'Cédula Digital Soberana', type:'proceso', cluster:4, wiki:'Al enviar propuesta ciudadana: SHA-256 del contenido + CURP ofuscada + QR representan el "gemelo digital" de la demanda.', tags:['privacidad','SHA256','ciudadano'] },
+  { id:43, name:'Ciclo Auto-mejora', type:'proceso', cluster:1, wiki:'SelfImprover evalúa → genera propuesta de ajuste → staging → validación humana → si OK, deployment a producción.', tags:['auto-mejora','CI','validacion'] },
+  { id:44, name:'Deployment VPS', type:'proceso', cluster:2, wiki:'rsync local → VPS 144.24.23.61 → deploy_ubuntu.sh → Python server + React build. Servicios: Nginx + uvicorn + Ollama.', tags:['deploy','VPS','Ubuntu'] },
+  { id:45, name:'Campañas Quirúrgicas', type:'proceso', cluster:3, wiki:'Segmentación de secciones electorales con swing votes. Optimización de gasto tierra + aire con precisión a nivel de manzana y CP.', tags:['campana','electoral','segmentacion'] },
+  { id:46, name:'Auditoría de Promesas', type:'proceso', cluster:3, wiki:'Compara propuestas del candidato con políticas implementadas post-elección. Genera índice de cumplimiento y credibilidad pública.', tags:['auditoria','promesas','transparencia'] },
+];
+
+// Edges (connections between nodes)
+const EDGES = [
+  [0,1],[0,2],[0,3],[0,16],[0,24],[1,24],[2,3],[2,30],[2,34],
+  [3,30],[4,0],[4,20],[4,33],[5,6],[5,8],[5,27],[6,5],[7,8],[7,32],
+  [8,27],[8,32],[9,10],[9,11],[9,17],[9,29],[10,23],[10,33],[11,37],
+  [12,13],[12,14],[12,39],[13,40],[13,22],[14,16],[14,17],[14,19],
+  [15,22],[15,42],[15,31],[16,0],[16,24],[17,9],[17,37],[18,36],
+  [18,35],[19,23],[19,34],[20,4],[20,41],[21,22],[21,23],[21,24],
+  [21,25],[21,26],[21,27],[21,28],[22,29],[22,30],[22,31],[23,10],
+  [23,19],[24,1],[24,16],[25,26],[26,18],[27,43],[28,43],[29,9],
+  [30,3],[31,15],[32,7],[32,21],[33,4],[33,20],[34,19],[34,15],
+  [35,36],[35,12],[35,18],[36,26],[37,17],[37,45],[38,21],[38,35],
+  [39,12],[39,14],[40,13],[41,20],[41,33],[42,15],[43,28],[44,8],
+  [45,11],[45,37],[46,37],[46,9],
+];
+
+const CLUSTER_COLORS = [
+  '#9370FF', // 0 Simulación
+  '#4488FF', // 1 Conocimiento / IA
+  '#00D4AA', // 2 Sistema / Arquitectura
+  '#FF4466', // 3 Electoral
+  '#FFB347', // 4 Territorio / Datos
+];
+
+const CLUSTER_NAMES = [
+  'Simulación ABM',
+  'IA / Conocimiento',
+  'Sistema / Arquitectura',
+  'Análisis Electoral',
+  'Territorio / Datos'
+];
+
+// ════════════════════════════════════
+// THREE.JS — 3D Graph
+// ════════════════════════════════════
+let scene, camera, renderer, spheres = [], lines = [], rotSpeed = 0.003;
+let raycaster, mouse, hoveredNode = null, activeFilter = 'all';
+
+function initThree() {
+  const canvas = document.getElementById('graph-canvas');
+  const W = canvas.parentElement.offsetWidth;
+  const H = canvas.parentElement.offsetHeight;
+
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(60, W/H, 0.1, 5000);
+  camera.position.set(0, 0, 180);
+
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setSize(W, H);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x000000, 0);
+
+  raycaster = new THREE.Raycaster();
+  mouse = new THREE.Vector2();
+
+  // Ambient + directional light
+  scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+  const dl = new THREE.DirectionalLight(0xffffff, 0.8);
+  dl.position.set(100, 100, 100);
+  scene.add(dl);
+
+  // Stars background
+  const starGeo = new THREE.BufferGeometry();
+  const starVerts = [];
+  for(let i=0;i<2000;i++) {
+    starVerts.push((Math.random()-0.5)*2000,(Math.random()-0.5)*2000,(Math.random()-0.5)*2000);
+  }
+  starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starVerts,3));
+  scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({color:0xffffff,size:0.4,transparent:true,opacity:0.5})));
+
+  buildGraph();
+  buildEdges();
+  window.addEventListener('resize', onResize);
+  canvas.addEventListener('mousemove', onMouseMove);
+  canvas.addEventListener('click', onGraphClick);
+
+  // Drag to rotate
+  let dragging = false, lastX = 0, lastY = 0;
+  canvas.addEventListener('mousedown', e=>{dragging=true;lastX=e.clientX;lastY=e.clientY;});
+  canvas.addEventListener('mouseup',()=>{dragging=false;});
+  canvas.addEventListener('mousemove', e=>{
+    if(!dragging) return;
+    const dx=(e.clientX-lastX)*0.005;
+    const dy=(e.clientY-lastY)*0.005;
+    scene.rotation.y+=dx;
+    scene.rotation.x+=dy;
+    lastX=e.clientX;lastY=e.clientY;
+  });
+  canvas.addEventListener('wheel',e=>{
+    camera.position.z = Math.max(50, Math.min(500, camera.position.z+e.deltaY*0.3));
+  });
+
+  animate();
+}
+
+function buildGraph() {
+  spheres.forEach(s=>scene.remove(s));
+  spheres = [];
+  NODES.forEach(n=>{
+    if(activeFilter !== 'all' && n.type !== activeFilter) return;
+    const angle1 = Math.random()*Math.PI*2;
+    const angle2 = Math.random()*Math.PI;
+    const radius = 50 + Math.random()*60;
+    // Cluster positioning
+    const ca = (n.cluster/5)*Math.PI*2;
+    const x = Math.cos(ca)*30 + Math.cos(angle1)*radius*0.5;
+    const y = Math.sin(angle2)*radius*0.5;
+    const z = Math.sin(ca)*30 + Math.sin(angle1)*radius*0.5;
+    n._pos = {x,y,z};
+
+    const typeInfo = NODE_TYPES[n.type];
+    // Node size based on connections
+    const degree = EDGES.filter(e=>e[0]===n.id||e[1]===n.id).length;
+    const size = 2 + degree*0.4;
+
+    const geo = new THREE.SphereGeometry(size, 12, 12);
+    const mat = new THREE.MeshPhongMaterial({
+      color: typeInfo.color,
+      emissive: typeInfo.color,
+      emissiveIntensity: 0.3,
+      transparent: true,
+      opacity: 0.85,
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(x,y,z);
+    mesh.userData = { nodeId: n.id, origColor: typeInfo.color };
+    scene.add(mesh);
+    n._mesh = mesh;
+    spheres.push(mesh);
+  });
+}
+
+function buildEdges() {
+  lines.forEach(l=>scene.remove(l));
+  lines = [];
+  EDGES.forEach(([a,b])=>{
+    const na = NODES[a]; const nb = NODES[b];
+    if(!na._pos || !nb._pos) return;
+    if(activeFilter !== 'all' && (na.type !== activeFilter && nb.type !== activeFilter)) return;
+    const points = [new THREE.Vector3(na._pos.x,na._pos.y,na._pos.z), new THREE.Vector3(nb._pos.x,nb._pos.y,nb._pos.z)];
+    const geo = new THREE.BufferGeometry().setFromPoints(points);
+    const mat = new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:0.08});
+    const line = new THREE.Line(geo, mat);
+    line.userData = { edgeNodes:[a,b] };
+    scene.add(line);
+    lines.push(line);
+  });
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  scene.rotation.y += rotSpeed;
+  renderer.render(scene, camera);
+}
+
+function onResize() {
+  const canvas = document.getElementById('graph-canvas');
+  const W = canvas.parentElement.offsetWidth;
+  const H = canvas.parentElement.offsetHeight;
+  camera.aspect = W/H;
+  camera.updateProjectionMatrix();
+  renderer.setSize(W, H);
+}
+
+function onMouseMove(e) {
+  const canvas = document.getElementById('graph-canvas');
+  const rect = canvas.getBoundingClientRect();
+  mouse.x = ((e.clientX-rect.left)/rect.width)*2-1;
+  mouse.y = -((e.clientY-rect.top)/rect.height)*2+1;
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(spheres);
+  const tt = document.getElementById('tooltip');
+  if(hits.length > 0) {
+    const mesh = hits[0].object;
+    const nid = mesh.userData.nodeId;
+    const n = NODES[nid];
+    document.getElementById('tt-name').textContent = n.name;
+    document.getElementById('tt-type').textContent = NODE_TYPES[n.type].label;
+    document.getElementById('tt-type').style.color = '#'+NODE_TYPES[n.type].color.toString(16).padStart(6,'0');
+    const deg = EDGES.filter(e=>e[0]===n.id||e[1]===n.id).length;
+    document.getElementById('tt-links').textContent = `${deg} conexiones`;
+    document.getElementById('tt-cluster').textContent = `Cluster: ${CLUSTER_NAMES[n.cluster]}`;
+    tt.style.display='block';
+    tt.style.left=(e.clientX-rect.left+16)+'px';
+    tt.style.top=(e.clientY-rect.top-10)+'px';
+    canvas.style.cursor='pointer';
+    // Highlight connected edges
+    lines.forEach(l=>{
+      const [a,b]=l.userData.edgeNodes||[];
+      l.material.opacity = (a===nid||b===nid) ? 0.5 : 0.05;
+      l.material.color.set((a===nid||b===nid)?0x9370FF:0xffffff);
+    });
+  } else {
+    tt.style.display='none';
+    canvas.style.cursor='default';
+    lines.forEach(l=>{l.material.opacity=0.08;l.material.color.set(0xffffff);});
+  }
+}
+
+function onGraphClick(e) {
+  const canvas = document.getElementById('graph-canvas');
+  const rect = canvas.getBoundingClientRect();
+  mouse.x = ((e.clientX-rect.left)/rect.width)*2-1;
+  mouse.y = -((e.clientY-rect.top)/rect.height)*2+1;
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(spheres);
+  if(hits.length > 0) {
+    const n = NODES[hits[0].object.userData.nodeId];
+    openWikiNode(n);
+  }
+}
+
+function resetCamera() {
+  camera.position.set(0,0,180);
+  scene.rotation.set(0,0,0);
+}
+
+function updateRot(el) {
+  rotSpeed = el.value * 0.001;
+  document.getElementById('rot-val').textContent = el.value;
+}
+
+function filterNodes(type) {
+  activeFilter = type;
+  buildGraph(); buildEdges();
+}
+
+// ════════════════════════════════════
+// LEFT PANEL — Node List
+// ════════════════════════════════════
+function renderNodeList() {
+  const container = document.getElementById('node-list');
+  container.innerHTML = '';
+  const groups = {};
+  NODES.forEach(n=>{ if(!groups[n.type]) groups[n.type]=[];groups[n.type].push(n); });
+  Object.entries(groups).forEach(([type,nodes])=>{
+    const label = document.createElement('div');
+    label.style.cssText='font-size:9px;font-family:var(--ff-mono);color:var(--dim);letter-spacing:0.1em;text-transform:uppercase;margin:12px 0 5px 4px';
+    label.textContent = NODE_TYPES[type].label.toUpperCase();
+    container.appendChild(label);
+    nodes.forEach(n=>{
+      const item = document.createElement('div');
+      item.className='node-item'; item.id='nitem-'+n.id;
+      const color = '#'+NODE_TYPES[n.type].color.toString(16).padStart(6,'0');
+      const deg = EDGES.filter(e=>e[0]===n.id||e[1]===n.id).length;
+      item.innerHTML=`<div class="node-dot" style="background:${color}"></div><div class="node-info"><div class="node-name">${n.name}</div><div class="node-links">${deg} conexiones · cluster: ${n.cluster}</div></div>`;
+      item.onclick=()=>openWikiNode(n);
+      container.appendChild(item);
+    });
+  });
+}
+
+// ════════════════════════════════════
+// WIKI
+// ════════════════════════════════════
+function openWikiNode(n) {
+  document.querySelectorAll('.node-item').forEach(el=>el.classList.remove('selected'));
+  const el = document.getElementById('nitem-'+n.id);
+  if(el) el.classList.add('selected');
+
+  const color = '#'+NODE_TYPES[n.type].color.toString(16).padStart(6,'0');
+  const deg = EDGES.filter(e=>e[0]===n.id||e[1]===n.id).length;
+  const connected = EDGES.filter(e=>e[0]===n.id||e[1]===n.id).map(e=>e[0]===n.id?NODES[e[1]]:NODES[e[0]]);
+
+  const wikiLinks = connected.slice(0,6).map(cn=>`<span class="wiki-link" onclick="openWikiNode(NODES[${cn.id}])">[[${cn.name}]]</span>`).join(', ');
+  const tags = n.tags.map(t=>`<span class="wiki-tag">#${t}</span>`).join('');
+
+  document.getElementById('wiki-content').innerHTML=`
+    <div class="wiki-title" style="color:${color}">${n.name}</div>
+    <div class="wiki-meta">${NODE_TYPES[n.type].label} · ${deg} conexiones · Cluster ${CLUSTER_NAMES[n.cluster]}</div>
+    <div class="wiki-body">
+      <p>${n.wiki}</p>
+      ${connected.length>0?`<p><strong style="color:var(--dim)">Ver también:</strong> ${wikiLinks}</p>`:''}
+    </div>
+    <div class="wiki-tags" style="margin-top:12px">${tags}</div>`;
+
+  // Switch to wiki tab
+  document.querySelectorAll('.panel-body').forEach(p=>p.style.display='none');
+  document.getElementById('tab-wiki').style.display='block';
+  document.querySelectorAll('.ptab').forEach(t=>t.classList.remove('active'));
+}
+
+function backToNodes() {
+  document.querySelectorAll('.panel-body').forEach(p=>p.style.display='none');
+  document.getElementById('tab-nodes').style.display='block';
+  document.querySelectorAll('.ptab')[0].classList.add('active');
+}
+
+// ════════════════════════════════════
+// GNN Detection
+// ════════════════════════════════════
+function runGNN() {
+  const cl = document.getElementById('gnn-clusters');
+  const comm = document.getElementById('gnn-communities');
+  const hubs = document.getElementById('gnn-hubs');
+  // Simulate GNN cluster detection
+  cl.innerHTML = CLUSTER_NAMES.map((name,i)=>{
+    const c = CLUSTER_COLORS[i];
+    const count = NODES.filter(n=>n.cluster===i).length;
+    const score = (0.72+Math.random()*0.24).toFixed(2);
+    return `<div class="gnn-cluster">
+      <div class="gnn-cluster-name" style="color:${c}">${name}</div>
+      <div class="gnn-cluster-score">${count} nodos · Cohesión: ${score}</div>
+      <div class="gnn-bar"><div class="gnn-fill" style="width:${score*100}%;background:${c}"></div></div>
+    </div>`;
+  }).join('');
+  // Communities (simulated Louvain)
+  comm.innerHTML = `
+    <div class="gnn-cluster"><div class="gnn-cluster-name" style="color:var(--cyan)">ABM ↔ Electoral</div><div class="gnn-cluster-score">Bridge community · 12 nodos</div></div>
+    <div class="gnn-cluster"><div class="gnn-cluster-name" style="color:var(--amber)">Territorio ↔ Datos</div><div class="gnn-cluster-score">Dense community · 9 nodos</div></div>
+    <div class="gnn-cluster"><div class="gnn-cluster-name" style="color:var(--purple)">Arquitectura Core</div><div class="gnn-cluster-score">Hub community · 11 nodos</div></div>`;
+  // Top hubs by PageRank
+  const ranked = NODES.map(n=>({n, deg:EDGES.filter(e=>e[0]===n.id||e[1]===n.id).length})).sort((a,b)=>b.deg-a.deg).slice(0,5);
+  hubs.innerHTML = ranked.map(({n,deg})=>{
+    const c='#'+NODE_TYPES[n.type].color.toString(16).padStart(6,'0');
+    const pr = (deg/20).toFixed(2);
+    return `<div class="gnn-cluster"><div class="gnn-cluster-name" style="color:${c}">${n.name}</div><div class="gnn-cluster-score">PageRank: ${pr} · ${deg} aristas</div><div class="gnn-bar"><div class="gnn-fill" style="width:${pr*100}%;background:${c}"></div></div></div>`;
+  }).join('');
+  // Highlight hubs in 3D
+  showHubs();
+}
+
+function showCommunities() {
+  NODES.forEach(n=>{
+    if(!n._mesh) return;
+    const c = CLUSTER_COLORS[n.cluster];
+    n._mesh.material.emissiveIntensity = 0.6;
+  });
+}
+
+function showHubs() {
+  NODES.forEach(n=>{
+    if(!n._mesh) return;
+    const deg = EDGES.filter(e=>e[0]===n.id||e[1]===n.id).length;
+    n._mesh.material.emissiveIntensity = deg > 6 ? 0.9 : 0.2;
+    n._mesh.scale.setScalar(deg > 6 ? 1.4 : 1.0);
+  });
+}
+
+// ════════════════════════════════════
+// INGEST — LLM Wiki
+// ════════════════════════════════════
+async function ingestNote() {
+  const text = document.getElementById('ingest-text').value.trim();
+  if(!text) { alert('Escribe o pega una nota para ingestar.'); return; }
+  const log = document.getElementById('ingest-log');
+  log.innerHTML = '';
+  const steps = [
+    {t:300, msg:'→ Tokenizando nota...', color:'var(--muted)'},
+    {t:800, msg:'→ Enviando a Ollama local (qwen2.5:72b)...', color:'var(--muted)'},
+    {t:1800, msg:'→ Extrayendo conceptos clave...', color:'var(--cyan)'},
+    {t:2800, msg:'→ Detectando [[wikilinks]] existentes...', color:'var(--cyan)'},
+    {t:3600, msg:'→ Actualizando índice brain/...', color:'var(--purple)'},
+    {t:4200, msg:'→ Añadiendo nodo al grafo GNN...', color:'var(--purple)'},
+    {t:4800, msg:'✓ Ingest completo · 3 conceptos extraídos', color:'var(--cyan)'},
+  ];
+  steps.forEach(({t,msg,color})=>{
+    setTimeout(()=>{
+      log.innerHTML += `<div style="color:${color}">${msg}</div>`;
+    }, t);
+  });
+  // Simulate adding a new node
+  setTimeout(()=>{
+    const words = text.split(' ').slice(0,4).join(' ');
+    const newNode = {
+      id: NODES.length,
+      name: words+'...',
+      type: 'concepto',
+      cluster: Math.floor(Math.random()*5),
+      wiki: text.substring(0,200),
+      tags: ['ingest','nuevo','wiki'],
+    };
+    NODES.push(newNode);
+    EDGES.push([0, newNode.id]);
+    renderNodeList();
+    buildGraph(); buildEdges();
+    document.getElementById('node-count').textContent = NODES.length+' nodos';
+    document.getElementById('stat-nodes').textContent = NODES.length;
+    document.getElementById('ingest-text').value = '';
+  }, 5000);
+}
+
+// ════════════════════════════════════
+// TAB MANAGEMENT
+// ════════════════════════════════════
+function setTab(tab, el) {
+  document.querySelectorAll('.panel-body').forEach(p=>p.style.display='none');
+  document.querySelectorAll('.ptab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+tab).style.display='block';
+  if(el) el.classList.add('active');
+}
+
+function setMode(mode, el) {
+  document.querySelectorAll('.tb-btn').forEach(b=>b.classList.remove('active-mode'));
+  el.classList.add('active-mode');
+  if(mode==='gnn') { setTab('gnn', null); runGNN(); }
+  else if(mode==='wiki') setTab('nodes', null);
+  else if(mode==='ingest') setTab('ingest', null);
+}
+
+// ════════════════════════════════════
+// INIT
+// ════════════════════════════════════
+window.onload = () => {
+  initThree();
+  renderNodeList();
+  renderGNNClusters();
+  runGNN();
+};
+
+function renderGNNClusters() {
+  const el = document.getElementById('gnn-clusters');
+  if(!el) return;
+  el.innerHTML = CLUSTER_NAMES.map((name,i)=>{
+    const c = CLUSTER_COLORS[i];
+    const count = NODES.filter(n=>n.cluster===i).length;
+    return `<div class="gnn-cluster"><div class="gnn-cluster-name" style="color:${c}">${name}</div><div class="gnn-cluster-score">${count} nodos</div></div>`;
+  }).join('');
+}
+</script>
+</body>
+</html>

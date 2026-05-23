@@ -43,8 +43,8 @@ export const CIVICPULSE_SPEC = {
     abm: {
       framework: "Mesa (Python) / custom TS port",
       modelos_matematicos: {
-        opinion: "Deffuant-Weisbuch (epsilon=0.3, mu=0.5)",
-        felicidad: "H = w_ingreso * ingreso + w_serv * servicios + w_seg * seguridad",
+        opinion: "Deffuant-Weisbuch (epsilon=0.3, mu=0.5, acoplamiento caosSocial e incertidumbre)",
+        felicidad: "H = w_ingreso * ingreso + w_serv * servicios + w_seg * seguridad - GiniPenalty - WaterStressPenalty",
         voto: "MNL Softmax sobre utilidades de agente",
       },
       sectores_agentes: ["comerciante", "estudiante", "obrero"],
@@ -53,6 +53,12 @@ export const CIVICPULSE_SPEC = {
         nivel_2: 10_000,
         nivel_3: 100_000,
       },
+      matriz_parametros_gds: {
+        factores_fisicos: ["radiacionSolar", "presionHidrica", "albedoSuperficial", "evapotranspiracion", "humedadRelativa"],
+        caos_y_dinamica_social: ["caosSocial", "incertidumbre", "polarizacion", "propagacionRumores", "densidadConectividad"],
+        demografia_y_economia: ["cohesionEducativa", "insercionLaboral", "coeficienteGini", "densidadPoblacional", "ahorroLiquidez"],
+        entorno_politico_y_medios: ["votoBasal", "confianzaGobierno", "toleranciaCorrupcion", "exposicionMedios", "resilienciaElectoral"]
+      }
     },
 
     predictor_electoral: {
@@ -74,6 +80,23 @@ export const CIVICPULSE_SPEC = {
       tecnicas: ["Pseudo-anonimización", "Hash SHA-256", "Audit Log inmutable"],
       fase_2: ["ZKP (Zero-Knowledge Proofs)", "Privacidad Diferencial"],
       datos_que_salen: ["Solo payload anonimizado a OBP con consentimiento explícito"],
+    },
+    arquitectura_niveles: {
+      nivel_1_ciudadano: {
+        nombre: "Portal de Captura Cívica (ThothAgora)",
+        acceso: "Público General / Anonimato Seguro",
+        tecnicas: ["Hash SHA-256 local", "Sanitización XSS", "Captura de Metadatos Silenciosa (Anti-Bot)"]
+      },
+      nivel_2_cliente: {
+        nombre: "Consola Estratégica (Marca Blanca)",
+        acceso: "SaaS Clientes (Lectura de Gemelos y Decisiones)",
+        restricciones: ["Solo Lectura de Simulaciones ABM", "Solicitudes de Variaciones Escritas Facturadas a $4,800 MXN"]
+      },
+      nivel_3_agente: {
+        nombre: "Consola Operativa y de Calibración",
+        acceso: "Operadores y Analistas Internos (Full Control)",
+        tecnicas: ["Ejecución de Sandbox ABM", "Auditoría de Ingesta y Dispositivo", "Detección y Filtrado de Botnets por GNN"]
+      }
     },
   },
 
@@ -168,15 +191,17 @@ export const AGENTE_SCHEMA = {
   $id: "https://civicpulse.mx/schemas/agente-sintetico",
   title: "AgenteSintetico",
   type: "object",
-  required: ["id", "sector", "ingreso", "edad", "felicidad", "intencionVoto", "opinion"],
+  required: ["id", "sector", "ingreso", "edad", "felicidad", "intencionVoto", "opinion", "postalCode", "partyAffiliation"],
   properties: {
     id: { type: "string", pattern: "^AGT-[0-9]+$" },
-    sector: { type: "string", enum: ["comerciante", "estudiante", "obrero"] },
+    sector: { type: "string", enum: ["comerciante", "estudiante", "obrero", "jovenes", "comerciantes", "asalariados"] },
     ingreso: { type: "number", minimum: 0, maximum: 1 },
     edad: { type: "integer", minimum: 18, maximum: 100 },
     felicidad: { type: "number", minimum: 0, maximum: 1 },
     intencionVoto: { type: "number", minimum: 0, maximum: 1 },
     opinion: { type: "number", minimum: 0, maximum: 1 },
+    postalCode: { type: "integer", minimum: 83000, maximum: 83999 },
+    partyAffiliation: { type: "string", enum: ["MORENA", "PAN", "PRI", "MC", "NINGUNO"] }
   },
   additionalProperties: false,
 };
@@ -206,6 +231,14 @@ export const OBP_PAYLOAD_SCHEMA = {
   },
 };
 
+export const ELECTORAL_CATALOG_SPEC = {
+  total_scenarios: 3454,
+  distritos_federales: 298,
+  distritos_locales: 679,
+  municipios: 2477,
+  source_file: "src/data/electoral_scenarios.json"
+};
+
 // Validación de schemas MDD
 describe("MDD › Validación de Schemas JSON", () => {
   it("schema AgenteSintetico tiene todos los campos requeridos", () => {
@@ -213,6 +246,8 @@ describe("MDD › Validación de Schemas JSON", () => {
     expect(required).toContain("sector");
     expect(required).toContain("intencionVoto");
     expect(required).toContain("opinion");
+    expect(required).toContain("postalCode");
+    expect(required).toContain("partyAffiliation");
   });
 
   it("schema OBP requiere local_only = true en auditoría", () => {
@@ -224,6 +259,22 @@ describe("MDD › Validación de Schemas JSON", () => {
     const ingreso = AGENTE_SCHEMA.properties.ingreso;
     expect(ingreso.minimum).toBe(0);
     expect(ingreso.maximum).toBe(1);
+  });
+
+  it("catálogo electoral contiene exactamente los escenarios nacionales configurados", () => {
+    expect(ELECTORAL_CATALOG_SPEC.total_scenarios).toBe(3454);
+    expect(ELECTORAL_CATALOG_SPEC.distritos_federales).toBe(298);
+    expect(ELECTORAL_CATALOG_SPEC.distritos_locales).toBe(679);
+    expect(ELECTORAL_CATALOG_SPEC.municipios).toBe(2477);
+  });
+
+  it("schema AgenteSintetico incluye código postal y militancia partidista válidos", () => {
+    const partyEnum = AGENTE_SCHEMA.properties.partyAffiliation.enum;
+    expect(partyEnum).toContain("MORENA");
+    expect(partyEnum).toContain("PAN");
+    expect(partyEnum).toContain("PRI");
+    expect(partyEnum).toContain("MC");
+    expect(partyEnum).toContain("NINGUNO");
   });
 });
 
@@ -562,6 +613,26 @@ export const COMPONENT_SPECS = {
       "factor-dominante",
     ],
   },
+
+  MasterConsole: {
+    props: {
+      clients: "Client[]",
+      onAddClient: "(c: Client) => void",
+      onDeleteClient: "(id: string) => void",
+      onUpdateClient: "(c: Client) => void",
+    },
+    estados: ["clients", "metrics", "openclaw", "pipeline"],
+    testIds: [
+      "btn-aprovisionar",
+      "buscador-escenarios",
+      "lista-clientes-activos",
+      "tabla-facturacion"
+    ],
+    buscador_escenarios: {
+      capacidad_minima_escenarios: 3000,
+      autocompletado_activo: true
+    }
+  },
 } as const;
 
 describe("CDD › Especificación de Componentes UI", () => {
@@ -580,6 +651,11 @@ describe("CDD › Especificación de Componentes UI", () => {
 
   it("PredictorEngine incluye margen-error como testId obligatorio", () => {
     expect(COMPONENT_SPECS.PredictorEngine.testIds).toContain("margen-error");
+  });
+
+  it("MasterConsole tiene buscador táctico con capacidad >3,000 escenarios", () => {
+    expect(COMPONENT_SPECS.MasterConsole.buscador_escenarios.capacidad_minima_escenarios).toBeGreaterThanOrEqual(3000);
+    expect(COMPONENT_SPECS.MasterConsole.buscador_escenarios.autocompletado_activo).toBe(true);
   });
 });
 

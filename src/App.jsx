@@ -13,7 +13,8 @@ import {
   Terminal,
   ShieldAlert,
   Network,
-  BookOpen
+  BookOpen,
+  Award
 } from 'lucide-react';
 
 import DashboardOverview from './components/DashboardOverview';
@@ -28,6 +29,8 @@ import ClientOnboarding from './components/ClientOnboarding';
 import SocialGraph3D from './components/SocialGraph3D';
 import SyntoWiki from './components/SyntoWiki';
 import GDSMegaVisualizer from './components/GDSMegaVisualizer';
+import ImplementationPlan from './components/ImplementationPlan';
+import AgentRawView from './components/AgentRawView';
 
 import { applyTheme } from './themeManager';
 
@@ -67,11 +70,11 @@ export default function App() {
     return () => window.removeEventListener('civic-toast', handleToastEvent);
   }, []);
 
-  // 2. Active Server Status Checking (Zero-Trust Local-First)
+  // 2. Verificación Activa del Estado del Servidor (Cero Confianza, Primero Local)
   useEffect(() => {
     const checkApiStatus = async () => {
       try {
-        const res = await fetch('http://localhost:5001', { method: 'GET' });
+        const res = await fetch(`http://${window.location.hostname}:5001`, { method: 'GET' });
         setApiOnline(res.ok);
       } catch (err) {
         setApiOnline(false);
@@ -131,11 +134,27 @@ export default function App() {
   
   // Clients List (Dynamic White-Labeling)
   const [clients, setClients] = useState([
-    { id: '1', name: 'Gobierno de Hermosillo', code: 'HER-DIS-08', region: 'Hermosillo, Sonora', population: 75000, themeId: 'glass-classic', active: true, phase: 2, subscription: 'gold', paymentVerified: true },
-    { id: '2', name: 'Campaña Claudia Rivera', code: 'MORENA-SONORA-2026', region: 'Hermosillo, Sonora', population: 75000, themeId: 'sunset-gold', active: true, phase: 2, subscription: 'silver', paymentVerified: true },
-    { id: '3', name: 'Campaña Manuel Astiazarán', code: 'PAN-HERMOSILLO', region: 'Hermosillo, Sonora', population: 75000, themeId: 'royal-corporate', active: true, phase: 2, subscription: 'silver', paymentVerified: true },
-    { id: '4', name: 'Campaña Municipio Nogales', code: 'NOGALES-PENDIENTE', region: 'Nogales, Sonora', population: 50000, themeId: 'cyber-neon', active: false, phase: 1, subscription: 'none', paymentVerified: false },
-    { id: 'master', name: 'Admin Master', code: 'CIVICAOS-MASTER', region: 'Global', population: 150000, themeId: 'glass-classic', active: true, phase: 2, subscription: 'gold', paymentVerified: true }
+    // Nivel 1: Distritos
+    { id: '1', name: 'Gobierno de Hermosillo D8', code: 'HER-DIS-08', region: 'Hermosillo, Sonora', level: 'Distrito Local', office: 'Diputación Local (D8 - Palo Verde)', population: 75000, themeId: 'glass-classic', active: true, phase: 2, subscription: 'gold', paymentVerified: true },
+    { id: '2', name: 'Campaña Federal D05 Sonora', code: 'SONORA-FED-05', region: 'Hermosillo, Sonora', level: 'Distrito Federal', office: 'Diputación Federal (Distrito 5)', population: 120000, themeId: 'sunset-gold', active: true, phase: 2, subscription: 'silver', paymentVerified: true },
+    
+    // Nivel 2: Municipios
+    { id: '3', name: 'Municipio de Nogales', code: 'NOGALES-ALCALDIA', region: 'Nogales, Sonora', level: 'Municipio', office: 'Alcaldía (Presidente Municipal)', population: 260000, themeId: 'cyber-neon', active: true, phase: 2, subscription: 'gold', paymentVerified: true },
+    { id: '4', name: 'Campaña Municipio Cajeme', code: 'CAJEME-PENDIENTE', region: 'Ciudad Obregón, Sonora', level: 'Municipio', office: 'Alcaldía (Presidente Municipal)', population: 430000, themeId: 'royal-corporate', active: false, phase: 1, subscription: 'none', paymentVerified: false },
+    
+    // Nivel 3: Estados
+    { id: '5', name: 'Gubernatura de Sonora 2027', code: 'SONORA-GUBERNATURA', region: 'Sonora, México', level: 'Estado', office: 'Gubernatura del Estado', population: 2900000, themeId: 'emerald-glass', active: true, phase: 2, subscription: 'platinum', paymentVerified: true },
+    { id: '6', name: 'Fórmula al Senado Sonora', code: 'SONORA-SENADO', region: 'Sonora, México', level: 'Estado', office: 'Senaduría de la República', population: 2900000, themeId: 'rose-glow', active: true, phase: 2, subscription: 'gold', paymentVerified: true },
+    
+    // Nivel 4: Nacional
+    { id: '7', name: 'Presidencia de México 2030', code: 'MEXICO-PRESIDENCIA', region: 'México (Nacional)', level: 'Nacional', office: 'Presidencia de la República', population: 128000000, themeId: 'glass-classic', active: true, phase: 2, subscription: 'platinum', paymentVerified: true },
+    
+    // Nivel 5: Internacional
+    { id: '8', name: 'Alcaldía Mayor de Bogotá', code: 'BOGOTA-ALCALDIA', region: 'Bogotá, Colombia', level: 'Internacional (Municipio)', office: 'Alcaldía Mayor', population: 8000000, themeId: 'royal-corporate', active: true, phase: 2, subscription: 'gold', paymentVerified: true },
+    { id: '9', name: 'Gobernación de Buenos Aires', code: 'ARG-BA-GOB', region: 'Buenos Aires, Argentina', level: 'Internacional (Estado)', office: 'Gobernación de Provincia', population: 17500000, themeId: 'cyber-neon', active: true, phase: 2, subscription: 'platinum', paymentVerified: true },
+    
+    // Master Console
+    { id: 'master', name: 'Admin Master', code: 'CIVICAOS-MASTER', region: 'Global', level: 'Global', office: 'Orquestación General', population: 150000000, themeId: 'glass-classic', active: true, phase: 2, subscription: 'gold', paymentVerified: true }
   ]);
 
   const [activeTab, setActiveTab] = useState('overview');
@@ -190,6 +209,8 @@ export default function App() {
         applyTheme('quantum-indigo');
       } else if (path === '/client' || path === '/cliente') {
         setAuthStatus(prev => (prev === 'client' ? 'client' : 'locked-client'));
+      } else if (path === '/agent' || path === '/agente') {
+        setAuthStatus(prev => (prev === 'agent' ? 'agent' : 'locked-agent'));
       } else {
         setAuthStatus('lobby');
         applyTheme('glass-classic');
@@ -232,7 +253,7 @@ export default function App() {
     setAuthStatus(newStatus);
     if (newStatus === 'public-citizen') {
       applyTheme('quantum-indigo');
-    } else if (newStatus === 'lobby' || newStatus === 'locked-client' || newStatus === 'locked-master') {
+    } else if (newStatus === 'lobby' || newStatus === 'locked-client' || newStatus === 'locked-master' || newStatus === 'locked-agent') {
       applyTheme('glass-classic');
     }
   };
@@ -250,6 +271,13 @@ export default function App() {
       code === 'CIVICAOS-ADMIN'
     );
 
+    const isAgentCode = (
+      code === 'CIVICAOS-AGENT' ||
+      code === 'AGENT' ||
+      code === 'AGENTE' ||
+      code === 'CIVICAOS-AGENTE'
+    );
+
     if (isMasterCode) {
       setIsShaking(false);
       const masterClient = clients.find(c => c.id === 'master') || { themeId: 'glass-classic' };
@@ -260,6 +288,20 @@ export default function App() {
       setActiveTab('master-panel');
       window.dispatchEvent(new CustomEvent('civic-toast', {
         detail: { message: '🔓 Consola Master desbloqueada con éxito.', type: 'success' }
+      }));
+      return;
+    }
+
+    if (isAgentCode) {
+      setIsShaking(false);
+      const agentClient = clients.find(c => c.id === '1') || { themeId: 'glass-classic' };
+      setActiveClient(agentClient);
+      applyTheme('quantum-indigo');
+      window.history.pushState({}, '', '/agent');
+      setAuthStatus('agent');
+      setActiveTab('overview');
+      window.dispatchEvent(new CustomEvent('civic-toast', {
+        detail: { message: '🔓 Consola de Agente desbloqueada con éxito.', type: 'success' }
       }));
       return;
     }
@@ -357,6 +399,56 @@ export default function App() {
     );
   }
 
+  // 🚪 RENDER MODE: Locked Agent Console Page (/agent)
+  if (authStatus === 'locked-agent') {
+    return (
+      <div className="login-wrapper">
+        <div className="bg-glow glow-top-left" style={{ background: '#8b5cf6' }}></div>
+        <div className="bg-glow glow-bottom-right" style={{ background: '#ec4899' }}></div>
+
+        <div className={`login-card scale-in ${isShaking ? 'shake' : ''}`} style={{ borderColor: 'rgba(139, 92, 246, 0.25)' }}>
+          <div className="logo-container">
+            <div className="logo-icon" style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '10px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Terminal size={28} color="var(--neon-purple)" />
+            </div>
+            <h1 className="gradient-text" style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Consola de Agentes</h1>
+            <p className="subtitle">Procesamiento de Datos Crudos, GNN y Sandbox ABM</p>
+          </div>
+
+          <form onSubmit={handleClientLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div className="input-section">
+              <label className="input-label" style={{ color: 'var(--neon-purple)' }}>Clave Operativa de Agente</label>
+              <input 
+                type="password" 
+                placeholder="Ingresa tu clave de agente (ej. CIVICAOS-AGENT)"
+                value={clientCodeInput}
+                onChange={(e) => setClientCodeInput(e.target.value)}
+                className="premium-input"
+                style={{ textAlign: 'center', letterSpacing: '2px', fontFamily: 'monospace', borderColor: 'rgba(139, 92, 246, 0.3)' }}
+                required
+              />
+            </div>
+
+            <button type="submit" className="btn-primary glow-pulse" style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)' }}>
+              Iniciar Consola de Agente
+            </button>
+          </form>
+
+          <div className="divider">
+            <span>ó</span>
+          </div>
+
+          <button 
+            className="btn-secondary" 
+            onClick={() => navigateTo('/', 'lobby')}
+          >
+            ← Volver al Portal General
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   // 🚪 RENDER MODE: Locked Client Portal Page (/client)
   if (authStatus === 'locked-client') {
     return (
@@ -414,7 +506,7 @@ export default function App() {
         <div className="bg-glow glow-top-left" style={{ width: '600px', height: '600px', background: 'rgba(139, 92, 246, 0.18)' }}></div>
         <div className="bg-glow glow-bottom-right" style={{ width: '600px', height: '600px', background: 'rgba(59, 130, 246, 0.18)' }}></div>
 
-        <div style={{ maxWidth: '1100px', width: '100%', margin: '0 auto', zIndex: 10, display: 'flex', flexDirection: 'column', gap: '3rem', alignItems: 'center', animation: 'scaleIn 0.8s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+        <div style={{ maxWidth: '1200px', width: '100%', margin: '0 auto', zIndex: 10, display: 'flex', flexDirection: 'column', gap: '3rem', alignItems: 'center', animation: 'scaleIn 0.8s cubic-bezier(0.16, 1, 0.3, 1)' }}>
           
           <div style={{ textAlign: 'center', maxWidth: '650px' }}>
             <div style={{ 
@@ -456,8 +548,8 @@ export default function App() {
 
           <div style={{ 
             display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
-            gap: '2rem', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+            gap: '1.5rem', 
             width: '100%' 
           }}>
             
@@ -486,7 +578,7 @@ export default function App() {
                   <Sparkles size={24} color="var(--neon-emerald)" />
                 </div>
                 <h3 style={{ fontSize: '1.4rem', fontWeight: '800', marginBottom: '0.25rem' }}>Portal Ciudadano</h3>
-                <span style={{ fontSize: '0.7rem', color: 'var(--neon-emerald)', fontWeight: '700', letterSpacing: '0.1em', textTransform: 'uppercase', display: 'block', marginBottom: '1rem' }}>ThothAgora Oracle</span>
+                <span style={{ fontSize: '0.7rem', color: 'var(--neon-emerald)', fontWeight: '700', letterSpacing: '0.1em', textTransform: 'uppercase', display: 'block', marginBottom: '1rem' }}>ThothAgora (Nivel 1)</span>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
                   Canal público seguro y anónimo para enviar propuestas y demandas territoriales con firmas criptográficas soberanas.
                 </p>
@@ -530,9 +622,9 @@ export default function App() {
                   <LayoutDashboard size={24} color="var(--neon-blue)" />
                 </div>
                 <h3 style={{ fontSize: '1.4rem', fontWeight: '800', marginBottom: '0.25rem' }}>Consola del Cliente</h3>
-                <span style={{ fontSize: '0.7rem', color: 'var(--neon-blue)', fontWeight: '700', letterSpacing: '0.1em', textTransform: 'uppercase', display: 'block', marginBottom: '1rem' }}>Estratégico / Marca Blanca</span>
+                <span style={{ fontSize: '0.7rem', color: 'var(--neon-blue)', fontWeight: '700', letterSpacing: '0.1em', textTransform: 'uppercase', display: 'block', marginBottom: '1rem' }}>Estratégico (Nivel 2)</span>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
-                  Análisis predictivo de opinión, mapas de calor GIS distritales de dolor social y simulador de políticas públicas.
+                  Análisis predictivo de opinión, mapas de calor GIS distritales de dolor social y planes de acción de solo lectura.
                 </p>
               </div>
               <button 
@@ -549,7 +641,51 @@ export default function App() {
               </button>
             </div>
 
-            {/* Column 3: Master Portal */}
+            {/* Column 3: Agent Portal */}
+            <div className="glass-card glow-purple" style={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              justifyContent: 'space-between', 
+              minHeight: '340px',
+              background: 'rgba(15, 10, 30, 0.4)',
+              borderColor: 'rgba(139, 92, 246, 0.15)',
+              padding: '2.25rem 2rem'
+            }}>
+              <div>
+                <div style={{ 
+                  background: 'rgba(139, 92, 246, 0.1)', 
+                  width: '48px', 
+                  height: '48px', 
+                  borderRadius: '12px', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  marginBottom: '1.5rem',
+                  border: '1px solid rgba(139, 92, 246, 0.25)'
+                }}>
+                  <Terminal size={24} color="var(--neon-purple)" />
+                </div>
+                <h3 style={{ fontSize: '1.4rem', fontWeight: '800', marginBottom: '0.25rem' }}>Consola de Agentes</h3>
+                <span style={{ fontSize: '0.7rem', color: 'var(--neon-purple)', fontWeight: '700', letterSpacing: '0.1em', textTransform: 'uppercase', display: 'block', marginBottom: '1rem' }}>Operacional (Nivel 3)</span>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+                  Sandbox ABM, simulación libre multi-agente, logs de Swarm, calibración GNN y auditoría de datos crudos sin filtrar.
+                </p>
+              </div>
+              <button 
+                onClick={() => navigateTo('/agent', 'locked-agent')}
+                className="btn-premium"
+                style={{ 
+                  width: '100%', 
+                  background: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)',
+                  boxShadow: '0 0 15px rgba(139, 92, 246, 0.3)',
+                  marginTop: '2rem'
+                }}
+              >
+                Acceso Agentes
+              </button>
+            </div>
+
+            {/* Column 4: Master Portal */}
             <div className="glass-card glow-rose" style={{ 
               display: 'flex', 
               flexDirection: 'column', 
@@ -574,9 +710,9 @@ export default function App() {
                   <ShieldAlert size={24} color="var(--neon-rose)" />
                 </div>
                 <h3 style={{ fontSize: '1.4rem', fontWeight: '800', marginBottom: '0.25rem' }}>Consola Maestra</h3>
-                <span style={{ fontSize: '0.7rem', color: 'var(--neon-rose)', fontWeight: '700', letterSpacing: '0.1em', textTransform: 'uppercase', display: 'block', marginBottom: '1rem' }}>Orquestación Global e IA</span>
+                <span style={{ fontSize: '0.7rem', color: 'var(--neon-rose)', fontWeight: '700', letterSpacing: '0.1em', textTransform: 'uppercase', display: 'block', marginBottom: '1rem' }}>Orquestación Global (Nivel 0)</span>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
-                  Aprovisionamiento de marcas blancas, facturación SaaS local y centro de control del enjambre multi-agente cognitivo.
+                  Aprovisionamiento de marcas blancas, facturación SaaS local y administración central de licencias de distrito.
                 </p>
               </div>
               <button 
@@ -647,6 +783,52 @@ export default function App() {
     );
   }
 
+  // Dynamic Tab definitions based on role permissions (3 Layers of CívicaOS)
+  const getSidebarTabs = () => {
+    if (authStatus === 'client') {
+      return [
+        { id: 'overview', label: 'Resumen Ejecutivo', icon: <LayoutDashboard size={20} /> },
+        { id: 'map', label: 'Mapas de Dolor (GIS)', icon: <Map size={20} /> },
+        { id: 'social-graph', label: 'Grafo Social 3D', icon: <Network size={20} /> },
+        { id: 'synto-wiki', label: 'Obsidian LLM Wiki', icon: <BookOpen size={20} /> },
+        { id: 'implementation-plan', label: 'Plan de Acción (+1024)', icon: <Award size={20} /> }
+      ];
+    }
+
+    const tabs = [];
+    if (authStatus === 'master') {
+      tabs.push({ 
+        id: 'master-panel', 
+        label: 'Tablero Master', 
+        icon: <ShieldAlert size={20} color="var(--neon-rose)" />,
+        style: { borderColor: 'rgba(239, 68, 68, 0.2)', background: activeTab === 'master-panel' ? 'rgba(239, 68, 68, 0.15)' : '' }
+      });
+    }
+
+    tabs.push(
+      { id: 'overview', label: 'Resumen Ejecutivo', icon: <LayoutDashboard size={20} /> },
+      { id: 'map', label: 'Mapas de Dolor (GIS)', icon: <Map size={20} /> },
+      { id: 'simulator', label: 'Sandbox ABM', icon: <Play size={20} /> },
+      { 
+        id: 'gds-mega', 
+        label: 'Gemelo GDS-MEGA', 
+        icon: <Database size={20} />, 
+        style: { 
+          borderColor: activeTab === 'gds-mega' ? 'var(--neon-purple)' : '', 
+          background: activeTab === 'gds-mega' ? 'rgba(127, 29, 219, 0.15)' : '' 
+        } 
+      },
+      { id: 'predictor', label: 'Predictor Electoral', icon: <Vote size={20} /> },
+      { id: 'data-hub', label: 'Data Hub & APIs', icon: <Database size={20} /> },
+      { id: 'swarm', label: 'Swarm OpenClaw', icon: <Terminal size={20} /> },
+      { id: 'social-graph', label: 'Grafo Social 3D & GNN', icon: <Network size={20} /> },
+      { id: 'synto-wiki', label: 'Obsidian LLM Wiki', icon: <BookOpen size={20} /> },
+      { id: 'citizen-portal', label: 'Portal Ciudadano', icon: <Smile size={20} /> },
+      { id: 'agent-raw', label: 'Datos Crudos & Bots', icon: <Terminal size={20} color="var(--neon-purple)" /> }
+    );
+    return tabs;
+  };
+
   // 🚪 RENDER MODE: Client or Master Authenticated View
   return (
     <div className="app-container">
@@ -660,122 +842,44 @@ export default function App() {
             </div>
             <div>
               <span className="brand-name">{authStatus === 'master' ? 'CívicaOS Engine' : activeClient?.name || 'CivicPulse'}</span>
-              <span className="brand-sub">{authStatus === 'master' ? 'SUPER-ADMIN PORTAL' : 'GEMELO DIGITAL ACTIVO'}</span>
+              <span className="brand-sub">
+                {authStatus === 'master' ? 'SUPER-ADMIN PORTAL' : 
+                 authStatus === 'agent' ? 'CONSOLA DE AGENTE' : 'GEMELO DIGITAL ACTIVO'}
+              </span>
             </div>
           </div>
 
           <nav className="nav-links">
-            {/* Master exclusive panel link */}
-            {authStatus === 'master' && (
+            {getSidebarTabs().map((tab) => (
               <div 
-                className={`nav-item ${activeTab === 'master-panel' ? 'active' : ''}`}
-                onClick={() => setActiveTab('master-panel')}
-                style={{ borderColor: 'rgba(239, 68, 68, 0.2)', background: activeTab === 'master-panel' ? 'rgba(239, 68, 68, 0.15)' : '' }}
+                key={tab.id}
+                className={`nav-item ${activeTab === tab.id ? 'active' : ''}`}
+                onClick={() => setActiveTab(tab.id)}
+                style={tab.style}
               >
-                <ShieldAlert size={20} color="var(--neon-rose)" />
-                <span style={{ color: activeTab === 'master-panel' ? 'var(--neon-rose)' : 'inherit', fontWeight: '700' }}>Tablero Master</span>
+                {tab.icon}
+                <span>{tab.label}</span>
               </div>
-            )}
-
-            <div 
-              className={`nav-item ${activeTab === 'overview' ? 'active' : ''}`}
-              onClick={() => setActiveTab('overview')}
-            >
-              <LayoutDashboard size={20} />
-              <span>Resumen Ejecutivo</span>
-            </div>
-
-            <div 
-              className={`nav-item ${activeTab === 'map' ? 'active' : ''}`}
-              onClick={() => setActiveTab('map')}
-            >
-              <Map size={20} />
-              <span>Mapas de Dolor (GIS)</span>
-            </div>
-
-            <div 
-              className={`nav-item ${activeTab === 'simulator' ? 'active' : ''}`}
-              onClick={() => setActiveTab('simulator')}
-            >
-              <Play size={20} />
-              <span>Sandbox ABM</span>
-            </div>
-
-            <div 
-              className={`nav-item ${activeTab === 'gds-mega' ? 'active' : ''}`}
-              onClick={() => setActiveTab('gds-mega')}
-              style={{ 
-                borderColor: activeTab === 'gds-mega' ? 'var(--neon-purple)' : '', 
-                background: activeTab === 'gds-mega' ? 'rgba(127, 29, 219, 0.15)' : '' 
-              }}
-            >
-              <Database size={20} color={activeTab === 'gds-mega' ? 'var(--neon-purple)' : 'inherit'} />
-              <span style={{ color: activeTab === 'gds-mega' ? 'var(--neon-purple)' : 'inherit', fontWeight: activeTab === 'gds-mega' ? '700' : 'normal' }}>Gemelo GDS-MEGA</span>
-            </div>
-
-            <div 
-              className={`nav-item ${activeTab === 'predictor' ? 'active' : ''}`}
-              onClick={() => setActiveTab('predictor')}
-            >
-              <Vote size={20} />
-              <span>Predictor Electoral</span>
-            </div>
-
-            <div 
-              className={`nav-item ${activeTab === 'data-hub' ? 'active' : ''}`}
-              onClick={() => setActiveTab('data-hub')}
-            >
-              <Database size={20} />
-              <span>Data Hub & APIs</span>
-            </div>
-
-            <div 
-              className={`nav-item ${activeTab === 'swarm' ? 'active' : ''}`}
-              onClick={() => setActiveTab('swarm')}
-            >
-              <Terminal size={20} />
-              <span>Swarm OpenClaw</span>
-            </div>
-
-            <div 
-              className={`nav-item ${activeTab === 'social-graph' ? 'active' : ''}`}
-              onClick={() => setActiveTab('social-graph')}
-            >
-              <Network size={20} />
-              <span>Grafo Social 3D & GNN</span>
-            </div>
-
-            <div 
-              className={`nav-item ${activeTab === 'synto-wiki' ? 'active' : ''}`}
-              onClick={() => setActiveTab('synto-wiki')}
-            >
-              <BookOpen size={20} />
-              <span>Obsidian LLM Wiki</span>
-            </div>
-
-            <div 
-              className={`nav-item ${activeTab === 'citizen-portal' ? 'active' : ''}`}
-              onClick={() => setActiveTab('citizen-portal')}
-            >
-              <Smile size={20} />
-              <span>Portal Ciudadano</span>
-            </div>
-
+            ))}
           </nav>
         </div>
 
         {/* Sidebar Footer with session context */}
         <div className="sidebar-footer" style={{ flexDirection: 'column', gap: '1.25rem', alignItems: 'stretch' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <div className="user-avatar" style={{ background: authStatus === 'master' ? 'linear-gradient(135deg, #7f1d1d, #ef4444)' : 'linear-gradient(135deg, var(--neon-purple), var(--neon-pink))' }}>
-              {authStatus === 'master' ? 'AD' : 'RC'}
+            <div className="user-avatar" style={{ 
+              background: authStatus === 'master' ? 'linear-gradient(135deg, #7f1d1d, #ef4444)' : 
+                         authStatus === 'agent' ? 'linear-gradient(135deg, var(--neon-purple), var(--neon-indigo))' :
+                         'linear-gradient(135deg, var(--neon-purple), var(--neon-pink))' 
+            }}>
+              {authStatus === 'master' ? 'AD' : authStatus === 'agent' ? 'AG' : 'RC'}
             </div>
             <div>
               <h4 style={{ fontSize: '0.85rem', fontWeight: '700' }}>
-                {authStatus === 'master' ? 'Super Administrador' : 'Roberto Celis'}
+                {authStatus === 'master' ? 'Super Administrador' : authStatus === 'agent' ? 'Agente de Campo' : 'Roberto Celis'}
               </h4>
               <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
-                {authStatus === 'master' ? 'CívicaOS Master' : activeClient?.name || 'Estratega Principal'}
+                {authStatus === 'master' ? 'CívicaOS Master' : authStatus === 'agent' ? 'Operador Nivel 3' : activeClient?.name || 'Estratega Principal'}
               </span>
             </div>
           </div>
@@ -834,6 +938,8 @@ export default function App() {
               {activeTab === 'social-graph' && "Detección de Bots y Coordinación GNN"}
               {activeTab === 'synto-wiki' && "Cerebro Digital & Synto LLM Wiki"}
               {activeTab === 'citizen-portal' && "ThothAgora • Portal de Participación Ciudadana"}
+              {activeTab === 'implementation-plan' && "Plan de Acción Territorial Integrado"}
+              {activeTab === 'agent-raw' && "Consola de Datos Crudos e Ingesta"}
             </h1>
             <p>
               {activeTab === 'master-panel' && "Administrar marcas blancas, facturación simulada e inferencias."}
@@ -847,6 +953,8 @@ export default function App() {
               {activeTab === 'social-graph' && "Análisis de cuentas automatizadas, amplificación y topología social 3D."}
               {activeTab === 'synto-wiki' && "Consultar la base de conocimiento local, notas Obsidian y logs de Claude Brain."}
               {activeTab === 'citizen-portal' && "Simulador y vista previa interactiva del portal ciudadano ThothAgora para registrar opiniones cívicas."}
+              {activeTab === 'implementation-plan' && "Recomendaciones de políticas y obras públicas basadas en +1024 factores."}
+              {activeTab === 'agent-raw' && "Ingesta en tiempo real, geolocalización, metadatos y detección de botnets por GNN."}
             </p>
           </div>
 
@@ -916,6 +1024,12 @@ export default function App() {
           )}
           {activeTab === 'citizen-portal' && (
             <ThothAgoraPortal />
+          )}
+          {activeTab === 'implementation-plan' && (
+            <ImplementationPlan activeClient={activeClient} />
+          )}
+          {activeTab === 'agent-raw' && (
+            <AgentRawView clients={clients} />
           )}
         </section>
 

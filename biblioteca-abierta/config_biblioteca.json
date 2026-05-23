@@ -1,0 +1,107 @@
+{
+  "nombre_proyecto": "Biblioteca de Conocimiento Abierto",
+  "directorio_base": "biblioteca-abierta",
+  "max_documentos_por_fuente_por_categoria": 25,
+  "formatos_preferidos": ["pdf", "epub", "txt"],
+  "delay_entre_peticiones_segundos": 3,
+  "timeout_descarga_segundos": 120,
+  "categorias": {
+    "01-Economia-y-Finanzas": {
+      "emoji": "📊",
+      "gutenberg_subjects": ["Economics", "Political economy", "Finance"],
+      "arxiv_categories": ["econ.GN", "econ.EM", "econ.TH"],
+      "openstax_books": [
+        {"titulo": "Principles of Macroeconomics 3e", "slug": "principles-macroeconomics-3e"},
+        {"titulo": "Principles of Microeconomics 3e", "slug": "principles-microeconomics-3e"},
+        {"titulo": "Principles of Economics 3e", "slug": "principles-economics-3e"}
+      ],
+      "doab_keywords": ["economics", "financial economics", "macroeconomics"]
+    },
+    "02-Inteligencia-Artificial": {
+      "emoji": "🤖",
+      "gutenberg_subjects": [],
+      "arxiv_categories": ["cs.AI", "cs.LG", "cs.CL", "cs.CV", "cs.NE"],
+      "openstax_books": [],
+      "doab_keywords": ["artificial intelligence", "machine learning", "deep learning"]
+    },
+    "03-Sociologia": {
+      "emoji": "👥",
+      "gutenberg_subjects": ["Sociology", "Social sciences", "Social change"],
+      "arxiv_categories": [],
+      "openstax_books": [
+        {"titulo": "Introduction to Sociology 3e", "slug": "introduction-sociology-3e"}
+      ],
+      "doab_keywords": ["sociology", "social theory", "social sciences"]
+    },
+    "04-Psicologia-y-Comportamiento-Humano": {
+      "emoji": "🧠",
+      "gutenberg_subjects": ["Psychology", "Mental health", "Human behavior", "Psychoanalysis"],
+      "arxiv_categories": ["q-bio.NC", "cs.CY"],
+      "openstax_books": [
+        {"titulo": "Psychology 2e", "slug": "psychology-2e"}
+      ],
+      "doab_keywords": ["psychology", "behavioral science", "cognitive science"]
+    },
+    "05-Politica": {
+      "emoji": "🏛️",
+      "gutenberg_subjects": ["Political science", "Politics and government", "Democracy"],
+      "arxiv_categories": [],
+      "openstax_books": [
+        {"titulo": "American Government 3e", "slug": "american-government-3e"},
+        {"titulo": "Introduction to Political Science", "slug": "introduction-political-science"}
+      ],
+      "doab_keywords": ["political science", "governance", "public policy"]
+    },
+    "06-Marketing-y-Startups": {
+      "emoji": "📈",
+      "gutenberg_subjects": ["Marketing", "Advertising"],
+      "arxiv_categories": ["cs.SI"],
+      "openstax_books": [
+        {"titulo": "Introduction to Business", "slug": "introduction-business"},
+        {"titulo": "Entrepreneurship", "slug": "entrepreneurship"}
+      ],
+      "doab_keywords": ["marketing", "entrepreneurship", "startup"]
+    },
+    "07-Finanzas": {
+      "emoji": "💰",
+      "gutenberg_subjects": ["Finance", "Banks and banking", "Money"],
+      "arxiv_categories": ["q-fin.GN", "q-fin.PM", "q-fin.RM"],
+      "openstax_books": [
+        {"titulo": "Principles of Finance", "slug": "principles-finance"},
+        {"titulo": "Principles of Accounting Volume 1", "slug": "principles-financial-accounting"},
+        {"titulo": "Introductory Business Statistics", "slug": "introductory-business-statistics"}
+      ],
+      "doab_keywords": ["finance", "financial markets", "investment"]
+    },
+    "08-Tecnologia-Experimental": {
+      "emoji": "💻",
+      "gutenberg_subjects": [],
+      "arxiv_categories": ["cs.ET", "cs.AR", "cs.CR", "cs.DC"],
+      "openstax_books": [],
+      "doab_keywords": ["emerging technology", "quantum computing", "blockchain technology"]
+    },
+    "09-Energias-Limpias": {
+      "emoji": "⚡",
+      "gutenberg_subjects": [],
+      "arxiv_categories": ["physics.soc-ph", "eess.SY"],
+      "openstax_books": [],
+      "doab_keywords": ["renewable energy", "clean energy", "solar energy", "wind energy", "sustainability"]
+    },
+    "10-Regulaciones-Internacionales": {
+      "emoji": "📋",
+      "gutenberg_subjects": ["International law", "International relations"],
+      "arxiv_categories": [],
+      "openstax_books": [
+        {"titulo": "Business Law I Essentials", "slug": "business-law-i-essentials"}
+      ],
+      "doab_keywords": ["international law", "international regulation", "trade law", "human rights law"]
+    },
+    "11-Logistica": {
+      "emoji": "🚚",
+      "gutenberg_subjects": [],
+      "arxiv_categories": ["cs.MA", "math.OC"],
+      "openstax_books": [],
+      "doab_keywords": ["logistics", "supply chain", "operations research", "transportation"]
+    }
+  }
+}

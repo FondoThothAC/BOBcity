@@ -1,0 +1,43 @@
+/* =====================
+   Impact Section
+   ===================== */
+.impact-section {
+  background: linear-gradient(180deg, transparent, rgba(0, 212, 255, 0.02), transparent);
+}
+
+.impact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+}
+
+.impact-card {
+  text-align: center;
+  padding: 2.5rem 1.5rem;
+  animation: orbitalGlow 6s ease-in-out infinite;
+}
+
+.impact-icon {
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+.impact-number {
+  font-family: var(--font-heading);
+  font-size: 3rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--color-cyan), var(--color-purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.1;
+  margin-bottom: 0.5rem;
+}
+
+.impact-label {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+}

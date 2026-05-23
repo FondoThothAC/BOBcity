@@ -18,6 +18,23 @@ Para CívicaOS, la experiencia de usuario (UX) y el diseño visual de la interfa
 3. **Jerarquía Visual y Tipografía Curada:** Se utiliza la fuente **Outfit** de Google Fonts para títulos e indicadores numéricos de alto impacto (dando un aspecto premium y moderno), combinada con **Inter** para textos de lectura general y fuentes monoespaciadas para la consola de logs.
 4. **Retroalimentación Dinámica (Micro-Animaciones):** Las interacciones físicas con sliders, popups de mapas o botones de exportación disparan transiciones fluidas de 150-300ms, haciendo que la interfaz se sienta "viva" y responda inmediatamente a las intenciones del usuario.
 
+### 1.1 Cartografía de Precisión e Irregularidad Geodésica (Navegación Multinivel y Límites GeoJSON)
+Para satisfacer la necesidad de visualización con **límites reales y trazado de precisión**, la interfaz gráfica de CívicaOS integra un motor de renderizado de polígonos multinivel estructurado en tres escalas tácticas:
+* **Escala Nacional (Nivel 1 - 32 Estados):** Muestra los límites de las 32 entidades federativas utilizando archivos GeoJSON georreferenciados de alta resolución.
+  > [!IMPORTANT]
+  > Para garantizar la resiliencia offline-first del sistema, la carga del GeoJSON nacional utiliza un patrón de tolerancia a fallos en cascada: primero consulta el endpoint local autónomo `/api/estados` provisto por el servidor de simulación en Python (puerto 5001), el cual calcula de forma determinista y poligonal los contornos de los 32 estados a partir de sus centroides geográficos reales; si este falla, recurre a un repositorio Git de respaldo, y si ambos fallan, despliega el fallback procedural interno de celdas geodésicas.
+* **Escala Municipal (Nivel 2 - Municipios):** Al seleccionar o hacer clic en un estado, se renderizan los municipios que lo conforman representados por polígonos orgánicos suavizados de 14 lados (`getInterlockingPolygon`) calculados dinámicamente a partir de sus coordenadas base.
+* **Escala de Códigos Postales/Sección (Nivel 3):** Permite profundizar a nivel de colonias y secciones electorales, ofreciendo el máximo nivel de resolución analítica para estudiar el comportamiento de manzanas urbanas y distritos electorales.
+* **Acceso Directo a Ciudades Clave:** Se incorpora en la parte superior del mapa un control de navegación rápida (breadcrumbs interactivos y barra de búsqueda) que permite saltar instantáneamente con un solo clic a la vista seccional de **Hermosillo, Tijuana, Monterrey, CDMX, Guadalajara y Querétaro**, cargando sus respectivos polígonos de códigos postales.
+* **Tolerancia y Prevención de Ciclos Infinitos (React Lifecycle):** Para evitar bucles de actualización (`Maximum update depth exceeded`) debidos a la sincronización entre Leaflet y React, el viewport del mapa (`mapViewport`) se encuentra memorizado con un hook `useMemo` anclado estrictamente a los cambios en `selectedMunicipality` y `selectedState`. De igual forma, las consultas al DENUE (INEGI) escuchan exclusivamente coordenadas numéricas primitivas (`mapCenter[0]` y `mapCenter[1]`) de modo que las referencias de arrays complejos no disparen ciclos de re-renderizado infinitos.
+
+### 1.2 Sub-Mapas Temáticos, Cruces Multidimensionales y Catálogo INEGI (1,000+ Indicadores)
+Para evitar la saturación visual y permitir análisis sofisticados cruzando datos socioeconómicos de INEGI con el clima de opinión, el mapa incorpora un menú superior de pestañas dinámicas y controles avanzados de filtrado:
+1. **🔥 Tensión & Dolores:** Muestra el descontento social general, alerta hídrica, inseguridad, cobro de impuestos y congestión de tráfico por calles o colonias.
+2. **🗳️ Fuerza Electoral:** Visualiza la densidad de afiliados del INE, participación estimada por secciones electorales y militancia partidaria (MORENA, PAN, PRI, MC).
+3. **📊 Socioeconómico (INEGI):** Integra variables del Censo Nacional de Población y Vivienda a través de una barra de búsqueda y catálogo dinámico que cubre indicadores agrupados en Demografía, Educación, Empleo y Vivienda/Servicios. Soporta variables como Población Total, Población Analfabeta (P15YM_ANAF), Grado Promedio de Escolaridad (GRAPROES), Población Económicamente Activa (PEA) y Viviendas con Internet (VPH_INTERNET).
+4. **🔀 Cruces de Datos (CROSSOVER):** Permite al analista cruzar interactivamente cualquier Variable X del catálogo de INEGI con una Variable Y del Clima Político-Social (militancia, participación o dolor), aplicando operadores matemáticos de Interacción ($X \times Y$), Brecha ($|X - Y|$) o Ratio ($X / Y$), desplegando un mapa de correlación coroplético con una rampa de color de alto contraste violeta-rosa neón.
+
 ---
 
 ## 2. Mapa de Navegación e Flujos de Usuario (User Flows)

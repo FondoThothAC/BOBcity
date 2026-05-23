@@ -474,50 +474,83 @@ export default function SocialGraph3D({ agents = [] }) {
             </h3>
 
             {selectedNode ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', fontSize: '0.8rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.8rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontWeight: '700', color: selectedNode.isBot ? 'var(--neon-rose)' : '#fff', fontSize: '0.9rem' }}>{selectedNode.label}</span>
+                  <span style={{ fontWeight: '800', color: selectedNode.isBot ? 'var(--neon-rose)' : '#fff', fontSize: '0.95rem' }}>{selectedNode.label}</span>
                   <span className={`tag-badge`} style={{
-                    background: selectedNode.isBot ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.15)',
+                    background: selectedNode.isBot ? 'rgba(239, 68, 68, 0.12)' : 'rgba(16, 185, 129, 0.12)',
                     color: selectedNode.isBot ? 'var(--neon-rose)' : 'var(--neon-emerald)',
                     borderColor: selectedNode.isBot ? 'var(--neon-rose)' : 'var(--neon-emerald)',
                     fontSize: '0.65rem',
-                    padding: '0.1rem 0.4rem'
+                    padding: '0.15rem 0.5rem',
+                    borderRadius: '4px',
+                    border: '1px solid'
                   }}>
                     {selectedNode.isBot ? '🤖 BOT CLASIFICADO' : '🟢 HUMANO VERIFICADO'}
                   </span>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '0.25rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem', marginTop: '0.25rem' }}>
                   <div>
-                    <span style={{ color: 'var(--text-secondary)', display: 'block', fontSize: '0.65rem' }}>Sector Social:</span>
-                    <strong style={{ color: '#fff' }}>{selectedNode.sector}</strong>
+                    <span style={{ color: 'var(--text-secondary)', display: 'block', fontSize: '0.65rem', textTransform: 'uppercase' }}>Sector Social:</span>
+                    <strong style={{ color: '#fff', fontSize: '0.85rem' }}>{selectedNode.sector}</strong>
                   </div>
                   <div>
-                    <span style={{ color: 'var(--text-secondary)', display: 'block', fontSize: '0.65rem' }}>Afinidad de Voto:</span>
-                    <strong style={{ color: selectedNode.stance.includes('A') ? 'var(--neon-blue)' : 'var(--neon-purple)' }}>{selectedNode.stance}</strong>
+                    <span style={{ color: 'var(--text-secondary)', display: 'block', fontSize: '0.65rem', textTransform: 'uppercase' }}>Afinidad de Voto:</span>
+                    <strong style={{ color: selectedNode.stance.includes('A') ? 'var(--neon-blue)' : 'var(--neon-purple)', fontSize: '0.85rem' }}>{selectedNode.stance}</strong>
                   </div>
                   <div>
-                    <span style={{ color: 'var(--text-secondary)', display: 'block', fontSize: '0.65rem' }}>Centralidad de Grado:</span>
-                    <strong style={{ color: '#fff' }}>{selectedNode.centrality}</strong>
+                    <span style={{ color: 'var(--text-secondary)', display: 'block', fontSize: '0.65rem', textTransform: 'uppercase' }}>Centralidad de Grado:</span>
+                    <strong style={{ color: '#fff', fontSize: '0.85rem' }}>{selectedNode.centrality}</strong>
                   </div>
                   <div>
-                    <span style={{ color: 'var(--text-secondary)', display: 'block', fontSize: '0.65rem' }}>Bot Probability:</span>
-                    <strong style={{ color: selectedNode.isBot ? 'var(--neon-rose)' : 'var(--neon-emerald)' }}>{(selectedNode.botScore * 100).toFixed(1)}%</strong>
+                    <span style={{ color: 'var(--text-secondary)', display: 'block', fontSize: '0.65rem', textTransform: 'uppercase' }}>Nivel de Riesgo GNN:</span>
+                    <strong style={{ 
+                      color: selectedNode.botScore > 0.75 ? 'var(--neon-rose)' : selectedNode.botScore > 0.4 ? 'var(--neon-amber)' : 'var(--neon-emerald)', 
+                      fontSize: '0.85rem' 
+                    }}>
+                      {selectedNode.botScore > 0.75 ? 'Crítico (Alto)' : selectedNode.botScore > 0.4 ? 'Sospechoso (Medio)' : 'Seguro (Bajo)'}
+                    </strong>
                   </div>
                 </div>
 
-                <div style={{ borderTop: '1px dashed var(--border-glass)', paddingTop: '0.5rem', marginTop: '0.25rem' }}>
-                  <span style={{ color: 'var(--text-secondary)', display: 'block', fontSize: '0.65rem' }}>Análisis de Sentimiento NLP (BETO):</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.2rem' }}>
-                    <div style={{ flex: 1, height: '6px', background: 'rgba(255,255,255,0.08)', borderRadius: '3px', overflow: 'hidden' }}>
+                {/* Micro Barra de Progreso para Probabilidad de Bot */}
+                <div style={{ borderTop: '1px dashed var(--border-glass)', paddingTop: '0.6rem', marginTop: '0.25rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
+                    <span>Probabilidad de Automatización (Bot Score):</span>
+                    <strong style={{ color: selectedNode.isBot ? 'var(--neon-rose)' : 'var(--neon-emerald)' }}>
+                      {(selectedNode.botScore * 100).toFixed(1)}%
+                    </strong>
+                  </div>
+                  <div style={{ height: '8px', background: 'rgba(255,255,255,0.06)', borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.04)' }}>
+                    <div style={{ 
+                      width: `${selectedNode.botScore * 100}%`, 
+                      height: '100%', 
+                      background: selectedNode.botScore > 0.75 
+                        ? 'linear-gradient(90deg, #7f1d1d 0%, var(--neon-rose) 100%)' 
+                        : selectedNode.botScore > 0.4 
+                        ? 'linear-gradient(90deg, #d97706 0%, var(--neon-amber) 100%)'
+                        : 'linear-gradient(90deg, #064e3b 0%, var(--neon-emerald) 100%)',
+                      transition: 'width 0.5s ease-out'
+                    }}></div>
+                  </div>
+                </div>
+
+                {/* Análisis de Sentimiento NLP */}
+                <div style={{ borderTop: '1px dashed var(--border-glass)', paddingTop: '0.6rem', marginTop: '0.25rem' }}>
+                  <span style={{ color: 'var(--text-secondary)', display: 'block', fontSize: '0.65rem', marginBottom: '0.25rem' }}>Análisis de Sentimiento NLP (BETO):</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{ flex: 1, height: '8px', background: 'rgba(255,255,255,0.06)', borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.04)' }}>
                       <div style={{ 
                         width: `${((selectedNode.sentiment + 1) / 2) * 100}%`, 
                         height: '100%', 
-                        background: selectedNode.sentiment > 0 ? 'var(--neon-emerald)' : 'var(--neon-rose)'
+                        background: selectedNode.sentiment > 0 
+                          ? 'linear-gradient(90deg, #059669 0%, var(--neon-emerald) 100%)' 
+                          : 'linear-gradient(90deg, #dc2626 0%, var(--neon-rose) 100%)',
+                        transition: 'width 0.5s ease-out'
                       }}></div>
                     </div>
-                    <span style={{ fontSize: '0.7rem', fontWeight: '700', color: selectedNode.sentiment > 0 ? 'var(--neon-emerald)' : 'var(--neon-rose)' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: '800', color: selectedNode.sentiment > 0 ? 'var(--neon-emerald)' : 'var(--neon-rose)' }}>
                       {selectedNode.sentiment > 0 ? `+${selectedNode.sentiment}` : selectedNode.sentiment}
                     </span>
                   </div>

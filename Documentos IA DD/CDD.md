@@ -73,7 +73,7 @@ Para asegurar la robustez en TypeScript, los componentes clave exponen contratos
 |------------|-------------------------------|-----------------------------|
 | **`OrchestratorConsole`** | *Ninguna (Componente de Página Central).* | `query: string`<br>`logs: SwarmEvent[]`<br>`activeAgent: string`<br>`progress: number`<br>`simulationData: any` |
 | **`ABMSimulator`** | `initialPolicies: Record<string, number>`<br>`agents: SyntheticAgent[]`<br>`onSimulationComplete: (results: any) => void` | `policies: Record<string, number>`<br>`trajectory: TrajectoryPoint[]`<br>`isSimulating: boolean` |
-| **`PainPointsMap`** | `districts: GeographicEntity[]`<br>`painPoints: PainPoint[]`<br>`onSelectDistrict: (id: string) => void` | `selectedDistrictId: string \| null`<br>`zoomLevel: number`<br>`activeCategoryFilter: string` |
+| **`PainPointsMap`** | `agents: SyntheticAgent[]` | `activeCategory: "TENSION" \| "POLITICAL" \| "SOCIOECONOMIC" \| "CROSSOVER"`<br>`activeLayer: string`<br>`activeSector: string`<br>`dataSourceMode: "SIMULATED" \| "REAL_INGESTED"`<br>`crossoverVarX: string`<br>`crossoverVarY: string`<br>`crossoverMath: "multiply" \| "difference" \| "ratio"`<br>`selectedState: any`<br>`selectedMunicipality: any` |
 | **`PredictorEngine`** | `agents: SyntheticAgent[]`<br>`candidateProfiles: any`<br>`onPredict: (results: any) => void` | `predictions: ElectoralPrediction[]`<br>`isCalculating: boolean`<br>`selectedYear: number` |
 
 ---

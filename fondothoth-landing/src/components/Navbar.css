@@ -1,0 +1,32 @@
+.navbar-logo .logo-img {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  animation: logoPulse 3s ease-in-out infinite;
+}
+
+.theme-toggle-li {
+  display: flex;
+  align-items: center;
+}
+
+.theme-toggle-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  color: var(--color-text-primary);
+  font-family: var(--font-heading);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.theme-toggle-btn:hover {
+  background: rgba(0, 245, 212, 0.1);
+  border-color: var(--color-cyan);
+  color: var(--color-cyan);
+}

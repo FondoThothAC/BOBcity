@@ -12,7 +12,7 @@ from datetime import datetime
 # SECURE CONFIGURATION
 # ==============================================================================
 # Change this to your actual VPS IP address or Domain Name
-VPS_HOST = "144.24.23.61" # Remote public Ubuntu VPS Server IP
+VPS_HOST = "129.146.213.8" # Remote public Ubuntu VPS Server IP
 SECURE_GATEWAY_KEY = "ThothSecretGatewayKey2026!"
 # ==============================================================================
 

@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 3335,
-    host: '127.0.0.1'
+    // Escuchar en todas las interfaces de red para permitir acceso local/remoto
+    host: '0.0.0.0'
   }
 });

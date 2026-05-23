@@ -1,0 +1,347 @@
+{
+    "metadata": {
+        "estado_piloto": "San Luis Potosí (Clave 24)",
+        "total_secciones_analizadas": 1843,
+        "timestamp": "2026-05-19"
+    },
+    "estadisticas_descriptivas": {
+        "total_establecimientos": {
+            "media": 69.4064,
+            "desviacion_estandar": 114.2884,
+            "min": 0.0,
+            "max": 1184.0
+        },
+        "comercios_retail": {
+            "media": 30.0005,
+            "desviacion_estandar": 57.8778,
+            "min": 0.0,
+            "max": 704.0
+        },
+        "servicios_alimentos": {
+            "media": 10.4243,
+            "desviacion_estandar": 17.5188,
+            "min": 0.0,
+            "max": 156.0
+        },
+        "manufactura": {
+            "media": 6.1774,
+            "desviacion_estandar": 11.235,
+            "min": 0.0,
+            "max": 237.0
+        },
+        "poblacion_estimada": {
+            "media": 1805.9631,
+            "desviacion_estandar": 1824.0589,
+            "min": 0.0,
+            "max": 12776.0
+        },
+        "promedio_escolaridad": {
+            "media": 9.0826,
+            "desviacion_estandar": 2.2881,
+            "min": 0.0,
+            "max": 15.65
+        },
+        "poblacion_activa": {
+            "media": 923.089,
+            "desviacion_estandar": 975.6684,
+            "min": 0.0,
+            "max": 6806.0
+        }
+    },
+    "matriz_correlacion": {
+        "total_establecimientos": {
+            "total_establecimientos": 1.0,
+            "comercios_retail": 0.9497,
+            "servicios_alimentos": 0.9296,
+            "manufactura": 0.7406,
+            "poblacion_estimada": 0.3391,
+            "promedio_escolaridad": 0.4055,
+            "poblacion_activa": 0.3333
+        },
+        "comercios_retail": {
+            "total_establecimientos": 0.9497,
+            "comercios_retail": 1.0,
+            "servicios_alimentos": 0.8554,
+            "manufactura": 0.6377,
+            "poblacion_estimada": 0.282,
+            "promedio_escolaridad": 0.3039,
+            "poblacion_activa": 0.2737
+        },
+        "servicios_alimentos": {
+            "total_establecimientos": 0.9296,
+            "comercios_retail": 0.8554,
+            "servicios_alimentos": 1.0,
+            "manufactura": 0.68,
+            "poblacion_estimada": 0.336,
+            "promedio_escolaridad": 0.4084,
+            "poblacion_activa": 0.3317
+        },
+        "manufactura": {
+            "total_establecimientos": 0.7406,
+            "comercios_retail": 0.6377,
+            "servicios_alimentos": 0.68,
+            "manufactura": 1.0,
+            "poblacion_estimada": 0.3347,
+            "promedio_escolaridad": 0.2227,
+            "poblacion_activa": 0.3207
+        },
+        "poblacion_estimada": {
+            "total_establecimientos": 0.3391,
+            "comercios_retail": 0.282,
+            "servicios_alimentos": 0.336,
+            "manufactura": 0.3347,
+            "poblacion_estimada": 1.0,
+            "promedio_escolaridad": 0.5356,
+            "poblacion_activa": 0.9963
+        },
+        "promedio_escolaridad": {
+            "total_establecimientos": 0.4055,
+            "comercios_retail": 0.3039,
+            "servicios_alimentos": 0.4084,
+            "manufactura": 0.2227,
+            "poblacion_estimada": 0.5356,
+            "promedio_escolaridad": 1.0,
+            "poblacion_activa": 0.5575
+        },
+        "poblacion_activa": {
+            "total_establecimientos": 0.3333,
+            "comercios_retail": 0.2737,
+            "servicios_alimentos": 0.3317,
+            "manufactura": 0.3207,
+            "poblacion_estimada": 0.9963,
+            "promedio_escolaridad": 0.5575,
+            "poblacion_activa": 1.0
+        }
+    },
+    "hotspots": {
+        "top_densidad_economica": [
+            {
+                "id_seccion": "240280903",
+                "total_establecimientos": 1184.0,
+                "promedio_escolaridad": 13.29,
+                "poblacion_estimada": 345.0
+            },
+            {
+                "id_seccion": "240281039",
+                "total_establecimientos": 968.0,
+                "promedio_escolaridad": 15.21,
+                "poblacion_estimada": 3534.0
+            },
+            {
+                "id_seccion": "240280941",
+                "total_establecimientos": 919.0,
+                "promedio_escolaridad": 11.75,
+                "poblacion_estimada": 2556.0
+            },
+            {
+                "id_seccion": "240280864",
+                "total_establecimientos": 899.0,
+                "promedio_escolaridad": 10.68,
+                "poblacion_estimada": 1878.0
+            },
+            {
+                "id_seccion": "240281125",
+                "total_establecimientos": 793.0,
+                "promedio_escolaridad": 0.0,
+                "poblacion_estimada": 1.0
+            },
+            {
+                "id_seccion": "240240648",
+                "total_establecimientos": 767.0,
+                "promedio_escolaridad": 11.07,
+                "poblacion_estimada": 4056.0
+            },
+            {
+                "id_seccion": "240130315",
+                "total_establecimientos": 744.0,
+                "promedio_escolaridad": 10.78,
+                "poblacion_estimada": 1018.0
+            },
+            {
+                "id_seccion": "240280873",
+                "total_establecimientos": 718.0,
+                "promedio_escolaridad": 10.68,
+                "poblacion_estimada": 1878.0
+            },
+            {
+                "id_seccion": "240240644",
+                "total_establecimientos": 715.0,
+                "promedio_escolaridad": 11.07,
+                "poblacion_estimada": 4056.0
+            },
+            {
+                "id_seccion": "240280773",
+                "total_establecimientos": 708.0,
+                "promedio_escolaridad": 11.33,
+                "poblacion_estimada": 2402.0
+            }
+        ],
+        "top_nivel_educativo": [
+            {
+                "id_seccion": "240280929",
+                "total_establecimientos": 138.0,
+                "promedio_escolaridad": 15.65,
+                "poblacion_estimada": 2452.0
+            },
+            {
+                "id_seccion": "240280983",
+                "total_establecimientos": 76.0,
+                "promedio_escolaridad": 15.65,
+                "poblacion_estimada": 2452.0
+            },
+            {
+                "id_seccion": "240280984",
+                "total_establecimientos": 191.0,
+                "promedio_escolaridad": 15.49,
+                "poblacion_estimada": 3023.0
+            },
+            {
+                "id_seccion": "240280930",
+                "total_establecimientos": 105.0,
+                "promedio_escolaridad": 15.49,
+                "poblacion_estimada": 3023.0
+            },
+            {
+                "id_seccion": "240281106",
+                "total_establecimientos": 321.0,
+                "promedio_escolaridad": 15.45,
+                "poblacion_estimada": 1482.0
+            },
+            {
+                "id_seccion": "240280982",
+                "total_establecimientos": 134.0,
+                "promedio_escolaridad": 15.4,
+                "poblacion_estimada": 3138.0
+            },
+            {
+                "id_seccion": "240281022",
+                "total_establecimientos": 97.0,
+                "promedio_escolaridad": 15.32,
+                "poblacion_estimada": 2001.0
+            },
+            {
+                "id_seccion": "240281039",
+                "total_establecimientos": 968.0,
+                "promedio_escolaridad": 15.21,
+                "poblacion_estimada": 3534.0
+            },
+            {
+                "id_seccion": "240280999",
+                "total_establecimientos": 688.0,
+                "promedio_escolaridad": 15.04,
+                "poblacion_estimada": 1168.0
+            },
+            {
+                "id_seccion": "240280914",
+                "total_establecimientos": 189.0,
+                "promedio_escolaridad": 15.04,
+                "poblacion_estimada": 2425.0
+            }
+        ]
+    },
+    "top_dinamismo_social": [
+        {
+            "id_seccion": "240281039",
+            "indice_dinamismo": 0.7117,
+            "categoria": "Muy Alto Dinamismo"
+        },
+        {
+            "id_seccion": "240280903",
+            "indice_dinamismo": 0.6471,
+            "categoria": "Dinamismo Moderado"
+        },
+        {
+            "id_seccion": "240280977",
+            "indice_dinamismo": 0.621,
+            "categoria": "Dinamismo Moderado"
+        },
+        {
+            "id_seccion": "240281874",
+            "indice_dinamismo": 0.6166,
+            "categoria": "Dinamismo Moderado"
+        },
+        {
+            "id_seccion": "240351864",
+            "indice_dinamismo": 0.6149,
+            "categoria": "Dinamismo Moderado"
+        },
+        {
+            "id_seccion": "240281876",
+            "indice_dinamismo": 0.6108,
+            "categoria": "Dinamismo Moderado"
+        },
+        {
+            "id_seccion": "240351829",
+            "indice_dinamismo": 0.6095,
+            "categoria": "Dinamismo Moderado"
+        },
+        {
+            "id_seccion": "240351833",
+            "indice_dinamismo": 0.6083,
+            "categoria": "Dinamismo Moderado"
+        },
+        {
+            "id_seccion": "240281871",
+            "indice_dinamismo": 0.6058,
+            "categoria": "Dinamismo Moderado"
+        },
+        {
+            "id_seccion": "240281875",
+            "indice_dinamismo": 0.6052,
+            "categoria": "Dinamismo Moderado"
+        },
+        {
+            "id_seccion": "240280941",
+            "indice_dinamismo": 0.5937,
+            "categoria": "Dinamismo Moderado"
+        },
+        {
+            "id_seccion": "240280999",
+            "indice_dinamismo": 0.5884,
+            "categoria": "Dinamismo Moderado"
+        },
+        {
+            "id_seccion": "240240648",
+            "indice_dinamismo": 0.5763,
+            "categoria": "Dinamismo Moderado"
+        },
+        {
+            "id_seccion": "240240644",
+            "indice_dinamismo": 0.5631,
+            "categoria": "Dinamismo Moderado"
+        },
+        {
+            "id_seccion": "240280947",
+            "indice_dinamismo": 0.5503,
+            "categoria": "Dinamismo Moderado"
+        },
+        {
+            "id_seccion": "240280864",
+            "indice_dinamismo": 0.5468,
+            "categoria": "Dinamismo Moderado"
+        },
+        {
+            "id_seccion": "240351287",
+            "indice_dinamismo": 0.5439,
+            "categoria": "Dinamismo Moderado"
+        },
+        {
+            "id_seccion": "240351861",
+            "indice_dinamismo": 0.5437,
+            "categoria": "Dinamismo Moderado"
+        },
+        {
+            "id_seccion": "240280776",
+            "indice_dinamismo": 0.5427,
+            "categoria": "Dinamismo Moderado"
+        },
+        {
+            "id_seccion": "240281883",
+            "indice_dinamismo": 0.5424,
+            "categoria": "Dinamismo Moderado"
+        }
+    ],
+    "insights_clave": [
+        "Se observa una tendencia positiva moderada (0.4055) que relaciona la escolaridad promedio de la población con un incremento en las actividades comerciales y de servicios en la sección."
+    ]
+}

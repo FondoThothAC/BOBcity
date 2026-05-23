@@ -34,8 +34,18 @@ Hemos realizado una simulación interactiva completa en tiempo real utilizando e
 * Configuración de la navegación por atajos de teclado (Ctrl + número) para dar soporte al nuevo panel.
 * Mapeo de cabeceras, títulos y subtítulos del `top-bar`.
 
+### 3. Navegación GIS Multinivel y Catálogo INEGI en [PainPointsMap.jsx](file:///Volumes/SSD1TB/plataforma/src/components/PainPointsMap.jsx)
+* **Visualización Geográfica de Límites Reales:** Carga del GeoJSON oficial de la República Mexicana en la escala de Entidades Federativas (Nacional), con navegación drill-down automática (clic para entrar al estado y cargar municipios).
+* **4 Sub-Mapas Temáticos:** Navegación por pestañas independientes:
+  - **Tensión & Dolores:** Incidentes y quejas ciudadanas de agua, seguridad e impuestos.
+  - **Fuerza Electoral:** Afiliados INE, participación electoral y militancia partidaria.
+  - **Socioeconómico (INEGI):** Buscador interactivo y selector del catálogo dinámico (Población, Educación, Empleo, Vivienda y Servicios).
+  - **Crossover:** Permite realizar cruzamiento dinámico correlacionando variables de INEGI con el clima político-social usando operadores matemáticos y mapa de calor violeta-rosa neón.
+* **Estadísticas Deterministas en Popups:** Tooltips premium y popups con desglose de población censo, grado de escolaridad, ingreso familiar promedio y fuerza electoral estimada por partido político.
+
 ---
 
 ## 🛠️ Verificación y Compilación
 
 * Hemos ejecutado un build de producción completo con Vite (`npm run build`) que compiló **exitosamente con 0 errores y 0 advertencias**, garantizando la robustez y compatibilidad de todos los nuevos tipos y librerías utilizadas.
+* Se ejecutó el script de sincronización local `./git_sync.sh` para comprometer los cambios en la rama local con el mensaje descriptivo en español.

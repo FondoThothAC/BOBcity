@@ -1,6 +1,3 @@
-// src/components/MasterConsole.jsx
-// Master Administrative Console - Exclusive for CívicaOS Admins
-
 import React, { useState } from 'react';
 import { 
   ShieldAlert, 
@@ -21,20 +18,55 @@ import {
 } from 'lucide-react';
 import { themes } from '../themeManager';
 import OrchestratorConsole from './OrchestratorConsole';
+import electoralScenarios from '../data/electoral_scenarios.json';
 
 export default function MasterConsole({ clients, onAddClient, onDeleteClient, onUpdateClient }) {
   const [activeSubTab, setActiveSubTab] = useState('clients');
   const [isCalibrating, setIsCalibrating] = useState(null);
   
+  // Autocomplete State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [selectedScenario, setSelectedScenario] = useState(null);
+
   // Form State
   const [newClientName, setNewClientName] = useState('');
   const [newClientCode, setNewClientCode] = useState('');
   const [newClientRegion, setNewClientRegion] = useState('');
+  const [newClientLevel, setNewClientLevel] = useState('Distrito Local');
+  const [newClientOffice, setNewClientOffice] = useState('Diputación Local');
   const [newClientPop, setNewClientPop] = useState(75000);
   const [newClientTheme, setNewClientTheme] = useState('glass-classic');
 
   // Copy State
   const [copiedCode, setCopiedCode] = useState(null);
+
+  const handleSearchScenarios = (query) => {
+    setSearchQuery(query);
+    if (query.trim().length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    const lowerQuery = query.toLowerCase();
+    const filtered = electoralScenarios.filter(s => 
+      s.name.toLowerCase().includes(lowerQuery) || 
+      s.code.toLowerCase().includes(lowerQuery) ||
+      s.state.toLowerCase().includes(lowerQuery)
+    ).slice(0, 8); // Top 8 for fluid UI
+    setSearchResults(filtered);
+  };
+
+  const handleSelectScenario = (scenario) => {
+    setSelectedScenario(scenario);
+    setNewClientName(scenario.name);
+    setNewClientCode(scenario.code);
+    setNewClientRegion(`${scenario.state}, México`);
+    setNewClientLevel(scenario.level);
+    setNewClientOffice(scenario.office);
+    setNewClientPop(scenario.population);
+    setSearchQuery('');
+    setSearchResults([]);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -45,17 +77,25 @@ export default function MasterConsole({ clients, onAddClient, onDeleteClient, on
       name: newClientName,
       code: newClientCode.toUpperCase().trim(),
       region: newClientRegion,
+      level: newClientLevel,
+      office: newClientOffice,
       population: parseInt(newClientPop) || 50000,
       themeId: newClientTheme,
-      active: true
+      active: true,
+      phase: 2,
+      subscription: 'platinum',
+      paymentVerified: true
     });
 
-    // Reset Form
+    // Reset Form & Autocomplete
     setNewClientName('');
     setNewClientCode('');
     setNewClientRegion('');
+    setNewClientLevel('Distrito Local');
+    setNewClientOffice('Diputación Local');
     setNewClientPop(75000);
     setNewClientTheme('glass-classic');
+    setSelectedScenario(null);
   };
 
   const handleCopy = (code) => {
@@ -148,8 +188,94 @@ export default function MasterConsole({ clients, onAddClient, onDeleteClient, on
               Dar de Alta Nuevo Cliente
             </h3>
 
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', position: 'relative' }}>
               
+              {/* 🔍 Buscador Inteligente de Escenarios Electorales (>3,400 Opciones) */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', borderBottom: '1px dashed var(--border-glass)', paddingBottom: '1rem', position: 'relative' }}>
+                <label style={{ fontSize: '0.75rem', color: 'var(--neon-blue)', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                  <span>🔍</span> BUSCADOR TÁCTICO DE ESCENARIOS (3,454 DISTRITOS Y MUNICIPIOS)
+                </label>
+                <input 
+                  type="text" 
+                  placeholder="Escribe el nombre del municipio, distrito o estado... (Ej. Hermosillo, Zapopan, Sonora)" 
+                  value={searchQuery}
+                  onChange={(e) => handleSearchScenarios(e.target.value)}
+                  className="citizen-input"
+                  style={{ borderColor: 'var(--neon-blue)', background: 'rgba(0,0,0,0.3)' }}
+                />
+                
+                {searchResults.length > 0 && (
+                  <div className="glass-card" style={{ 
+                    position: 'absolute', 
+                    zIndex: 999, 
+                    top: '100%', 
+                    left: 0,
+                    width: '100%', 
+                    background: 'rgba(8, 12, 28, 0.98)', 
+                    maxHeight: '220px', 
+                    overflowY: 'auto',
+                    border: '1px solid var(--neon-blue)',
+                    boxShadow: '0px 12px 40px rgba(0, 0, 0, 0.95)',
+                    padding: '0.25rem',
+                    borderRadius: '8px'
+                  }}>
+                    {searchResults.map((scenario) => (
+                      <div 
+                        key={scenario.code}
+                        onClick={() => handleSelectScenario(scenario)}
+                        style={{ 
+                          padding: '0.6rem 0.8rem', 
+                          cursor: 'pointer', 
+                          borderBottom: '1px solid rgba(255,255,255,0.05)',
+                          fontSize: '0.75rem',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          borderRadius: '4px',
+                          margin: '2px 0',
+                          transition: 'background 0.2s'
+                        }}
+                        className="hover-highlight"
+                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <div>
+                          <span style={{ color: 'white', fontWeight: '700' }}>{scenario.name}</span>
+                          <span style={{ color: 'var(--text-secondary)', fontSize: '0.65rem', marginLeft: '0.5rem' }}>({scenario.state})</span>
+                        </div>
+                        <span className="tag-badge" style={{ fontSize: '0.55rem', background: 'rgba(68,136,255,0.15)', color: 'var(--neon-blue)' }}>
+                          {scenario.level}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {selectedScenario && (
+                  <div style={{ 
+                    fontSize: '0.7rem', 
+                    color: 'var(--neon-emerald)', 
+                    background: 'rgba(16, 185, 129, 0.08)', 
+                    padding: '0.4rem 0.6rem', 
+                    borderRadius: '4px',
+                    border: '1px solid rgba(16, 185, 129, 0.2)',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginTop: '0.25rem'
+                  }}>
+                    <span>✅ Escenario inyectado: <strong>{selectedScenario.name}</strong> [{selectedScenario.code}]</span>
+                    <button 
+                      type="button" 
+                      onClick={() => setSelectedScenario(null)}
+                      style={{ background: 'none', border: 'none', color: 'var(--neon-rose)', cursor: 'pointer', fontWeight: '800' }}
+                    >
+                      Desvincular
+                    </button>
+                  </div>
+                )}
+              </div>
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                   <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: '700' }}>Nombre del Cliente / Campaña:</label>
@@ -173,6 +299,37 @@ export default function MasterConsole({ clients, onAddClient, onDeleteClient, on
                     required
                     className="citizen-input"
                     style={{ textTransform: 'uppercase', fontFamily: 'monospace' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                  <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: '700' }}>Nivel Territorial:</label>
+                  <select 
+                    value={newClientLevel} 
+                    onChange={(e) => setNewClientLevel(e.target.value)}
+                    className="citizen-input"
+                  >
+                    <option value="Distrito Local">Distrito Local</option>
+                    <option value="Distrito Federal">Distrito Federal</option>
+                    <option value="Municipio">Municipio / Alcaldía</option>
+                    <option value="Estado">Estado / Provincia</option>
+                    <option value="Nacional">Nacional</option>
+                    <option value="Internacional (Municipio)">Internacional (Municipio)</option>
+                    <option value="Internacional (Estado)">Internacional (Estado)</option>
+                  </select>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                  <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: '700' }}>Cargo en Juego / Uso:</label>
+                  <input 
+                    type="text" 
+                    placeholder="Ej. Diputación Local, Alcaldía, Presidencia" 
+                    value={newClientOffice}
+                    onChange={(e) => setNewClientOffice(e.target.value)}
+                    required
+                    className="citizen-input"
                   />
                 </div>
               </div>
@@ -293,8 +450,10 @@ export default function MasterConsole({ clients, onAddClient, onDeleteClient, on
                           <span style={{ fontSize: '0.55rem', background: 'rgba(239,68,68,0.2)', color: 'var(--neon-rose)', padding: '0.1rem 0.3rem', borderRadius: '4px' }}>MASTER</span>
                         )}
                       </h4>
-                      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem', fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
+                      <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.25rem', fontSize: '0.7rem', color: 'var(--text-secondary)', flexWrap: 'wrap' }}>
                         <span>📍 {client.region}</span>
+                        <span>•</span>
+                        <span style={{ color: 'var(--neon-amber)' }}>🏷️ {client.level || 'Distrito Local'} ({client.office || 'Diputación Local'})</span>
                         <span>•</span>
                         <span>👥 {client.population.toLocaleString()}</span>
                         <span>•</span>
