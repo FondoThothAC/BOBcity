@@ -33,7 +33,6 @@ def limpiar_fecha(val):
     if pd.isna(val) or val == "":
         return None
     try:
-        # Intentar convertir a datetime y luego a string YYYY-MM-DD
         dt = pd.to_datetime(val, errors='coerce')
         if pd.isna(dt):
             return None
@@ -51,27 +50,44 @@ def importar_padron_partido(conn, partido, filename):
         
     start_time = time.time()
     
-    # 1. Cargar archivo omitiendo las primeras 8 filas vacías/encabezado
+    # 1. Cargar archivo excel completo
     print("   📖 Leyendo archivo excel...")
-    df = pd.read_excel(filepath, skiprows=8)
+    df = pd.read_excel(filepath)
     
-    # Limpiar nombres de columnas
-    df.columns = [str(c).strip() for c in df.columns]
-    print(f"   Columnas leídas: {list(df.columns)}")
+    # 2. Localizar dinámicamente la fila de cabeceras buscando la palabra "ENTIDAD"
+    header_row_index = None
+    for idx in range(min(20, len(df))):
+        row_values = [str(val).strip().upper() for val in df.iloc[idx].values]
+        if 'ENTIDAD' in row_values:
+            header_row_index = idx
+            break
+            
+    if header_row_index is not None:
+        print(f"   ✅ Cabecera detectada dinámicamente en la fila del excel índice {header_row_index}.")
+        # Asignar los nombres de columna basados en esa fila
+        df.columns = [str(val).strip().upper() for val in df.iloc[header_row_index].values]
+        # Conservar solo los registros que están después de la fila de cabecera
+        df = df.iloc[header_row_index + 1:]
+    else:
+        print("   ⚠️ No se detectó la columna 'ENTIDAD' en las primeras 20 filas. Usando fallback de posición.")
+        if df.shape[1] == 5:
+            df.columns = ['ENTIDAD', 'APELLIDO PATERNO', 'APELLIDO MATERNO', 'NOMBRE', 'FECHA DE AFILIACIÓN']
+            
+    print(f"   Columnas finales asignadas: {list(df.columns)}")
     
-    # Columnas esperadas: ENTIDAD, APELLIDO PATERNO, APELLIDO MATERNO, NOMBRE, FECHA DE AFILIACIÓN
+    # Mapear las columnas requeridas
     column_mapping = {
         'ENTIDAD': 'entidad',
         'APELLIDO PATERNO': 'apellido_paterno',
         'APELLIDO MATERNO': 'apellido_materno',
         'NOMBRE': 'nombre',
-        'FECHA DE AFILIACIÓN': 'fecha_afiliacion'
+        'FECHA DE AFILIACIÓN': 'fecha_afiliacion',
+        'FECHA AFILIACION': 'fecha_afiliacion'
     }
     
-    # Renombrar si existen las columnas
     df = df.rename(columns=column_mapping)
     
-    # Asegurarnos de que las columnas existan
+    # Asegurar que todas las columnas existan
     required_cols = ['entidad', 'apellido_paterno', 'apellido_materno', 'nombre', 'fecha_afiliacion']
     for col in required_cols:
         if col not in df.columns:
@@ -79,38 +95,32 @@ def importar_padron_partido(conn, partido, filename):
             
     df = df[required_cols]
     
-    # Eliminar registros donde el nombre esté vacío
+    # Eliminar registros vacíos o nulos en el campo nombre
     df = df.dropna(subset=['nombre'])
+    df = df[df['nombre'].astype(str).str.strip() != ""]
     
-    # Inyectar la columna del partido
+    # Inyectar el partido
     df['partido'] = partido
     
-    # 2. Limpieza de datos
+    # 3. Limpieza de datos
     print("   🧹 Limpiando y formateando datos...")
     df['entidad'] = df['entidad'].fillna("DESCONOCIDA").astype(str).str.strip().str.upper()
     df['apellido_paterno'] = df['apellido_paterno'].fillna("").astype(str).str.strip().str.upper()
     df['apellido_materno'] = df['apellido_materno'].fillna("").astype(str).str.strip().str.upper()
     df['nombre'] = df['nombre'].fillna("").astype(str).str.strip().str.upper()
     
-    # Formatear la fecha
     df['fecha_afiliacion'] = df['fecha_afiliacion'].apply(limpiar_fecha)
     
-    # 3. Importación masiva usando COPY a PostgreSQL (el método más rápido)
+    # 4. Importación masiva usando COPY a PostgreSQL
     print("   🐘 Preparando buffer para COPY masivo...")
-    
-    # Reordenar columnas para que coincidan con la estructura de la base de datos
-    # partidos_militantes: partido, entidad, apellido_paterno, apellido_materno, nombre, fecha_afiliacion
     df_db = df[['partido', 'entidad', 'apellido_paterno', 'apellido_materno', 'nombre', 'fecha_afiliacion']]
     
-    # Crear buffer en memoria
     output = io.StringIO()
-    # Escribir como CSV delimitado por tabuladores, rellenando nulos con \N (formato nulo de postgres)
     df_db.to_csv(output, sep='\t', header=False, index=False, na_rep='\\N')
     output.seek(0)
     
     print(f"   ⚡ Insertando {len(df_db)} registros vía COPY...")
     with conn.cursor() as cur:
-        # Usar COPY para una carga ultra rápida
         cur.copy_from(
             output, 
             'partidos_militantes', 
@@ -138,7 +148,6 @@ def main():
                 importar_padron_partido(conn, partido, filename)
             except Exception as pe:
                 print(f"❌ Error al procesar partido {partido}: {pe}", file=sys.stderr)
-                # Continuar con el siguiente partido si uno falla
                 continue
                 
         conn.close()

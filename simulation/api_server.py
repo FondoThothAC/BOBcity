@@ -538,6 +538,106 @@ class SimulationAPIHandler(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps({"status": "error", "message": str(e)}).encode('utf-8'))
                 return
 
+        # 🗳️ GET /api/cruces-electorales - Cruzar ganadores históricos de elecciones con padrones de militantes de 2023
+        if requested_path.startswith("/api/cruces-electorales"):
+            from urllib.parse import urlparse, parse_qs
+            parsed_url = urlparse(requested_path)
+            query_params = parse_qs(parsed_url.query)
+            municipio_id = query_params.get("municipio_id", ["26019"])[0]
+            
+            try:
+                import psycopg2
+                from psycopg2.extras import RealDictCursor
+                conn = psycopg2.connect(
+                    host="localhost",
+                    port="5432",
+                    dbname="civicaos",
+                    user="robertoeduardocelisrobles"
+                )
+                cur = conn.cursor(cursor_factory=RealDictCursor)
+                
+                # 1. Obtener ganadores históricos del municipio
+                cur.execute("""
+                    SELECT anio, partido_ganador, nombre_ganador, genero, escolaridad, margen_victoria_pct
+                    FROM candidatos_elecciones
+                    WHERE municipio_id = %s
+                    ORDER BY anio DESC;
+                """, (municipio_id,))
+                candidatos = cur.fetchall()
+                
+                cruces = []
+                
+                # 2. Buscar cada ganador en el padrón de militantes
+                for cand in candidatos:
+                    nombre_completo = cand["nombre_ganador"].strip().upper()
+                    
+                    # Convertir margen a float
+                    if cand["margen_victoria_pct"]:
+                        cand["margen_victoria_pct"] = float(cand["margen_victoria_pct"])
+                        
+                    # Separar palabras para la búsqueda
+                    palabras = [p for p in nombre_completo.split() if len(p) > 2]
+                    
+                    militancias = []
+                    
+                    def acento_comodinficar(pal):
+                        acentos = {
+                            'Á': '_', 'É': '_', 'Í': '_', 'Ó': '_', 'Ú': '_', 'Ü': '_',
+                            'á': '_', 'é': '_', 'í': '_', 'ó': '_', 'ú': '_', 'ü': '_'
+                        }
+                        return "".join(acentos.get(c, c) for c in pal)
+                    
+                    if len(palabras) >= 2:
+                        likers = []
+                        params = []
+                        for pal in palabras:
+                            pal_pattern = acento_comodinficar(pal)
+                            likers.append("(apellido_paterno LIKE %s OR apellido_materno LIKE %s OR nombre LIKE %s)")
+                            params.extend([f"%{pal_pattern}%", f"%{pal_pattern}%", f"%{pal_pattern}%"])
+                            
+                        # Buscar coincidencia
+                        query_militante = f"""
+                            SELECT partido, entidad, apellido_paterno, apellido_materno, nombre, fecha_afiliacion
+                            FROM partidos_militantes
+                            WHERE {" AND ".join(likers)}
+                            LIMIT 5;
+                        """
+                        cur.execute(query_militante, params)
+                        militancias = cur.fetchall()
+                        
+                    # Formatear la fecha para evitar problemas de JSON
+                    for m in militancias:
+                        if m["fecha_afiliacion"]:
+                            m["fecha_afiliacion"] = str(m["fecha_afiliacion"])
+                            
+                    cruces.append({
+                        "eleccion": cand,
+                        "militancias_encontradas": militancias,
+                        "coincidencia": len(militancias) > 0
+                    })
+                    
+                conn.close()
+                
+                response = {
+                    "status": "success",
+                    "municipio_id": municipio_id,
+                    "cruces": cruces
+                }
+                
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json; charset=utf-8')
+                self._set_cors_headers()
+                self.end_headers()
+                self.wfile.write(json.dumps(response, ensure_ascii=False).encode('utf-8'))
+                return
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self._set_cors_headers()
+                self.end_headers()
+                self.wfile.write(json.dumps({"status": "error", "message": str(e)}).encode('utf-8'))
+                return
+
         # SPA Routing Fallback: If it's a browser route (like /master or /citizen), serve index.html
         index_path = os.path.join(BASE_DIST_DIR, "index.html")
         if not requested_path.startswith("/api/") and os.path.exists(index_path):
