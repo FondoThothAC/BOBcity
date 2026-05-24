@@ -130,6 +130,27 @@ Cada agente sintético posee una **Memoria Episódica Temporal (Array Histórico
   * $t_k$ es el momento temporal en el que ocurrió un choque de bienestar extremo (positivo como recibir subsidio `MEC_13`, o negativo como ser víctima de un delito `SEG_02`).
   * $\gamma$ es el factor de decaimiento del recuerdo (olvido cívico). Un valor bajo de $\gamma$ simula una población con "memoria histórica a largo plazo".
 
+### 4.3 Historial Electoral y Correlaciones Multivariables en Cascada (1995-2024)
+
+Con el fin de usar la historia de las elecciones como un predictor calibrado, el sistema acopla los perfiles de los candidatos ganadores con las series de tiempo socioeconómicas del municipio.
+
+#### A. Perfilado de Candidatos y Contexto Geo-Socioeconómico:
+Cada elección municipal histórica se desglosa en:
+* **Atributos del Candidato:** Género, Nivel de Escolaridad, Estatura Física (cm), Tonalidad de Tez/Piel (clasificación sociológica de colorismo en política), Propuestas de Campaña y Nivel de Cumplimiento (NLP en planes de desarrollo).
+* **Canal de Difusión Preponderante:** Medios tradicionales/campo vs. Redes Sociales digitales vs. Híbrido.
+* **Contexto del Triunfo (INEGI/CONEVAL):** Margen de victoria, porcentaje de participación ciudadana y las variables físicas del municipio en el año electoral (pobreza extrema, pavimentación de calles, alumbrado público, cobertura de internet, PIB local y presupuesto federal SHCP).
+
+#### B. Ecuación de Predicción de Impacto en Cascada:
+Para modelar cómo un cambio en una variable (por ejemplo, subir los impuestos o pavimentar una avenida) impacta las demás, calculamos el coeficiente de correlación de Pearson ($r_{xy}$) sobre la serie histórica del municipio. El cambio proyectado en una variable dependiente $Y$ ante un incremento porcentual solicitado en una variable modificada $X$ ($\Delta X_{\%}$) se calcula como:
+
+$$\Delta Y_{\%} = \Delta X_{\%} \cdot r_{xy}$$
+
+Donde:
+* $r_{xy}$ es la correlación histórica calculada para ese municipio específico.
+* El nuevo valor proyectado de la variable es: $Y_{\text{nuevo}} = Y_{\text{actual}} \cdot (1 + \frac{\Delta Y_{\%}}{100})$.
+
+Esto permite a Cívica OS predecir dinámicamente cómo las intervenciones públicas alteran los demás indicadores (por ejemplo, cómo una mayor pavimentación reduce la pobreza extrema y mejora la cobertura del transporte público).
+
 ---
 
 ## 5. Caso de Uso en Producción 2026: Simulación de Apagones y Tarifas CFE en Hermosillo
