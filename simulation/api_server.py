@@ -598,9 +598,10 @@ class SimulationAPIHandler(BaseHTTPRequestHandler):
             temp = int(params.get("temp", 32))
             agua = int(params.get("agua", 80))
             subsidio = float(params.get("subsidio", 1.40))
+            prev_state = params.get("prev_state", {})
             
             try:
-                result = run_micro_simulation(model_name, temp, agua, subsidio)
+                result = run_micro_simulation(model_name, temp, agua, subsidio, prev_state)
                 response = {
                     "status": "success",
                     "results": result
