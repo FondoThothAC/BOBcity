@@ -76,6 +76,14 @@ El desarrollo del producto se organiza en torno a cuatro épicas principales de 
   * Debe transferir el roadmap de fases, presupuesto estimado y KPIs.
   * El sistema debe almacenar el ID de proyecto resultante para auditoría y trazabilidad cruzada.
 
+### Épica 5: Simulación Cognitiva Micro a Bajo Costo (SLM Engine)
+* **Historia de Usuario:** Como analista de políticas públicas en campo, quiero correr inferencias cognitivas de gemelos sintéticos usando modelos locales extremadamente ligeros (1B/2B parámetros) en mi laptop para evaluar el bienestar individual y la intención de voto de forma gratuita.
+* **Criterios de Aceptación:**
+  * El motor debe soportar inferencia en tiempo real en Ollama usando `llama3.2:1b` y `qwen2.5:1.5b`.
+  * Debe recibir las variables de entrada de temperatura (°C), presión de agua (%) y subsidio de luz ($/kWh).
+  * Debe proveer un parser JSON estricto con un algoritmo de fallback heurístico si Ollama está fuera de línea.
+  * El gemelo simulado debe devolver su bienestar (1-100), una opinión cognitiva con acento local y su intención de voto.
+
 ---
 
 ## 4. Roadmap del Producto

@@ -149,6 +149,18 @@ And tras 1.2 segundos muestra la respuesta del ciudadano sintético formateada e
 And la respuesta contiene expresiones típicas de Sonora como "¡Qué bárbaro con este calorón!"  
 And la respuesta detalla la presión exacta en PSI del predio del agente adaptada de forma condicional  
 
+**Escenario: Simulación cognitiva con modelo de lenguaje local ligero (1B/2B)**  
+Dado que estoy en la sección de "Gemelo Micro (LLM Local)"  
+Cuando configuro la "Temperatura" a 45°C  
+And configuro la "Presión de Agua" a 20%  
+And configuro el "Subsidio de CFE" a 0.90 $/kWh  
+And selecciono el modelo local "qwen2.5:1.5b"  
+And ejecuto la simulación con el modelo local  
+Entonces el sistema debe mostrar el log cognitivo en la consola terminal  
+And la opinión resultante del gemelo sintético debe expresar insatisfacción por la temperatura y el agua  
+And el bienestar individual del gemelo debe ser inferior a 30%  
+And la intención de voto resultante debe ser "Oposición"
+
 ---
 
 ### 2.3 Feature: Predicción Electoral por Distrito

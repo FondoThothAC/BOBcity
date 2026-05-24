@@ -583,6 +583,40 @@ class SimulationAPIHandler(BaseHTTPRequestHandler):
                 
                 error_response = {"status": "error", "message": str(e)}
                 self.wfile.write(json.dumps(error_response).encode('utf-8'))
+        elif self.path == "/api/gds-micro/simulate":
+            from gds_micro_agent import run_micro_simulation
+            
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            
+            try:
+                params = json.loads(post_data.decode('utf-8'))
+            except Exception:
+                params = {}
+                
+            model_name = params.get("model", "qwen2.5:1.5b")
+            temp = int(params.get("temp", 32))
+            agua = int(params.get("agua", 80))
+            subsidio = float(params.get("subsidio", 1.40))
+            
+            try:
+                result = run_micro_simulation(model_name, temp, agua, subsidio)
+                response = {
+                    "status": "success",
+                    "results": result
+                }
+                
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json; charset=utf-8')
+                self._set_cors_headers()
+                self.end_headers()
+                self.wfile.write(json.dumps(response, ensure_ascii=False).encode('utf-8'))
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self._set_cors_headers()
+                self.end_headers()
+                self.wfile.write(json.dumps({"status": "error", "message": str(e)}).encode('utf-8'))
         else:
             self.send_response(404)
             self._set_cors_headers()

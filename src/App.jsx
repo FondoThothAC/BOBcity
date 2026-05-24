@@ -29,6 +29,7 @@ import ClientOnboarding from './components/ClientOnboarding';
 import SocialGraph3D from './components/SocialGraph3D';
 import SyntoWiki from './components/SyntoWiki';
 import GDSMegaVisualizer from './components/GDSMegaVisualizer';
+import GDSMicroSimulator from './components/GDSMicroSimulator';
 import ImplementationPlan from './components/ImplementationPlan';
 import AgentRawView from './components/AgentRawView';
 
@@ -99,7 +100,7 @@ export default function App() {
         if (num !== null && num >= 1 && num <= 10) {
           e.preventDefault();
           if (authStatus === 'master') {
-            const tabs = ['master-panel', 'overview', 'map', 'simulator', 'gds-mega', 'predictor', 'data-hub', 'swarm', 'social-graph', 'synto-wiki', 'citizen-portal'];
+            const tabs = ['master-panel', 'overview', 'map', 'simulator', 'gds-mega', 'gds-micro', 'predictor', 'data-hub', 'swarm', 'social-graph', 'synto-wiki', 'citizen-portal'];
             const targetTab = tabs[num - 1];
             if (targetTab) {
               setActiveTab(targetTab);
@@ -111,7 +112,7 @@ export default function App() {
               }));
             }
           } else if (authStatus === 'client') {
-            const tabs = ['overview', 'map', 'simulator', 'gds-mega', 'predictor', 'data-hub', 'swarm', 'social-graph', 'synto-wiki', 'citizen-portal'];
+            const tabs = ['overview', 'map', 'simulator', 'gds-mega', 'gds-micro', 'predictor', 'data-hub', 'swarm', 'social-graph', 'synto-wiki', 'citizen-portal'];
             const targetTab = tabs[num - 1];
             if (targetTab) {
               setActiveTab(targetTab);
@@ -818,6 +819,15 @@ export default function App() {
           background: activeTab === 'gds-mega' ? 'rgba(127, 29, 219, 0.15)' : '' 
         } 
       },
+      { 
+        id: 'gds-micro', 
+        label: 'Gemelo Micro (LLM Local)', 
+        icon: <Sparkles size={20} />, 
+        style: { 
+          borderColor: activeTab === 'gds-micro' ? 'var(--neon-purple)' : '', 
+          background: activeTab === 'gds-micro' ? 'rgba(127, 29, 219, 0.15)' : '' 
+        } 
+      },
       { id: 'predictor', label: 'Predictor Electoral', icon: <Vote size={20} /> },
       { id: 'data-hub', label: 'Data Hub & APIs', icon: <Database size={20} /> },
       { id: 'swarm', label: 'Swarm OpenClaw', icon: <Terminal size={20} /> },
@@ -932,6 +942,7 @@ export default function App() {
               {activeTab === 'map' && "Mapa Georeferenciado de Dolores"}
               {activeTab === 'simulator' && "Simulador Basado en Agentes (ABM)"}
               {activeTab === 'gds-mega' && "Visualizador GDS-MEGA (1,024 KPIs)"}
+              {activeTab === 'gds-micro' && "Simulador GDS-Micro (LLM Local)"}
               {activeTab === 'predictor' && "Predictor Electoral Head-to-Head"}
               {activeTab === 'data-hub' && "Data Hub & APIs de Inferencia"}
               {activeTab === 'swarm' && "Enjambre Cognitivo OpenClaw"}
@@ -947,6 +958,7 @@ export default function App() {
               {activeTab === 'map' && "Visualizando capas de calor de insatisfacción ciudadana."}
               {activeTab === 'simulator' && "Prueba políticas y simula dinámicas de opinión."}
               {activeTab === 'gds-mega' && "Visualización profunda del Gemelo Digital Social a micro y macro escala."}
+              {activeTab === 'gds-micro' && "Inferencia cognitiva del gemelo digital usando modelos pequeños locales."}
               {activeTab === 'predictor' && "Probabilidad de victoria basada en perfiles y propuestas."}
               {activeTab === 'data-hub' && "Comercializar censos sintéticos, descargar datasets y gestionar claves API de desarrollador."}
               {activeTab === 'swarm' && "Logs del orquestador cognitivo, auditoría y exportación a OBP."}
@@ -1004,6 +1016,9 @@ export default function App() {
               agents={agents}
               setAgents={setAgents}
             />
+          )}
+          {activeTab === 'gds-micro' && (
+            <GDSMicroSimulator />
           )}
           {activeTab === 'predictor' && (
             <PredictorEngine 
