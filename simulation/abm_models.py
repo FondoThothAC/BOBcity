@@ -131,3 +131,217 @@ class CivicSimulationModel:
             },
             "final_opinions": opinions
         }
+
+
+class GISSandboxModel:
+    """
+    Modelo de Simulación Espacial (Sandbox GIS) para Hermosillo u otras ciudades.
+    MDD / DDD: Calcula el impacto de obras viales (cierres), puentes e infraestructuras de agua
+    en las poblaciones sintéticas geolocalizadas.
+    """
+    def __init__(self, lat: float, lon: float, num_agents: int = 500):
+        self.lat = lat
+        self.lon = lon
+        self.num_agents = num_agents
+        self.agents = []
+        self._initialize_population()
+
+    def _initialize_population(self):
+        import random
+        # Usar semilla para mantener consistencia física-temporal
+        r = random.Random(42)
+        
+        for i in range(self.num_agents):
+            sector = r.choice(['joven', 'comerciante', 'asalariado'])
+            
+            # Coordenadas de residencia (hogar) en Hermosillo
+            d_lat_home = r.uniform(-0.025, 0.025)
+            d_lon_home = r.uniform(-0.025, 0.025)
+            home_coords = (self.lat + d_lat_home, self.lon + d_lon_home)
+            
+            # Coordenadas de trabajo
+            d_lat_work = r.uniform(-0.025, 0.025)
+            d_lon_work = r.uniform(-0.025, 0.025)
+            work_coords = (self.lat + d_lat_work, self.lon + d_lon_work)
+            
+            # Asignar sección electoral en base al grid de 3x4 (secciones '0001' a '0012')
+            # correlacionado con mock GeoJSON en api_server.py
+            home_sec_idx = int((d_lat_home + 0.025) / 0.017) * 4 + int((d_lon_home + 0.025) / 0.013)
+            home_sec_idx = max(0, min(11, home_sec_idx))
+            home_section = f"{(home_sec_idx + 1):04d}"
+            
+            work_sec_idx = int((d_lat_work + 0.025) / 0.017) * 4 + int((d_lon_work + 0.025) / 0.013)
+            work_sec_idx = max(0, min(11, work_sec_idx))
+            work_section = f"{(work_sec_idx + 1):04d}"
+            
+            # Ruta de secciones cruzadas en el trayecto
+            route_sections = sorted(list({home_section, work_section}))
+            if len(route_sections) == 1:
+                sec_id = int(home_section)
+                inter_sec = f"{((sec_id % 12) + 1):04d}"
+                route_sections.append(inter_sec)
+                
+            base_water_pain = r.uniform(30.0, 80.0)
+            dist_home_work = self._haversine(home_coords, work_coords)
+            base_transit_pain = min(90.0, 20.0 + dist_home_work * 12.0 + r.uniform(0.0, 15.0))
+            
+            self.agents.append({
+                "agent_id": i,
+                "sector": sector,
+                "home_coords": home_coords,
+                "work_coords": work_coords,
+                "home_section": home_section,
+                "work_section": work_section,
+                "route_sections": route_sections,
+                "base_water_pain": base_water_pain,
+                "base_transit_pain": base_transit_pain,
+                "water_pain": base_water_pain,
+                "transit_pain": base_transit_pain,
+                "happiness": 50.0,
+                "vote_intention": "Morena"
+            })
+
+    def _haversine(self, c1, c2):
+        import math
+        lat1, lon1 = c1
+        lat2, lon2 = c2
+        R = 6371.0  # Radio de la Tierra en kilómetros
+        dlat = math.radians(lat2 - lat1)
+        dlon = math.radians(lon2 - lon1)
+        a = math.sin(dlat / 2)**2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2)**2
+        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+        return R * c
+
+    def update_simulation(self, structures: list):
+        """
+        Recalcula los dolores e índices de felicidad basados en las estructuras colocadas
+        """
+        wells = [s for s in structures if s.get("type") == "well"]
+        closures = [s for s in structures if s.get("type") == "closure"]
+        bridges = [s for s in structures if s.get("type") == "bridge"]
+        
+        # Conjunto de secciones viales cerradas
+        closed_sections = set(str(c.get("section", "")) for c in closures if c.get("section"))
+        
+        for agent in self.agents:
+            # 1. Recalcular dolor de agua (Pozos)
+            agent_home = agent["home_coords"]
+            water_served = False
+            for well in wells:
+                well_coords = (float(well["lat"]), float(well["lng"]))
+                dist = self._haversine(agent_home, well_coords)
+                # Radio de cobertura: 1.5 km
+                if dist <= 1.5:
+                    water_served = True
+                    break
+            
+            if water_served:
+                agent["water_pain"] = max(0.0, agent["base_water_pain"] * 0.15)
+            else:
+                agent["water_pain"] = agent["base_water_pain"]
+                
+            # 2. Recalcular dolor de tránsito (Cierres y Puentes)
+            transit_penalty = 0.0
+            for sec in agent["route_sections"]:
+                if sec in closed_sections:
+                    transit_penalty += 35.0  # Embotellamiento
+                    
+            bridge_discount = 0.0
+            if bridges:
+                route_center = ((agent["home_coords"][0] + agent["work_coords"][0]) / 2.0,
+                                (agent["home_coords"][1] + agent["work_coords"][1]) / 2.0)
+                for bridge in bridges:
+                    bridge_coords = (float(bridge["lat"]), float(bridge["lng"]))
+                    dist_to_bridge = self._haversine(route_center, bridge_coords)
+                    if dist_to_bridge <= 2.5:
+                        bridge_discount = max(bridge_discount, 20.0)
+            
+            agent["transit_pain"] = max(5.0, min(100.0, agent["base_transit_pain"] + transit_penalty - bridge_discount))
+            
+            # 3. Recalcular felicidad y preferencia electoral
+            avg_pain = (agent["water_pain"] + agent["transit_pain"]) / 2.0
+            agent["happiness"] = max(0.0, min(100.0, 100.0 - avg_pain))
+            
+            if agent["happiness"] > 55.0:
+                agent["vote_intention"] = "Morena"
+            else:
+                agent["vote_intention"] = "Oposición"
+
+    def get_metrics(self) -> dict:
+        """
+        Calcula y retorna las métricas agregadas globales y por sección electoral
+        """
+        import numpy as np
+        
+        happiness_list = [a["happiness"] for a in self.agents]
+        water_pain_list = [a["water_pain"] for a in self.agents]
+        transit_pain_list = [a["transit_pain"] for a in self.agents]
+        vote_intentions = [a["vote_intention"] for a in self.agents]
+        
+        total = len(self.agents)
+        vote_morena = vote_intentions.count("Morena")
+        vote_oposion = vote_intentions.count("Oposición")
+        
+        global_metrics = {
+            "avg_happiness": float(np.mean(happiness_list)) if total else 50.0,
+            "avg_water_pain": float(np.mean(water_pain_list)) if total else 40.0,
+            "avg_transit_pain": float(np.mean(transit_pain_list)) if total else 30.0,
+            "vote_share": {
+                "Morena": (vote_morena / total * 100.0) if total else 50.0,
+                "Oposición": (vote_oposion / total * 100.0) if total else 50.0
+            }
+        }
+        
+        section_metrics = {}
+        for s_idx in range(1, 13):
+            sec_id = f"{s_idx:04d}"
+            sec_agents = [a for a in self.agents if a["home_section"] == sec_id]
+            if sec_agents:
+                sec_happiness = [a["happiness"] for a in sec_agents]
+                sec_water = [a["water_pain"] for a in sec_agents]
+                sec_transit = [a["transit_pain"] for a in sec_agents]
+                sec_votes = [a["vote_intention"] for a in sec_agents]
+                
+                sec_total = len(sec_agents)
+                sec_morena = sec_votes.count("Morena")
+                
+                section_metrics[sec_id] = {
+                    "avg_happiness": float(np.mean(sec_happiness)),
+                    "avg_water_pain": float(np.mean(sec_water)),
+                    "avg_transit_pain": float(np.mean(sec_transit)),
+                    "militants_percent": {
+                        "MORENA": int(sec_morena / sec_total * 100.0),
+                        "PAN": int((sec_total - sec_morena) * 0.6 / sec_total * 100.0),
+                        "PRI": int((sec_total - sec_morena) * 0.2 / sec_total * 100.0),
+                        "MC": int((sec_total - sec_morena) * 0.2 / sec_total * 100.0)
+                    }
+                }
+            else:
+                section_metrics[sec_id] = {
+                    "avg_happiness": 50.0,
+                    "avg_water_pain": 40.0,
+                    "avg_transit_pain": 30.0,
+                    "militants_percent": {"MORENA": 40, "PAN": 30, "PRI": 15, "MC": 15}
+                }
+                
+        sample_agents = []
+        for a in self.agents[:100]:
+            sample_agents.append({
+                "agent_id": a["agent_id"],
+                "sector": a["sector"],
+                "home_coords": list(a["home_coords"]),
+                "work_coords": list(a["work_coords"]),
+                "home_section": a["home_section"],
+                "work_section": a["work_section"],
+                "water_pain": a["water_pain"],
+                "transit_pain": a["transit_pain"],
+                "happiness": a["happiness"],
+                "vote_intention": a["vote_intention"]
+            })
+            
+        return {
+            "global_metrics": global_metrics,
+            "section_metrics": section_metrics,
+            "sample_agents": sample_agents
+        }
+

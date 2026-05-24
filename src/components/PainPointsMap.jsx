@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { MapContainer, TileLayer, Polygon, Popup, useMap, CircleMarker, GeoJSON } from 'react-leaflet';
+import { MapContainer, TileLayer, Polygon, Popup, useMap, CircleMarker, GeoJSON, Marker, Circle, useMapEvents } from 'react-leaflet';
+import L from 'leaflet';
 import { 
   MEXICO_STATES, 
   STATE_MUNICIPALITIES, 
@@ -18,6 +19,90 @@ function ChangeMapView({ center, zoom }) {
     }
   }, [map, center, zoom]);
   return null;
+}
+
+// Helper Component para registrar clics en el mapa en modo construcción
+function MapClickEvents({ activeTool, onPlace }) {
+  useMapEvents({
+    click(e) {
+      if (activeTool === 'bridge' || activeTool === 'well') {
+        onPlace(e.latlng.lat, e.latlng.lng);
+      }
+    }
+  });
+  return null;
+}
+
+// Componente de partículas de votantes animados para el mapa
+function VoterParticles({ agents }) {
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    let frameId;
+    const start = Date.now();
+    const duration = 6000; // Ciclo de 6 segundos
+
+    const tick = () => {
+      const elapsed = Date.now() - start;
+      const t = (elapsed % duration) / duration;
+      const factor = t < 0.5 ? t * 2 : (1 - t) * 2;
+      setProgress(factor);
+      frameId = requestAnimationFrame(tick);
+    };
+
+    frameId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frameId);
+  }, []);
+
+  if (!agents || agents.length === 0) return null;
+
+  return (
+    <>
+      {agents.map((agent) => {
+        const homeCoords = agent.home_coords;
+        const workCoords = agent.work_coords;
+        if (!homeCoords || !workCoords) return null;
+
+        const [homeLat, homeLon] = homeCoords;
+        const [workLat, workLon] = workCoords;
+
+        const isStuck = agent.transit_pain > 60;
+
+        let currentLat, currentLon;
+        if (isStuck) {
+          const jitter = Math.sin(Date.now() / 80) * 0.0002;
+          currentLat = homeLat + (workLat - homeLat) * 0.4 + jitter;
+          currentLon = homeLon + (workLon - homeLon) * 0.4 + jitter;
+        } else {
+          currentLat = homeLat + (workLat - homeLat) * progress;
+          currentLon = homeLon + (workLon - homeLon) * progress;
+        }
+
+        let color = "var(--neon-emerald)";
+        if (agent.transit_pain > 60) {
+          color = "var(--neon-rose)";
+        } else if (agent.water_pain > 60) {
+          color = "var(--neon-amber)";
+        } else if (agent.happiness < 40) {
+          color = "var(--neon-pink)";
+        }
+
+        return (
+          <CircleMarker
+            key={agent.agent_id}
+            center={[currentLat, currentLon]}
+            radius={isStuck ? 4.5 : 3.5}
+            pathOptions={{
+              fillColor: color,
+              fillOpacity: 0.95,
+              color: "#fff",
+              weight: 0.8
+            }}
+          />
+        );
+      })}
+    </>
+  );
 }
 
 export default function PainPointsMap({ agents }) {
@@ -45,6 +130,36 @@ export default function PainPointsMap({ agents }) {
   // Estados de datos geográficos reales
   const [geoJsonData, setGeoJsonData] = useState(null);
   const [loadingGeoJson, setLoadingGeoJson] = useState(false);
+
+  // --- Estados del Sandbox GIS ---
+  const [activeTool, setActiveTool] = useState(null); // 'bridge' | 'closure' | 'well' | null
+  const [structures, setStructures] = useState([]); // array de { id, type, lat, lng, section }
+  const [sandboxResults, setSandboxResults] = useState(null);
+  const [isLoadingGis, setIsLoadingGis] = useState(false);
+
+  const customIcons = useMemo(() => {
+    if (typeof window === 'undefined') return {};
+    return {
+      bridge: L.divIcon({
+        html: '<div style="font-size: 24px; filter: drop-shadow(0 0 6px var(--neon-blue));">🌉</div>',
+        className: 'custom-div-icon',
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+      }),
+      closure: L.divIcon({
+        html: '<div style="font-size: 24px; filter: drop-shadow(0 0 6px var(--neon-rose));">🚧</div>',
+        className: 'custom-div-icon',
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+      }),
+      well: L.divIcon({
+        html: '<div style="font-size: 24px; filter: drop-shadow(0 0 6px var(--neon-blue));">🚰</div>',
+        className: 'custom-div-icon',
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+      })
+    };
+  }, []);
 
   // Integración de Banxico API (Tipo de Cambio, Inflación, Salario Mínimo)
   const [banxicoData, setBanxicoData] = useState({
@@ -282,6 +397,58 @@ export default function PainPointsMap({ agents }) {
       });
   }, [selectedState, selectedMunicipality]);
 
+  // Hook para disparar la simulación inicial al seleccionar un municipio
+  useEffect(() => {
+    if (selectedMunicipality) {
+      calculateGISSandbox(structures);
+    } else {
+      setSandboxResults(null);
+      setStructures([]);
+    }
+  }, [selectedMunicipality]);
+
+  // --- Funciones de Intervención del Sandbox GIS ---
+  const calculateGISSandbox = async (updatedStructures) => {
+    setIsLoadingGis(true);
+    const pythonApiUrl = localStorage.getItem('cp:python_api_url') || `http://${window.location.hostname}:5001`;
+    try {
+      const response = await fetch(`${pythonApiUrl}/api/gis-sandbox/calculate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          structures: updatedStructures,
+          ciudad: selectedMunicipality ? selectedMunicipality.id.replace("_mun", "") : "hermosillo"
+        })
+      });
+      if (!response.ok) throw new Error("Fallo al conectarse con el motor de simulación");
+      const data = await response.json();
+      if (data.status === 'success') {
+        setSandboxResults(data.results);
+      }
+    } catch (err) {
+      console.warn("Error al calcular el impacto del Sandbox GIS:", err);
+    } finally {
+      setIsLoadingGis(false);
+    }
+  };
+
+  const handlePlaceStructure = (lat, lng, section = null) => {
+    if (!activeTool) return;
+    const newStructure = {
+      id: Date.now(),
+      type: activeTool,
+      lat,
+      lng,
+      section: activeTool === 'closure' ? section : null
+    };
+    const updated = [...structures, newStructure];
+    setStructures(updated);
+    setActiveTool(null);
+    calculateGISSandbox(updated);
+  };
+
   // Navegación interactiva (Breadcrumbs y drilldown)
   const handleSelectState = (stateObj) => {
     setSelectedState(stateObj);
@@ -444,6 +611,22 @@ export default function PainPointsMap({ agents }) {
       }
     }
 
+    // Sobrescribir estadísticas si el Sandbox GIS tiene resultados para esta sección
+    if (sandboxResults && sandboxResults.section_metrics && type === "CP") {
+      const paddedId = String(elementId).padStart(4, '0');
+      const sbSec = sandboxResults.section_metrics[paddedId] || sandboxResults.section_metrics[elementId];
+      if (sbSec) {
+        avgHappiness = Math.round(sbSec.avg_happiness);
+        complaintCount = Math.round((80 - avgHappiness) * 1.5);
+        militants = {
+          MORENA: Math.round(padronTotal * (sbSec.militants_percent.MORENA / 100.0)),
+          PAN: Math.round(padronTotal * (sbSec.militants_percent.PAN / 100.0)),
+          PRI: Math.round(padronTotal * (sbSec.militants_percent.PRI / 100.0)),
+          MC: Math.round(padronTotal * (sbSec.militants_percent.MC / 100.0))
+        };
+      }
+    }
+
     const militantsTotal = militants.MORENA + militants.PAN + militants.PRI + militants.MC;
 
     // --- INDICADORES SOCIOECONÓMICOS REALES / SINTÉTICOS INEGI ---
@@ -459,7 +642,14 @@ export default function PainPointsMap({ agents }) {
     // Ingreso familiar promedio mensual
     const ingresoFamiliar = 8500 + ((geoSeed % 12) * 2100);
     // Cobertura de agua entubada en viviendas (%)
-    const inegiAguaEntubada = 72 + (geoSeed % 27);
+    let inegiAguaEntubadaVal = 72 + (geoSeed % 27);
+    if (sandboxResults && sandboxResults.section_metrics && type === "CP") {
+      const paddedId = String(elementId).padStart(4, '0');
+      const sbSec = sandboxResults.section_metrics[paddedId] || sandboxResults.section_metrics[elementId];
+      if (sbSec) {
+        inegiAguaEntubadaVal = Math.round(100 - sbSec.avg_water_pain);
+      }
+    }
     // Establecimientos comerciales activos del DENUE
     const denueComercio = 15 + (geoSeed % 15) * 11;
     // Participación Electoral Estimada (%)
@@ -480,7 +670,7 @@ export default function PainPointsMap({ agents }) {
       POCUPADA: Math.round(inegiPEA * (0.95 + (geoSeed % 4) * 0.008)),
       PE_INAC: Math.round(inegiPobTotal * (0.35 + (geoSeed % 5) * 0.02)),
       TVIVHAB: Math.round(inegiPobTotal / (3.25 + (geoSeed % 4) * 0.12)),
-      VPH_AGUADG: inegiAguaEntubada,
+      VPH_AGUADG: inegiAguaEntubadaVal,
       VPH_DRENA: Math.min(99, 87 + (geoSeed % 13)),
       VPH_ELECT: Math.min(100, 98.2 + (geoSeed % 4) * 0.4),
       VPH_INTERNET: Math.min(98, 55 + (geoSeed % 15) * 2.8),
@@ -563,8 +753,19 @@ export default function PainPointsMap({ agents }) {
         const ratio = 1.25 + ((seed % 5) * 0.1); 
         valueForLayer = Math.round((inegiPobTotal / Math.max(padronTotal, 1)) * 100 * ratio);
       } else if (activeLayer === "TRAFFIC_HOTSPOTS") {
-        const seed = (elementId.charCodeAt(0) || 1) + (elementId.charCodeAt(elementId.length - 1) || 2);
-        valueForLayer = 15 + (seed % 8) * 10; 
+        if (sandboxResults && sandboxResults.section_metrics && type === "CP") {
+          const paddedId = String(elementId).padStart(4, '0');
+          const sbSec = sandboxResults.section_metrics[paddedId] || sandboxResults.section_metrics[elementId];
+          if (sbSec) {
+            valueForLayer = Math.round(sbSec.avg_transit_pain);
+          } else {
+            const seed = (elementId.charCodeAt(0) || 1) + (elementId.charCodeAt(elementId.length - 1) || 2);
+            valueForLayer = 15 + (seed % 8) * 10;
+          }
+        } else {
+          const seed = (elementId.charCodeAt(0) || 1) + (elementId.charCodeAt(elementId.length - 1) || 2);
+          valueForLayer = 15 + (seed % 8) * 10;
+        }
       } else if (activeLayer === "SCHOOL_DENSITY") {
         const seed = (elementId.charCodeAt(0) || 1) + (elementId.charCodeAt(elementId.length - 1) || 2);
         valueForLayer = (seed % 5) + 1; 
@@ -779,6 +980,12 @@ export default function PainPointsMap({ agents }) {
 
     layer.on({
       click: (e) => {
+        if (activeTool === 'closure') {
+          L.DomEvent.stopPropagation(e);
+          layer.closePopup();
+          handlePlaceStructure(e.latlng.lat, e.latlng.lng, props.seccion);
+          return;
+        }
         if (isStateLevel) {
           // Drill-down automático al hacer clic en un estado en el mapa nacional real
           const name = props.name || props.ESTADO || '';
@@ -1176,7 +1383,11 @@ export default function PainPointsMap({ agents }) {
                         opacity: 0.8
                       }}
                       eventHandlers={{
-                        click: () => {
+                        click: (e) => {
+                          if (activeTool === 'closure') {
+                            handlePlaceStructure(e.latlng.lat, e.latlng.lng, poly.id);
+                            return;
+                          }
                           if (poly.type === "STATE") {
                             handleSelectState(poly);
                           } else if (poly.type === "MUNICIPALITY") {
@@ -1371,7 +1582,159 @@ export default function PainPointsMap({ agents }) {
                   </Popup>
                 </CircleMarker>
               ))}
+              {/* Elementos del Sandbox GIS de Infraestructura */}
+              <MapClickEvents activeTool={activeTool} onPlace={handlePlaceStructure} />
+              
+              {structures.map((s) => {
+                const icon = customIcons[s.type];
+                return (
+                  <React.Fragment key={s.id}>
+                    <Marker position={[s.lat, s.lng]} icon={icon}>
+                      <Popup>
+                        <div style={{ color: '#fff', background: 'rgba(10,15,30,0.95)', padding: '5px', borderRadius: '4px', fontSize: '11px', fontFamily: 'monospace' }}>
+                          <strong>{s.type === 'bridge' ? '🌉 Puente' : s.type === 'closure' ? '🚧 Cierre vial' : '🚰 Pozo de Agua'}</strong>
+                          <br />
+                          {s.type === 'closure' && `Sección: ${s.section}`}
+                          <br />
+                          <button 
+                            onClick={() => {
+                              const updated = structures.filter(x => x.id !== s.id);
+                              setStructures(updated);
+                              calculateGISSandbox(updated);
+                            }}
+                            style={{
+                              background: 'var(--neon-rose)',
+                              border: 'none',
+                              color: 'black',
+                              fontSize: '9px',
+                              padding: '2px 5px',
+                              borderRadius: '3px',
+                              cursor: 'pointer',
+                              marginTop: '5px',
+                              fontWeight: 'bold'
+                            }}
+                          >
+                            Eliminar obra
+                          </button>
+                        </div>
+                      </Popup>
+                    </Marker>
+                    {s.type === 'well' && (
+                      <Circle 
+                        center={[s.lat, s.lng]} 
+                        radius={1500} 
+                        pathOptions={{ color: 'var(--neon-blue)', fillColor: 'var(--neon-blue)', fillOpacity: 0.12, weight: 1.2 }} 
+                      />
+                    )}
+                  </React.Fragment>
+                );
+              })}
+
+              <VoterParticles agents={sandboxResults?.sample_agents} />
+
             </MapContainer>
+
+            {/* Barra de Herramientas del Sandbox GIS */}
+            {selectedMunicipality && (
+              <div style={{
+                position: 'absolute',
+                top: '10px',
+                right: '10px',
+                zIndex: 1000,
+                background: 'rgba(10, 15, 30, 0.85)',
+                backdropFilter: 'blur(12px)',
+                border: '1px solid var(--border-glass)',
+                padding: '0.6rem',
+                borderRadius: '8px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.45rem',
+                width: '180px',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+                fontFamily: 'sans-serif'
+              }}>
+                <div style={{ 
+                  fontSize: '0.65rem', 
+                  fontWeight: '800', 
+                  color: 'white', 
+                  textAlign: 'center', 
+                  borderBottom: '1px solid rgba(255,255,255,0.08)', 
+                  paddingBottom: '0.35rem', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  gap: '0.2rem',
+                  letterSpacing: '0.05em'
+                }}>
+                  <Database size={11} color="var(--neon-blue)" />
+                  SANDBOX GIS VIAL
+                </div>
+                
+                {[
+                  { id: 'bridge', label: '🌉 Construir Puente', color: 'var(--neon-blue)' },
+                  { id: 'closure', label: '🚧 Cerrar Avenida', color: 'var(--neon-rose)' },
+                  { id: 'well', label: '🚰 Perforar Pozo', color: 'var(--neon-blue)' },
+                ].map(tool => (
+                  <button
+                    key={tool.id}
+                    onClick={() => setActiveTool(activeTool === tool.id ? null : tool.id)}
+                    style={{
+                      fontSize: '0.65rem',
+                      padding: '0.4rem 0.5rem',
+                      border: '1px solid',
+                      borderColor: activeTool === tool.id ? tool.color : 'rgba(255,255,255,0.05)',
+                      borderRadius: '4px',
+                      background: activeTool === tool.id ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0,0,0,0.2)',
+                      color: activeTool === tool.id ? 'white' : 'var(--text-secondary)',
+                      cursor: 'pointer',
+                      fontWeight: '800',
+                      textAlign: 'left',
+                      transition: 'all 0.2s ease-in-out'
+                    }}
+                  >
+                    {tool.label}
+                  </button>
+                ))}
+                
+                {structures.length > 0 && (
+                  <button
+                    onClick={() => {
+                      setStructures([]);
+                      setSandboxResults(null);
+                      setActiveTool(null);
+                      calculateGISSandbox([]);
+                    }}
+                    style={{
+                      fontSize: '0.6rem',
+                      padding: '0.3rem',
+                      border: '1px solid rgba(239, 68, 68, 0.4)',
+                      borderRadius: '4px',
+                      background: 'rgba(239, 68, 68, 0.1)',
+                      color: 'var(--neon-rose)',
+                      cursor: 'pointer',
+                      fontWeight: '800',
+                      marginTop: '0.2rem',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    🧹 Limpiar Mapa ({structures.length})
+                  </button>
+                )}
+
+                {isLoadingGis && (
+                  <div style={{ 
+                    fontSize: '0.58rem', 
+                    color: 'var(--neon-blue)', 
+                    textAlign: 'center', 
+                    marginTop: '0.1rem',
+                    fontWeight: 'bold',
+                    letterSpacing: '0.02em'
+                  }}>
+                    ⚡ Recalculando...
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 

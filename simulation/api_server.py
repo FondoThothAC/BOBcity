@@ -618,6 +618,52 @@ class SimulationAPIHandler(BaseHTTPRequestHandler):
                 self._set_cors_headers()
                 self.end_headers()
                 self.wfile.write(json.dumps({"status": "error", "message": str(e)}).encode('utf-8'))
+        elif self.path == "/api/gis-sandbox/calculate":
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            
+            try:
+                params = json.loads(post_data.decode('utf-8'))
+            except Exception:
+                params = {}
+                
+            structures = params.get("structures", [])
+            ciudad = params.get("ciudad", "hermosillo")
+            
+            # Coordenadas centro de la ciudad
+            coords_map = {
+                'hermosillo': (29.0729, -110.9559),
+                'tijuana': (32.5149, -117.0382),
+                'monterrey': (25.6866, -100.3161),
+                'cdmx': (19.4326, -99.1332),
+                'guadalajara': (20.6597, -103.3496),
+                'queretaro': (20.5888, -100.3899)
+            }
+            
+            lat, lon = coords_map.get(str(ciudad).lower(), (29.0729, -110.9559))
+            
+            try:
+                from abm_models import GISSandboxModel
+                model = GISSandboxModel(lat=lat, lon=lon, num_agents=500)
+                model.update_simulation(structures)
+                results = model.get_metrics()
+                
+                response = {
+                    "status": "success",
+                    "results": results
+                }
+                
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json; charset=utf-8')
+                self._set_cors_headers()
+                self.end_headers()
+                self.wfile.write(json.dumps(response, ensure_ascii=False).encode('utf-8'))
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self._set_cors_headers()
+                self.end_headers()
+                self.wfile.write(json.dumps({"status": "error", "message": str(e)}).encode('utf-8'))
         else:
             self.send_response(404)
             self._set_cors_headers()
