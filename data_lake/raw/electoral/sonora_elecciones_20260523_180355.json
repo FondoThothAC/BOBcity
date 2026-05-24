@@ -1,0 +1,218 @@
+[
+    {
+        "metadata": {
+            "estado": "Sonora",
+            "municipio": "Hermosillo",
+            "anio_eleccion": 2015,
+            "fecha_extraccion": "2026-05-23T18:03:44.445358"
+        },
+        "resultados": {
+            "elec_participacion_pct": 45.0,
+            "elec_partido_ganador": "PAN",
+            "elec_margen_victoria": 5.4
+        },
+        "perfil_ganador": {
+            "cand_nombre": "Roberto C.",
+            "cand_genero": "Masculino",
+            "cand_escolaridad": "Doctorado"
+        }
+    },
+    {
+        "metadata": {
+            "estado": "Sonora",
+            "municipio": "Cajeme",
+            "anio_eleccion": 2015,
+            "fecha_extraccion": "2026-05-23T18:03:45.446806"
+        },
+        "resultados": {
+            "elec_participacion_pct": 45.0,
+            "elec_partido_ganador": "PAN",
+            "elec_margen_victoria": 5.4
+        },
+        "perfil_ganador": {
+            "cand_nombre": "Roberto C.",
+            "cand_genero": "Masculino",
+            "cand_escolaridad": "Doctorado"
+        }
+    },
+    {
+        "metadata": {
+            "estado": "Sonora",
+            "municipio": "Nogales",
+            "anio_eleccion": 2015,
+            "fecha_extraccion": "2026-05-23T18:03:46.447853"
+        },
+        "resultados": {
+            "elec_participacion_pct": 45.0,
+            "elec_partido_ganador": "PAN",
+            "elec_margen_victoria": 5.4
+        },
+        "perfil_ganador": {
+            "cand_nombre": "Roberto C.",
+            "cand_genero": "Masculino",
+            "cand_escolaridad": "Doctorado"
+        }
+    },
+    {
+        "metadata": {
+            "estado": "Sonora",
+            "municipio": "Hermosillo",
+            "anio_eleccion": 2018,
+            "fecha_extraccion": "2026-05-23T18:03:47.452238"
+        },
+        "resultados": {
+            "elec_participacion_pct": 62.1,
+            "elec_partido_ganador": "PRI",
+            "elec_margen_victoria": 2.3
+        },
+        "perfil_ganador": {
+            "cand_nombre": "Carlos López",
+            "cand_genero": "Masculino",
+            "cand_escolaridad": "Licenciatura"
+        }
+    },
+    {
+        "metadata": {
+            "estado": "Sonora",
+            "municipio": "Cajeme",
+            "anio_eleccion": 2018,
+            "fecha_extraccion": "2026-05-23T18:03:48.457192"
+        },
+        "resultados": {
+            "elec_participacion_pct": 62.1,
+            "elec_partido_ganador": "PRI",
+            "elec_margen_victoria": 2.3
+        },
+        "perfil_ganador": {
+            "cand_nombre": "Carlos López",
+            "cand_genero": "Masculino",
+            "cand_escolaridad": "Licenciatura"
+        }
+    },
+    {
+        "metadata": {
+            "estado": "Sonora",
+            "municipio": "Nogales",
+            "anio_eleccion": 2018,
+            "fecha_extraccion": "2026-05-23T18:03:49.462122"
+        },
+        "resultados": {
+            "elec_participacion_pct": 62.1,
+            "elec_partido_ganador": "PRI",
+            "elec_margen_victoria": 2.3
+        },
+        "perfil_ganador": {
+            "cand_nombre": "Carlos López",
+            "cand_genero": "Masculino",
+            "cand_escolaridad": "Licenciatura"
+        }
+    },
+    {
+        "metadata": {
+            "estado": "Sonora",
+            "municipio": "Hermosillo",
+            "anio_eleccion": 2021,
+            "fecha_extraccion": "2026-05-23T18:03:50.467081"
+        },
+        "resultados": {
+            "elec_participacion_pct": 48.9,
+            "elec_partido_ganador": "MORENA",
+            "elec_margen_victoria": 8.1
+        },
+        "perfil_ganador": {
+            "cand_nombre": "Juan Pérez",
+            "cand_genero": "Masculino",
+            "cand_escolaridad": "Licenciatura"
+        }
+    },
+    {
+        "metadata": {
+            "estado": "Sonora",
+            "municipio": "Cajeme",
+            "anio_eleccion": 2021,
+            "fecha_extraccion": "2026-05-23T18:03:51.467799"
+        },
+        "resultados": {
+            "elec_participacion_pct": 48.9,
+            "elec_partido_ganador": "MORENA",
+            "elec_margen_victoria": 8.1
+        },
+        "perfil_ganador": {
+            "cand_nombre": "Juan Pérez",
+            "cand_genero": "Masculino",
+            "cand_escolaridad": "Licenciatura"
+        }
+    },
+    {
+        "metadata": {
+            "estado": "Sonora",
+            "municipio": "Nogales",
+            "anio_eleccion": 2021,
+            "fecha_extraccion": "2026-05-23T18:03:52.468258"
+        },
+        "resultados": {
+            "elec_participacion_pct": 48.9,
+            "elec_partido_ganador": "MORENA",
+            "elec_margen_victoria": 8.1
+        },
+        "perfil_ganador": {
+            "cand_nombre": "Juan Pérez",
+            "cand_genero": "Masculino",
+            "cand_escolaridad": "Licenciatura"
+        }
+    },
+    {
+        "metadata": {
+            "estado": "Sonora",
+            "municipio": "Hermosillo",
+            "anio_eleccion": 2024,
+            "fecha_extraccion": "2026-05-23T18:03:53.473246"
+        },
+        "resultados": {
+            "elec_participacion_pct": 55.2,
+            "elec_partido_ganador": "MORENA",
+            "elec_margen_victoria": 12.5
+        },
+        "perfil_ganador": {
+            "cand_nombre": "María González",
+            "cand_genero": "Femenino",
+            "cand_escolaridad": "Maestría"
+        }
+    },
+    {
+        "metadata": {
+            "estado": "Sonora",
+            "municipio": "Cajeme",
+            "anio_eleccion": 2024,
+            "fecha_extraccion": "2026-05-23T18:03:54.478248"
+        },
+        "resultados": {
+            "elec_participacion_pct": 55.2,
+            "elec_partido_ganador": "MORENA",
+            "elec_margen_victoria": 12.5
+        },
+        "perfil_ganador": {
+            "cand_nombre": "María González",
+            "cand_genero": "Femenino",
+            "cand_escolaridad": "Maestría"
+        }
+    },
+    {
+        "metadata": {
+            "estado": "Sonora",
+            "municipio": "Nogales",
+            "anio_eleccion": 2024,
+            "fecha_extraccion": "2026-05-23T18:03:55.481406"
+        },
+        "resultados": {
+            "elec_participacion_pct": 55.2,
+            "elec_partido_ganador": "MORENA",
+            "elec_margen_victoria": 12.5
+        },
+        "perfil_ganador": {
+            "cand_nombre": "María González",
+            "cand_genero": "Femenino",
+            "cand_escolaridad": "Maestría"
+        }
+    }
+]

@@ -463,6 +463,81 @@ class SimulationAPIHandler(BaseHTTPRequestHandler):
                 self.wfile.write(str(e).encode('utf-8'))
                 return
 
+        # 🗳️ GET /api/historial-electoral - Obtener historial de ganadores e indicadores socioeconómicos del municipio
+        if requested_path.startswith("/api/historial-electoral"):
+            from urllib.parse import urlparse, parse_qs
+            parsed_url = urlparse(requested_path)
+            query_params = parse_qs(parsed_url.query)
+            municipio_id = query_params.get("municipio_id", ["26019"])[0]
+            
+            try:
+                import psycopg2
+                from psycopg2.extras import RealDictCursor
+                conn = psycopg2.connect(
+                    host="localhost",
+                    port="5432",
+                    dbname="civicaos",
+                    user="robertoeduardocelisrobles"
+                )
+                cur = conn.cursor(cursor_factory=RealDictCursor)
+                
+                # Obtener ganadores de elecciones
+                cur.execute("""
+                    SELECT anio, partido_ganador, nombre_ganador, genero, escolaridad,
+                           estatura_cm, tez_color, propuestas, propuestas_cumplidas,
+                           medio_difusion, margen_victoria_pct, participacion_pct
+                    FROM candidatos_elecciones
+                    WHERE municipio_id = %s
+                    ORDER BY anio ASC;
+                """, (municipio_id,))
+                candidatos = cur.fetchall()
+                
+                # Obtener variables socioeconómicas y urbanas anuales
+                cur.execute("""
+                    SELECT anio, pobreza_extrema_pct, pobreza_moderada_pct, calles_pavimentadas_pct,
+                           transporte_publico_cobertura, alumbrado_publico_pct, cobertura_internet_pct,
+                           tasa_criminalidad, pib_municipal, presupuesto_shcp_mxn
+                    FROM valores_municipales_anuales
+                    WHERE municipio_id = %s
+                    ORDER BY anio ASC;
+                """, (municipio_id,))
+                valores = cur.fetchall()
+                
+                conn.close()
+                
+                # Convertir Decimal y otros tipos para que sean JSON serializables
+                for c in candidatos:
+                    if c["estatura_cm"]: c["estatura_cm"] = float(c["estatura_cm"])
+                    c["margen_victoria_pct"] = float(c["margen_victoria_pct"])
+                    c["participacion_pct"] = float(c["participacion_pct"])
+                    
+                for v in valores:
+                    for k in ["pobreza_extrema_pct", "pobreza_moderada_pct", "calles_pavimentadas_pct",
+                              "transporte_publico_cobertura", "alumbrado_publico_pct", "cobertura_internet_pct",
+                              "tasa_criminalidad", "pib_municipal", "presupuesto_shcp_mxn"]:
+                        if v[k] is not None:
+                            v[k] = float(v[k])
+                
+                response = {
+                    "status": "success",
+                    "candidatos": candidatos,
+                    "indicadores": valores
+                }
+                
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json; charset=utf-8')
+                self._set_cors_headers()
+                self.end_headers()
+                self.wfile.write(json.dumps(response, ensure_ascii=False).encode('utf-8'))
+                return
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self._set_cors_headers()
+                self.end_headers()
+                self.wfile.write(json.dumps({"status": "error", "message": str(e)}).encode('utf-8'))
+                return
+
         # SPA Routing Fallback: If it's a browser route (like /master or /citizen), serve index.html
         index_path = os.path.join(BASE_DIST_DIR, "index.html")
         if not requested_path.startswith("/api/") and os.path.exists(index_path):
@@ -647,6 +722,43 @@ class SimulationAPIHandler(BaseHTTPRequestHandler):
                 model = GISSandboxModel(lat=lat, lon=lon, num_agents=500)
                 model.update_simulation(structures)
                 results = model.get_metrics()
+                
+                response = {
+                    "status": "success",
+                    "results": results
+                }
+                
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json; charset=utf-8')
+                self._set_cors_headers()
+                self.end_headers()
+                self.wfile.write(json.dumps(response, ensure_ascii=False).encode('utf-8'))
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self._set_cors_headers()
+                self.end_headers()
+                self.wfile.write(json.dumps({"status": "error", "message": str(e)}).encode('utf-8'))
+        elif self.path == "/api/predict-macro":
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            
+            try:
+                params = json.loads(post_data.decode('utf-8'))
+            except Exception:
+                params = {}
+                
+            municipio_id = params.get("municipio_id", "26019")
+            variable_modificada = params.get("variable", "calles_pavimentadas_pct")
+            incremento_pct = float(params.get("cambio_pct", 10.0))
+            
+            try:
+                import sys
+                # Añadir directorio actual al path por si acaso
+                sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+                from predict_engine import predict_impact
+                
+                results = predict_impact(municipio_id, variable_modificada, incremento_pct)
                 
                 response = {
                     "status": "success",

@@ -133,6 +133,14 @@ export default function PainPointsMap({ agents }) {
 
   // --- Estados del Sandbox GIS ---
   const [activeTool, setActiveTool] = useState(null); // 'bridge' | 'closure' | 'well' | null
+
+  // --- Estados de Historial Electoral y Predicciones ---
+  const [historicalData, setHistoricalData] = useState(null);
+  const [selectedTimelineYear, setSelectedTimelineYear] = useState(2024);
+  const [predictVariable, setPredictVariable] = useState("calles_pavimentadas_pct");
+  const [predictChangeVal, setPredictChangeVal] = useState(10);
+  const [cascadePredictions, setCascadePredictions] = useState(null);
+  const [isPredicting, setIsPredicting] = useState(false);
   const [structures, setStructures] = useState([]); // array de { id, type, lat, lng, section }
   const [sandboxResults, setSandboxResults] = useState(null);
   const [isLoadingGis, setIsLoadingGis] = useState(false);
@@ -406,6 +414,65 @@ export default function PainPointsMap({ agents }) {
       setStructures([]);
     }
   }, [selectedMunicipality]);
+
+  // Hook para cargar el historial electoral y series de tiempo del municipio seleccionado
+  useEffect(() => {
+    if (selectedMunicipality) {
+      const fetchHistory = async () => {
+        const pythonApiUrl = localStorage.getItem('cp:python_api_url') || `http://${window.location.hostname}:5001`;
+        const munId = selectedMunicipality.id === "HERMOSILLO" ? "26019" : "26018";
+        try {
+          const res = await fetch(`${pythonApiUrl}/api/historial-electoral?municipio_id=${munId}`);
+          const data = await res.json();
+          if (data.status === "success") {
+            setHistoricalData(data);
+            setSelectedTimelineYear(2024);
+          }
+        } catch (err) {
+          console.error("Error al cargar historial electoral:", err);
+        }
+      };
+      fetchHistory();
+    } else {
+      setHistoricalData(null);
+    }
+  }, [selectedMunicipality]);
+
+  // Función para llamar al simulador macro (predicción en cascada)
+  const calculateCascadePrediction = async (variable, changeVal) => {
+    if (!selectedMunicipality) return;
+    setIsPredicting(true);
+    const pythonApiUrl = localStorage.getItem('cp:python_api_url') || `http://${window.location.hostname}:5001`;
+    const munId = selectedMunicipality.id === "HERMOSILLO" ? "26019" : "26018";
+    try {
+      const res = await fetch(`${pythonApiUrl}/api/predict-macro`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          municipio_id: munId,
+          variable: variable,
+          cambio_pct: changeVal
+        })
+      });
+      const data = await res.json();
+      if (data.status === "success") {
+        setCascadePredictions(data.results.impacto_estimado);
+      }
+    } catch (err) {
+      console.error("Error al calcular predicción macro:", err);
+    } finally {
+      setIsPredicting(false);
+    }
+  };
+
+  // Disparar predicción cuando cambian las variables o el municipio
+  useEffect(() => {
+    if (selectedMunicipality) {
+      calculateCascadePrediction(predictVariable, predictChangeVal);
+    } else {
+      setCascadePredictions(null);
+    }
+  }, [selectedMunicipality, predictVariable, predictChangeVal]);
 
   // --- Funciones de Intervención del Sandbox GIS ---
   const calculateGISSandbox = async (updatedStructures) => {
@@ -728,8 +795,34 @@ export default function PainPointsMap({ agents }) {
 
     } else {
       // --- CAPAS ESTÁNDAR POR CATEGORÍA ---
-      if (activeCategory === "SOCIOECONOMIC") {
-        valueForLayer = inegiStats[selectedInegiIndicator] || 0;
+      if (selectedMunicipality && historicalData && historicalData.indicadores && ["HIST_POBREZA_EXTREMA", "HIST_PAVIMENTACION", "HIST_INTERNET", "HIST_CRIMINALIDAD", "HIST_PIB"].includes(activeLayer)) {
+        const yearData = historicalData.indicadores.find(i => i.anio === selectedTimelineYear);
+        if (yearData) {
+          const seed = (elementId.charCodeAt(0) || 1) + (elementId.charCodeAt(elementId.length - 1) || 2);
+          const j = 1.0 + (((seed % 10) - 5) * 0.03); // +/- 15% de variabilidad espacial para coropleta
+          
+          if (activeLayer === "HIST_POBREZA_EXTREMA") {
+            valueForLayer = Math.round(yearData.pobreza_extrema_pct * j * 100) / 100;
+          } else if (activeLayer === "HIST_PAVIMENTACION") {
+            valueForLayer = Math.round(yearData.calles_pavimentadas_pct * j * 100) / 100;
+          } else if (activeLayer === "HIST_INTERNET") {
+            valueForLayer = Math.round(yearData.cobertura_internet_pct * j * 100) / 100;
+          } else if (activeLayer === "HIST_CRIMINALIDAD") {
+            valueForLayer = Math.round(yearData.tasa_criminalidad * j * 100) / 100;
+          } else if (activeLayer === "HIST_PIB") {
+            valueForLayer = Math.round((yearData.pib_municipal / 100.0) * j);
+          }
+        }
+      } else if (activeCategory === "SOCIOECONOMIC") {
+        if (activeLayer === "POPULATION_TOTAL") {
+          valueForLayer = inegiPobTotal;
+        } else if (activeLayer === "SCHOOL_AVERAGE") {
+          valueForLayer = inegiEscolaridad;
+        } else if (activeLayer === "INCOME_AVERAGE") {
+          valueForLayer = ingresoFamiliar;
+        } else {
+          valueForLayer = inegiStats[selectedInegiIndicator] || 0;
+        }
       } else if (activeLayer === "ELECTORAL_PADRON") {
         valueForLayer = padronTotal;
       } else if (activeLayer === "MILITANTES_MORENA") {
@@ -1236,6 +1329,15 @@ export default function PainPointsMap({ agents }) {
                     <option value="INCOME_AVERAGE">💵 Ingreso Familiar Promedio</option>
                     <option value="COMMERCIAL_DENSITY">🏬 Densidad Comercial (DENUE)</option>
                     <option value="SCHOOL_DENSITY">🏫 Densidad Escolar (DENUE)</option>
+                    {selectedMunicipality && (
+                      <>
+                        <option value="HIST_POBREZA_EXTREMA">📉 Pobreza Extrema Histórica (%)</option>
+                        <option value="HIST_PAVIMENTACION">🛣️ Pavimentación Histórica (%)</option>
+                        <option value="HIST_INTERNET">📶 Cobertura de Internet Histórica (%)</option>
+                        <option value="HIST_CRIMINALIDAD">🚨 Tasa de Criminalidad Histórica</option>
+                        <option value="HIST_PIB">💰 PIB Municipal Histórico</option>
+                      </>
+                    )}
                   </>
                 )}
               </select>
@@ -1735,12 +1837,240 @@ export default function PainPointsMap({ agents }) {
                 )}
               </div>
             )}
+            {/* Control de Línea de Tiempo / Viaje Temporal */}
+            {selectedMunicipality && historicalData && (
+              <div style={{
+                marginTop: '0.8rem',
+                background: 'rgba(10, 15, 30, 0.75)',
+                backdropFilter: 'blur(12px)',
+                border: '1px solid var(--border-glass)',
+                padding: '0.65rem 1rem',
+                borderRadius: '6px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '1rem',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+                fontFamily: 'sans-serif'
+              }}>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <span style={{ fontSize: '0.58rem', color: 'var(--neon-purple)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Viaje Temporal</span>
+                  <span style={{ fontSize: '0.9rem', color: 'white', fontWeight: '900' }}>Año: {selectedTimelineYear}</span>
+                </div>
+                
+                <input 
+                  type="range" 
+                  min="1995" 
+                  max="2024" 
+                  step="1"
+                  value={selectedTimelineYear}
+                  onChange={(e) => setSelectedTimelineYear(parseInt(e.target.value))}
+                  style={{
+                    flex: 1,
+                    accentColor: 'var(--neon-purple)',
+                    background: 'rgba(255,255,255,0.05)',
+                    height: '6px',
+                    borderRadius: '3px',
+                    cursor: 'pointer'
+                  }}
+                />
+
+                <div style={{ display: 'flex', gap: '0.3rem' }}>
+                  {[1997, 2000, 2003, 2006, 2009, 2012, 2015, 2018, 2021, 2024].map(y => (
+                    <button
+                      key={y}
+                      onClick={() => setSelectedTimelineYear(y)}
+                      style={{
+                        fontSize: '0.58rem',
+                        padding: '0.2rem 0.35rem',
+                        background: selectedTimelineYear === y ? 'var(--neon-purple)' : 'rgba(255,255,255,0.03)',
+                        color: selectedTimelineYear === y ? 'black' : 'white',
+                        border: '1px solid',
+                        borderColor: selectedTimelineYear === y ? 'var(--neon-purple)' : 'rgba(255,255,255,0.08)',
+                        borderRadius: '3px',
+                        cursor: 'pointer',
+                        fontWeight: '800',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      {y}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Panel Lateral de Resumen y Matrices de Cruce */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           
+          {/* MÓDULO DE HISTORIAL ELECTORAL Y PREDICCIÓN EN CASCADA */}
+          {selectedMunicipality && historicalData && (
+            <div className="glass-card glow-blue" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <h3 style={{ fontSize: '0.95rem', color: 'white', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: '800' }}>
+                <TrendingUp size={16} color="var(--neon-blue)" />
+                Historial y Predicción en Cascada
+              </h3>
+              
+              {/* Sección A: Ganador de la Elección del Año Seleccionado */}
+              {(() => {
+                const electionYears = [1997, 2000, 2003, 2006, 2009, 2012, 2015, 2018, 2021, 2024];
+                const electionYear = electionYears.reduce((prev, curr) => {
+                  return (curr <= selectedTimelineYear) ? curr : prev;
+                }, 1997);
+                
+                const election = historicalData.candidatos.find(c => c.anio === electionYear);
+                
+                if (!election) return null;
+                
+                const partyColors = {
+                  "MORENA": "var(--neon-rose)",
+                  "PAN": "var(--neon-blue)",
+                  "PRI": "#10b981",
+                  "PAN-PRI": "var(--neon-purple)",
+                  "MC": "var(--neon-amber)"
+                };
+                
+                const partyColor = partyColors[election.partido_ganador] || "white";
+                
+                return (
+                  <div style={{ 
+                    background: 'rgba(255,255,255,0.03)', 
+                    border: '1px solid rgba(255,255,255,0.05)',
+                    padding: '0.6rem',
+                    borderRadius: '6px'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                      <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', fontWeight: '800', textTransform: 'uppercase' }}>
+                        Elección Municipal {electionYear}
+                      </span>
+                      <span style={{ 
+                        fontSize: '0.62rem', 
+                        padding: '0.1rem 0.4rem', 
+                        borderRadius: '3px',
+                        background: partyColor,
+                        color: 'black',
+                        fontWeight: '900'
+                      }}>
+                        {election.partido_ganador}
+                      </span>
+                    </div>
+                    
+                    <div style={{ fontSize: '0.82rem', fontWeight: '800', color: 'white', marginBottom: '0.2rem' }}>
+                      {election.nombre_ganador}
+                    </div>
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.4rem', fontSize: '0.65rem', color: 'var(--text-secondary)' }}>
+                      <div>Género: <span style={{ color: 'white', fontWeight: '700' }}>{election.genero}</span></div>
+                      <div>Educación: <span style={{ color: 'white', fontWeight: '700' }}>{election.escolaridad}</span></div>
+                      <div>Estatura: <span style={{ color: 'white', fontWeight: '700' }}>{election.estatura_cm} cm</span></div>
+                      <div>Tez de Piel: <span style={{ color: 'white', fontWeight: '700' }}>{election.tez_color}</span></div>
+                      <div>Difusión: <span style={{ color: 'white', fontWeight: '700' }}>{election.medio_difusion}</span></div>
+                      <div>Votos Margen: <span style={{ color: 'white', fontWeight: '700' }}>+{election.margen_victoria_pct}%</span></div>
+                    </div>
+                    
+                    {election.propuestas && election.propuestas.length > 0 && (
+                      <div style={{ marginTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '0.4rem' }}>
+                        <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '0.15rem' }}>
+                          Propuestas Campaña:
+                        </div>
+                        <ul style={{ margin: 0, paddingLeft: '0.8rem', fontSize: '0.65rem', color: 'white' }}>
+                          {election.propuestas.map((p, idx) => (
+                            <li key={idx} style={{ marginBottom: '0.1rem' }}>{p}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+              
+              {/* Sección B: Simulador en Cascada */}
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '0.6rem' }}>
+                <span style={{ fontSize: '0.68rem', color: 'white', fontWeight: '800', display: 'block', marginBottom: '0.4rem' }}>
+                  Simular Cambios Macro (Impuestos / Obras)
+                </span>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginBottom: '0.6rem' }}>
+                  <select
+                    value={predictVariable}
+                    onChange={(e) => setPredictVariable(e.target.value)}
+                    style={{ background: 'rgba(15,23,42,0.95)', color: 'white', border: '1px solid var(--border-glass)', borderRadius: '4px', fontSize: '0.65rem', padding: '0.25rem' }}
+                  >
+                    <option value="calles_pavimentadas_pct">🛣️ Pavimentación de Calles (%)</option>
+                    <option value="cobertura_internet_pct">📶 Cobertura de Internet (%)</option>
+                    <option value="presupuesto_shcp_mxn">💼 Presupuesto Federal (SHCP)</option>
+                    <option value="tasa_criminalidad">🚨 Tasa de Criminalidad</option>
+                  </select>
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <input 
+                      type="range"
+                      min="-30"
+                      max="30"
+                      step="5"
+                      value={predictChangeVal}
+                      onChange={(e) => setPredictChangeVal(parseInt(e.target.value))}
+                      style={{ flex: 1, accentColor: 'var(--neon-blue)', height: '4px' }}
+                    />
+                    <span style={{ fontSize: '0.68rem', fontWeight: '900', color: predictChangeVal > 0 ? 'var(--neon-emerald)' : predictChangeVal < 0 ? 'var(--neon-rose)' : 'white', width: '38px', textAlign: 'right' }}>
+                      {predictChangeVal > 0 ? `+${predictChangeVal}` : predictChangeVal}%
+                    </span>
+                  </div>
+                </div>
+                
+                {/* Tabla de Impactos Proyectados */}
+                {isPredicting ? (
+                  <div style={{ fontSize: '0.65rem', color: 'var(--neon-blue)', textAlign: 'center', padding: '1rem' }}>
+                    ⚡ Calculando correlaciones...
+                  </div>
+                ) : cascadePredictions ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                    <div style={{ fontSize: '0.58rem', color: 'var(--text-secondary)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.02em', marginBottom: '0.1rem' }}>
+                      Impacto estimado en cascada:
+                    </div>
+                    {Object.entries(cascadePredictions).map(([varKey, pred]) => {
+                      const labels = {
+                        "pobreza_extrema_pct": "Pobreza Extrema",
+                        "pobreza_moderada_pct": "Pobreza Moderada",
+                        "transporte_publico_cobertura": "Cobertura Transporte",
+                        "alumbrado_publico_pct": "Alumbrado Público",
+                        "cobertura_internet_pct": "Cobertura Internet",
+                        "tasa_criminalidad": "Tasa Criminalidad",
+                        "pib_municipal": "PIB Municipal",
+                        "presupuesto_shcp_mxn": "Presupuesto SHCP",
+                        "calles_pavimentadas_pct": "Pavimentación"
+                      };
+                      
+                      const label = labels[varKey] || varKey;
+                      const valChange = parseFloat(pred.cambio_porcentual);
+                      const color = valChange > 0 
+                        ? (["tasa_criminalidad", "pobreza_extrema_pct", "pobreza_moderada_pct"].includes(varKey) ? 'var(--neon-rose)' : 'var(--neon-emerald)')
+                        : (["tasa_criminalidad", "pobreza_extrema_pct", "pobreza_moderada_pct"].includes(varKey) ? 'var(--neon-emerald)' : 'var(--neon-rose)');
+                      
+                      return (
+                        <div key={varKey} style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          background: 'rgba(255,255,255,0.02)',
+                          padding: '0.25rem 0.4rem',
+                          borderRadius: '3px',
+                          fontSize: '0.65rem',
+                          borderLeft: `2px solid ${color}`
+                        }}>
+                          <span style={{ color: 'white' }}>{label}</span>
+                          <span style={{ color: color, fontWeight: '800' }}>
+                            {pred.cambio_porcentual}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          )}
+
           {/* Matriz de Cruce Geográfico Dinámica (INEGI, Electoral o Cruce Multidimensional) */}
           <div className="glass-card glow-purple" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             <h3 style={{ fontSize: '0.95rem', color: 'white', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: '800' }}>
