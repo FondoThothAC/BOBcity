@@ -4,6 +4,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Play, Pause, RefreshCw, Plus, Shield, Droplet, Construction, HelpCircle } from 'lucide-react';
+import GartnerRadar from './GartnerRadar';
 
 const WorldBoxSimulator = ({ pythonApiUrl = 'http://localhost:5001' }) => {
   // Estados de control de simulación
@@ -25,6 +26,9 @@ const WorldBoxSimulator = ({ pythonApiUrl = 'http://localhost:5001' }) => {
   const [taxes, setTaxes] = useState(12); // Pct de impuestos
   const [securityBudget, setSecurityBudget] = useState(60); // Pct presupuesto seguridad
   const [waterSubsidy, setWaterSubsidy] = useState(30); // Pct subsidio agua
+  
+  // OSINT Radar Events
+  const [macroEvents, setMacroEvents] = useState([]);
   
   const [logs, setLogs] = useState([
     '🤖 Consola del Simulador Iniciada.',
@@ -57,6 +61,12 @@ const WorldBoxSimulator = ({ pythonApiUrl = 'http://localhost:5001' }) => {
       const data = await res.json();
       if (data.status === 'success') {
         setGlobalMetrics(data.results.global_metrics);
+        if (data.results.active_macro_events) {
+          setMacroEvents(data.results.active_macro_events);
+          if (data.results.active_macro_events.length > 0 && logs.length < 50) {
+            addLog(`OSINT: Detectados ${data.results.active_macro_events.length} Macro-Eventos en tiempo real.`);
+          }
+        }
         
         // Inicializar agentes o actualizar sus estados
         const rawAgents = data.results.sample_agents || [];
@@ -704,6 +714,9 @@ const WorldBoxSimulator = ({ pythonApiUrl = 'http://localhost:5001' }) => {
             </div>
           )}
         </div>
+
+        {/* 3. Panel OSINT: Gartner Radar */}
+        <GartnerRadar events={macroEvents} />
 
       </div>
 

@@ -144,7 +144,19 @@ class GISSandboxModel:
         self.lon = lon
         self.num_agents = num_agents
         self.agents = []
+        self.active_macro_events = []
+        self._fetch_macro_shocks()
         self._initialize_population()
+
+    def _fetch_macro_shocks(self):
+        import sys
+        import os
+        sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "scrapers"))
+        try:
+            from macro_events_ingestor import get_latest_macro_events
+            self.active_macro_events = get_latest_macro_events()
+        except ImportError:
+            self.active_macro_events = []
 
     def _initialize_population(self):
         import random
@@ -272,17 +284,31 @@ class GISSandboxModel:
             
             agent["transit_pain"] = max(5.0, min(100.0, agent["base_transit_pain"] + transit_penalty - bridge_discount))
             
+            # --- SHOCKS MACROECONÓMICOS OSINT ---
+            macro_econ_penalty = 0.0
+            macro_gov_penalty = 0.0
+            for evt in self.active_macro_events:
+                # Si el impacto es negativo, aumenta el estrés/dolor. Si es positivo, lo reduce.
+                # Eventos con ETA cercano (meses < 6) golpean más fuerte
+                urgency_multiplier = max(0.2, 1.0 - (evt.get("eta_months", 12) / 24.0))
+                shock_val = evt.get("impact_score", 0.0) * urgency_multiplier * -1.0 # Invertir para que negativo suba el dolor
+                
+                if evt.get("category") == "Economía":
+                    macro_econ_penalty += shock_val
+                elif evt.get("category") == "Sociopolítica":
+                    macro_gov_penalty += shock_val
+            
             # 3. Recalcular KPIs extendidos (Frustración, Economía, Gobierno)
             # El tráfico impacta directamente en la frustración
             agent["frustration"] = max(0.0, min(100.0, (agent["transit_pain"] * 0.6) + (agent["water_pain"] * 0.4)))
             
-            # El estrés económico se agrava por el dolor de tránsito (costo de gasolina, pérdida de tiempo)
+            # El estrés económico se agrava por el dolor de tránsito y los MACRO SHOCKS económicos
             econ_penalty = transit_penalty * 0.2
-            agent["economic_stress"] = max(0.0, min(100.0, agent["base_economic_stress"] + econ_penalty))
+            agent["economic_stress"] = max(0.0, min(100.0, agent["base_economic_stress"] + econ_penalty + macro_econ_penalty))
             
-            # Aprobación de Gobierno cae si la frustración sube
+            # Aprobación de Gobierno cae si la frustración sube o si hay MACRO SHOCKS políticos
             frustration_impact = agent["frustration"] * 0.7
-            agent["government_approval"] = max(0.0, min(100.0, agent["base_government_approval"] - frustration_impact + bridge_discount + (40.0 if water_served else 0.0)))
+            agent["government_approval"] = max(0.0, min(100.0, agent["base_government_approval"] - frustration_impact - macro_gov_penalty + bridge_discount + (40.0 if water_served else 0.0)))
             
             # 4. Recalcular felicidad y preferencia electoral
             avg_pain = (agent["water_pain"] + agent["transit_pain"] + agent["economic_stress"]) / 3.0
@@ -318,6 +344,7 @@ class GISSandboxModel:
             "avg_economic_stress": float(np.sum(econ_stress_list) / total_population) if total_population else 45.0,
             "avg_gov_approval": float(np.sum(gov_approval_list) / total_population) if total_population else 50.0,
             "total_simulated_population": total_population,
+            "macro_events_count": len(self.active_macro_events),
             "vote_share": {
                 "Morena": (vote_morena / total_population * 100.0) if total_population else 50.0,
                 "Oposición": (vote_oposion / total_population * 100.0) if total_population else 50.0
@@ -388,6 +415,7 @@ class GISSandboxModel:
         return {
             "global_metrics": global_metrics,
             "section_metrics": section_metrics,
-            "sample_agents": sample_agents
+            "sample_agents": sample_agents,
+            "active_macro_events": self.active_macro_events
         }
 
