@@ -32,6 +32,7 @@ import GDSMegaVisualizer from './components/GDSMegaVisualizer';
 import GDSMicroSimulator from './components/GDSMicroSimulator';
 import ImplementationPlan from './components/ImplementationPlan';
 import AgentRawView from './components/AgentRawView';
+import WorldBoxSimulator from './components/WorldBoxSimulator';
 
 import { applyTheme } from './themeManager';
 
@@ -810,6 +811,7 @@ export default function App() {
       { id: 'overview', label: 'Resumen Ejecutivo', icon: <LayoutDashboard size={20} /> },
       { id: 'map', label: 'Mapas de Dolor (GIS)', icon: <Map size={20} /> },
       { id: 'simulator', label: 'Sandbox ABM', icon: <Play size={20} /> },
+      { id: 'worldbox', label: 'Simulador WorldBox', icon: <Play size={20} color="var(--neon-emerald)" /> },
       { 
         id: 'gds-mega', 
         label: 'Gemelo GDS-MEGA', 
@@ -941,6 +943,7 @@ export default function App() {
               {activeTab === 'overview' && "Tablero de Inteligencia Social"}
               {activeTab === 'map' && "Mapa Georeferenciado de Dolores"}
               {activeTab === 'simulator' && "Simulador Basado en Agentes (ABM)"}
+              {activeTab === 'worldbox' && "Simulador Sandbox (WorldBox)"}
               {activeTab === 'gds-mega' && "Visualizador GDS-MEGA (1,024 KPIs)"}
               {activeTab === 'gds-micro' && "Simulador GDS-Micro (LLM Local)"}
               {activeTab === 'predictor' && "Predictor Electoral Head-to-Head"}
@@ -957,6 +960,7 @@ export default function App() {
               {activeTab === 'overview' && `Indicadores de bienestar, seguridad y abasto en ${activeClient?.region || 'Hermosillo'}.`}
               {activeTab === 'map' && "Visualizando capas de calor de insatisfacción ciudadana."}
               {activeTab === 'simulator' && "Prueba políticas y simula dinámicas de opinión."}
+              {activeTab === 'worldbox' && "Aplica leyes de gobernación local y observa el enjambre de agentes en tiempo real."}
               {activeTab === 'gds-mega' && "Visualización profunda del Gemelo Digital Social a micro y macro escala."}
               {activeTab === 'gds-micro' && "Inferencia cognitiva del gemelo digital usando modelos pequeños locales."}
               {activeTab === 'predictor' && "Probabilidad de victoria basada en perfiles y propuestas."}
@@ -1010,6 +1014,9 @@ export default function App() {
               policies={policies} 
               setPolicies={setPolicies} 
             />
+          )}
+          {activeTab === 'worldbox' && (
+            <WorldBoxSimulator />
           )}
           {activeTab === 'gds-mega' && (
             <GDSMegaVisualizer 
