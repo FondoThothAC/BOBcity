@@ -8,6 +8,19 @@ import os
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 
 # Resilient Portable Import with Mock Fallback for testing environments
+# Registrador global de multiversos en memoria
+TIMELINES = {}
+
+def get_timeline(timeline_id, lat=29.0729, lon=-110.9559, policies=None):
+    global TIMELINES
+    from abm_models import GISSandboxModel
+    
+    if timeline_id not in TIMELINES:
+        print(f"🌀 Inicializando Línea Temporal: {timeline_id} en lat={lat}, lon={lon}")
+        TIMELINES[timeline_id] = GISSandboxModel(lat=lat, lon=lon, num_agents=500, policies=policies)
+        TIMELINES[timeline_id].update_simulation([])
+        
+    return TIMELINES[timeline_id]
 try:
     from abm_models import CivicSimulationModel
 except ImportError:
@@ -169,6 +182,60 @@ class SimulationAPIHandler(BaseHTTPRequestHandler):
         """Serves static frontend files or health checks if not built yet"""
         requested_path = self.path
         
+        # --- MULTIVERSE ENDPOINTS ---
+        if requested_path.startswith("/api/multiverse/timelines"):
+            global TIMELINES
+            get_timeline("realidad_base")
+            
+            data = []
+            for tid, model in TIMELINES.items():
+                metrics = model.get_metrics()
+                data.append({
+                    "id": tid,
+                    "name": "Realidad Base" if tid == "realidad_base" else tid.replace("_", " ").title(),
+                    "policies": model.policies,
+                    "global_metrics": metrics["global_metrics"]
+                })
+                
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json; charset=utf-8')
+            self._set_cors_headers()
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "success", "timelines": data}, ensure_ascii=False).encode('utf-8'))
+            return
+
+        if requested_path.startswith("/api/multiverse/agent-comparison"):
+            from urllib.parse import urlparse, parse_qs
+            parsed_url = urlparse(requested_path)
+            query_params = parse_qs(parsed_url.query)
+            agent_id = int(query_params.get("agent_id", [0])[0])
+            
+            global TIMELINES
+            get_timeline("realidad_base")
+            
+            comparison = {}
+            for tid, model in TIMELINES.items():
+                agent_data = next((a for a in model.agents if a["agent_id"] == agent_id), None)
+                if agent_data:
+                    comparison[tid] = {
+                        "timeline_id": tid,
+                        "timeline_name": "Realidad Base" if tid == "realidad_base" else tid.replace("_", " ").title(),
+                        "happiness": agent_data["happiness"],
+                        "water_pain": agent_data["water_pain"],
+                        "transit_pain": agent_data["transit_pain"],
+                        "frustration": agent_data["frustration"],
+                        "economic_stress": agent_data["economic_stress"],
+                        "government_approval": agent_data["government_approval"],
+                        "vote_intention": agent_data["vote_intention"]
+                    }
+                    
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json; charset=utf-8')
+            self._set_cors_headers()
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "success", "agent_id": agent_id, "comparison": comparison}, ensure_ascii=False).encode('utf-8'))
+            return
+
         # Secure Gateway API Endpoint to pull captured citizen data from local machine
         if requested_path.startswith("/api/secure-export"):
             auth_key = self.headers.get("X-Secure-Gateway-Key", "")
@@ -793,6 +860,77 @@ class SimulationAPIHandler(BaseHTTPRequestHandler):
                 self._set_cors_headers()
                 self.end_headers()
                 self.wfile.write(json.dumps({"status": "error", "message": str(e)}).encode('utf-8'))
+        elif self.path == "/api/multiverse/create":
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            
+            try:
+                params = json.loads(post_data.decode('utf-8'))
+            except Exception:
+                params = {}
+                
+            timeline_id = params.get("timeline_id", "").strip().lower().replace(" ", "_")
+            base_timeline_id = params.get("base_timeline_id", "realidad_base")
+            policies = params.get("policies", None)
+            
+            if not timeline_id:
+                self.send_response(400)
+                self.send_header('Content-Type', 'application/json')
+                self._set_cors_headers()
+                self.end_headers()
+                self.wfile.write(json.dumps({"status": "error", "message": "timeline_id es requerido"}, ensure_ascii=False).encode('utf-8'))
+                return
+                
+            global TIMELINES
+            base_model = get_timeline(base_timeline_id)
+            
+            import copy
+            new_model = copy.deepcopy(base_model)
+            if policies:
+                new_model.policies.update(policies)
+                
+            TIMELINES[timeline_id] = new_model
+            
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json; charset=utf-8')
+            self._set_cors_headers()
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "success", "message": f"Línea temporal '{timeline_id}' creada con éxito."}, ensure_ascii=False).encode('utf-8'))
+            return
+
+        elif self.path == "/api/multiverse/delete":
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            
+            try:
+                params = json.loads(post_data.decode('utf-8'))
+            except Exception:
+                params = {}
+                
+            timeline_id = params.get("timeline_id", "").strip().lower()
+            
+            if not timeline_id or timeline_id == "realidad_base":
+                self.send_response(400)
+                self.send_header('Content-Type', 'application/json')
+                self._set_cors_headers()
+                self.end_headers()
+                self.wfile.write(json.dumps({"status": "error", "message": "timeline_id no es válido o no se puede eliminar la Realidad Base"}, ensure_ascii=False).encode('utf-8'))
+                return
+                
+            global TIMELINES
+            if timeline_id in TIMELINES:
+                del TIMELINES[timeline_id]
+                msg = f"Línea temporal '{timeline_id}' eliminada."
+            else:
+                msg = f"Línea temporal '{timeline_id}' no encontrada."
+                
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json; charset=utf-8')
+            self._set_cors_headers()
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "success", "message": msg}, ensure_ascii=False).encode('utf-8'))
+            return
+
         elif self.path == "/api/gis-sandbox/calculate":
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
@@ -804,6 +942,8 @@ class SimulationAPIHandler(BaseHTTPRequestHandler):
                 
             structures = params.get("structures", [])
             ciudad = params.get("ciudad", "hermosillo")
+            timeline_id = params.get("timeline_id", "realidad_base")
+            policies = params.get("policies", None)
             
             # Coordenadas centro de la ciudad
             coords_map = {
@@ -818,9 +958,8 @@ class SimulationAPIHandler(BaseHTTPRequestHandler):
             lat, lon = coords_map.get(str(ciudad).lower(), (29.0729, -110.9559))
             
             try:
-                from abm_models import GISSandboxModel
-                model = GISSandboxModel(lat=lat, lon=lon, num_agents=500)
-                model.update_simulation(structures)
+                model = get_timeline(timeline_id, lat=lat, lon=lon)
+                model.update_simulation(structures, policies)
                 results = model.get_metrics()
                 
                 response = {

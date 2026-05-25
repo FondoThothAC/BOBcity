@@ -139,12 +139,13 @@ class GISSandboxModel:
     MDD / DDD: Calcula el impacto de obras viales (cierres), puentes e infraestructuras de agua
     en las poblaciones sintéticas geolocalizadas.
     """
-    def __init__(self, lat: float, lon: float, num_agents: int = 500):
+    def __init__(self, lat: float, lon: float, num_agents: int = 500, policies: dict = None):
         self.lat = lat
         self.lon = lon
         self.num_agents = num_agents
         self.agents = []
         self.active_macro_events = []
+        self.policies = policies or {"taxes": 12.0, "security": 60.0, "subsidy": 30.0}
         self._fetch_macro_shocks()
         self._initialize_population()
 
@@ -238,19 +239,32 @@ class GISSandboxModel:
         c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
         return R * c
 
-    def update_simulation(self, structures: list):
+    def update_simulation(self, structures: list, policies: dict = None):
         """
-        Recalcula los dolores e índices de felicidad basados en las estructuras colocadas
+        Recalcula los dolores e índices de felicidad basados en las estructuras colocadas y políticas activas
         """
+        if policies:
+            self.policies.update(policies)
+            
         wells = [s for s in structures if s.get("type") == "well"]
         closures = [s for s in structures if s.get("type") == "closure"]
         bridges = [s for s in structures if s.get("type") == "bridge"]
+        
+        # Parámetros de políticas del gobierno
+        taxes_val = float(self.policies.get("taxes", 12.0))
+        security_val = float(self.policies.get("security", 60.0))
+        subsidy_val = float(self.policies.get("subsidy", 30.0))
+        
+        # Diferenciales respecto al baseline estándar
+        tax_diff = taxes_val - 12.0
+        subsidy_diff = subsidy_val - 30.0
+        security_diff = security_val - 60.0
         
         # Conjunto de secciones viales cerradas
         closed_sections = set(str(c.get("section", "")) for c in closures if c.get("section"))
         
         for agent in self.agents:
-            # 1. Recalcular dolor de agua (Pozos)
+            # 1. Recalcular dolor de agua (Pozos + Subsidios de agua)
             agent_home = agent["home_coords"]
             water_served = False
             for well in wells:
@@ -262,9 +276,12 @@ class GISSandboxModel:
                     break
             
             if water_served:
+                # Si tiene pozo físico, el dolor es mínimo
                 agent["water_pain"] = max(0.0, agent["base_water_pain"] * 0.15)
             else:
-                agent["water_pain"] = agent["base_water_pain"]
+                # Si no tiene pozo, el subsidio alivia parte del dolor
+                subsidy_mitigation = subsidy_diff * 0.8
+                agent["water_pain"] = max(0.0, min(100.0, agent["base_water_pain"] - subsidy_mitigation))
                 
             # 2. Recalcular dolor de tránsito (Cierres y Puentes)
             transit_penalty = 0.0
@@ -289,9 +306,8 @@ class GISSandboxModel:
             macro_gov_penalty = 0.0
             for evt in self.active_macro_events:
                 # Si el impacto es negativo, aumenta el estrés/dolor. Si es positivo, lo reduce.
-                # Eventos con ETA cercano (meses < 6) golpean más fuerte
                 urgency_multiplier = max(0.2, 1.0 - (evt.get("eta_months", 12) / 24.0))
-                shock_val = evt.get("impact_score", 0.0) * urgency_multiplier * -1.0 # Invertir para que negativo suba el dolor
+                shock_val = evt.get("impact_score", 0.0) * urgency_multiplier * -1.0
                 
                 if evt.get("category") == "Economía":
                     macro_econ_penalty += shock_val
@@ -299,16 +315,33 @@ class GISSandboxModel:
                     macro_gov_penalty += shock_val
             
             # 3. Recalcular KPIs extendidos (Frustración, Economía, Gobierno)
-            # El tráfico impacta directamente en la frustración
-            agent["frustration"] = max(0.0, min(100.0, (agent["transit_pain"] * 0.6) + (agent["water_pain"] * 0.4)))
+            # La seguridad y la policía mitigan la frustración del entorno urbano
+            security_frust_relief = security_diff * 0.25
+            agent["frustration"] = max(0.0, min(100.0, (agent["transit_pain"] * 0.6) + (agent["water_pain"] * 0.4) - security_frust_relief))
             
-            # El estrés económico se agrava por el dolor de tránsito y los MACRO SHOCKS económicos
+            # El estrés económico se agrava por el dolor de tránsito, shocks macro, y el diferencial de impuestos (taxes)
+            # Los comerciantes y asalariados sufren más el alza de impuestos (multiplier)
+            tax_multiplier = 1.8 if agent["sector"] in ("comerciante", "asalariado") else 1.0
             econ_penalty = transit_penalty * 0.2
-            agent["economic_stress"] = max(0.0, min(100.0, agent["base_economic_stress"] + econ_penalty + macro_econ_penalty))
+            agent["economic_stress"] = max(0.0, min(100.0, agent["base_economic_stress"] + econ_penalty + macro_econ_penalty + (tax_diff * tax_multiplier * 1.5)))
             
-            # Aprobación de Gobierno cae si la frustración sube o si hay MACRO SHOCKS políticos
+            # Aprobación de Gobierno cae si la frustración sube, si hay shocks OSINT, si suben los impuestos,
+            # pero sube si hay más presupuesto de seguridad o subsidio de agua
             frustration_impact = agent["frustration"] * 0.7
-            agent["government_approval"] = max(0.0, min(100.0, agent["base_government_approval"] - frustration_impact - macro_gov_penalty + bridge_discount + (40.0 if water_served else 0.0)))
+            tax_approval_impact = tax_diff * 1.2
+            security_approval_bonus = security_diff * 0.5
+            subsidy_approval_bonus = subsidy_diff * 0.3
+            
+            agent["government_approval"] = max(0.0, min(100.0, (
+                agent["base_government_approval"] 
+                - frustration_impact 
+                - macro_gov_penalty 
+                - tax_approval_impact
+                + bridge_discount 
+                + security_approval_bonus 
+                + subsidy_approval_bonus
+                + (40.0 if water_served else 0.0)
+            )))
             
             # 4. Recalcular felicidad y preferencia electoral
             avg_pain = (agent["water_pain"] + agent["transit_pain"] + agent["economic_stress"]) / 3.0

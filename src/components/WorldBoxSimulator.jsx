@@ -29,6 +29,12 @@ const WorldBoxSimulator = ({ pythonApiUrl = 'http://localhost:5001' }) => {
   
   // OSINT Radar Events
   const [macroEvents, setMacroEvents] = useState([]);
+
+  // --- Estados del Gestor de Multiversos ---
+  const [timelines, setTimelines] = useState([]);
+  const [activeTimeline, setActiveTimeline] = useState('realidad_base');
+  const [newTimelineName, setNewTimelineName] = useState('');
+  const [agentComparison, setAgentComparison] = useState(null);
   
   const [logs, setLogs] = useState([
     '🤖 Consola del Simulador Iniciada.',
@@ -48,14 +54,26 @@ const WorldBoxSimulator = ({ pythonApiUrl = 'http://localhost:5001' }) => {
   };
 
   // 1. Obtener la simulación inicial y actualizar al cambiar estructuras/parámetros
-  const fetchSimulation = async (updatedStructures = structures) => {
+  const fetchSimulation = async (
+    updatedStructures = structures, 
+    updatedTaxes = taxes, 
+    updatedSecurity = securityBudget, 
+    updatedSubsidy = waterSubsidy, 
+    currentTimeline = activeTimeline
+  ) => {
     try {
       const res = await fetch(`${pythonApiUrl}/api/gis-sandbox/calculate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ciudad: 'hermosillo',
-          structures: updatedStructures
+          timeline_id: currentTimeline,
+          structures: updatedStructures,
+          policies: {
+            taxes: updatedTaxes,
+            security: updatedSecurity,
+            subsidy: updatedSubsidy
+          }
         })
       });
       const data = await res.json();
@@ -63,20 +81,14 @@ const WorldBoxSimulator = ({ pythonApiUrl = 'http://localhost:5001' }) => {
         setGlobalMetrics(data.results.global_metrics);
         if (data.results.active_macro_events) {
           setMacroEvents(data.results.active_macro_events);
-          if (data.results.active_macro_events.length > 0 && logs.length < 50) {
-            addLog(`OSINT: Detectados ${data.results.active_macro_events.length} Macro-Eventos en tiempo real.`);
-          }
         }
         
         // Inicializar agentes o actualizar sus estados
         const rawAgents = data.results.sample_agents || [];
-        // Añadir una fase pseudo-aleatoria de caminata para el movimiento en Canvas
         const processedAgents = rawAgents.map((agent, index) => {
           const homeCoords = agent.home_coords;
-          const workCoords = agent.work_coords;
           return {
             ...agent,
-            // Estado de movimiento: progreso entre 0.0 (casa) y 1.0 (trabajo)
             progress: Math.random(),
             direction: Math.random() > 0.5 ? 1 : -1,
             speed: 0.002 + Math.random() * 0.003,
@@ -86,13 +98,112 @@ const WorldBoxSimulator = ({ pythonApiUrl = 'http://localhost:5001' }) => {
         });
         setAgents(processedAgents);
       }
+      
+      // Sincronizar timelines y detalles individuales
+      fetchTimelines();
+      
+      if (selectedAgent) {
+        fetchAgentComparison(selectedAgent.agent_id);
+      }
     } catch (e) {
       console.error("Error fetching simulation metrics", e);
     }
   };
 
+  const fetchTimelines = async () => {
+    try {
+      const res = await fetch(`${pythonApiUrl}/api/multiverse/timelines`);
+      const data = await res.json();
+      if (data.status === 'success') {
+        setTimelines(data.timelines);
+      }
+    } catch (e) {
+      console.error("Error fetching timelines", e);
+    }
+  };
+
+  const fetchAgentComparison = async (agentId) => {
+    try {
+      const res = await fetch(`${pythonApiUrl}/api/multiverse/agent-comparison?agent_id=${agentId}`);
+      const data = await res.json();
+      if (data.status === 'success') {
+        setAgentComparison(data.comparison);
+      }
+    } catch (e) {
+      console.error("Error fetching agent comparison", e);
+    }
+  };
+
+  const handleTimelineChange = (timelineId) => {
+    setActiveTimeline(timelineId);
+    const targetTimeline = timelines.find(t => t.id === timelineId);
+    if (targetTimeline && targetTimeline.policies) {
+      const p = targetTimeline.policies;
+      setTaxes(p.taxes || 12);
+      setSecurityBudget(p.security || 60);
+      setWaterSubsidy(p.subsidy || 30);
+      addLog(`Multiverso: Cambiado al universo '${targetTimeline.name}'.`);
+      fetchSimulation(structures, p.taxes || 12, p.security || 60, p.subsidy || 30, timelineId);
+    } else {
+      fetchSimulation(structures, taxes, securityBudget, waterSubsidy, timelineId);
+    }
+  };
+
+  const handleCreateTimeline = async (e) => {
+    e.preventDefault();
+    if (!newTimelineName.trim()) return;
+    
+    const timelineId = newTimelineName.trim().toLowerCase().replace(/\s+/g, '_');
+    
+    try {
+      const res = await fetch(`${pythonApiUrl}/api/multiverse/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          timeline_id: timelineId,
+          base_timeline_id: activeTimeline,
+          policies: {
+            taxes,
+            security: securityBudget,
+            subsidy: waterSubsidy
+          }
+        })
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        addLog(`Multiverso: Creado nuevo universo '${newTimelineName}' clonado de '${activeTimeline}'.`);
+        setNewTimelineName('');
+        handleTimelineChange(timelineId);
+      }
+    } catch (e) {
+      console.error("Error creating timeline", e);
+    }
+  };
+
+  const handleDeleteTimeline = async (timelineId) => {
+    if (timelineId === 'realidad_base') return;
+    try {
+      const res = await fetch(`${pythonApiUrl}/api/multiverse/delete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ timeline_id: timelineId })
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        addLog(`Multiverso: Eliminado universo '${timelineId}'.`);
+        if (activeTimeline === timelineId) {
+          handleTimelineChange('realidad_base');
+        } else {
+          fetchTimelines();
+        }
+      }
+    } catch (e) {
+      console.error("Error deleting timeline", e);
+    }
+  };
+
   useEffect(() => {
-    fetchSimulation();
+    fetchSimulation(structures, taxes, securityBudget, waterSubsidy, activeTimeline);
   }, []);
 
   // Al colocar una estructura
@@ -107,30 +218,29 @@ const WorldBoxSimulator = ({ pythonApiUrl = 'http://localhost:5001' }) => {
     };
     const newStructures = [...structures, newStructure];
     setStructures(newStructures);
-    fetchSimulation(newStructures);
+    fetchSimulation(newStructures, taxes, securityBudget, waterSubsidy, activeTimeline);
     setToolActive(null);
     addLog(`Obras: Colocada nueva infraestructura: ${newStructure.name} en lat: ${lat.toFixed(4)}, lng: ${lng.toFixed(4)}`);
   };
 
   // Ajustes de políticas (sliders)
   const handlePolicyChange = (type, value) => {
+    let nextTaxes = taxes;
+    let nextSecurity = securityBudget;
+    let nextSubsidy = waterSubsidy;
+
     if (type === 'taxes') {
       setTaxes(value);
-      const diff = value - 12;
-      // Impacto simulado
-      const newHappiness = Math.max(10, Math.min(95, globalMetrics.avg_happiness - diff * 0.4));
-      setGlobalMetrics(prev => ({
-        ...prev,
-        avg_happiness: newHappiness
-      }));
-      addLog(`Gobierno: Modificación de impuestos a ${value}%. Impacto proyectado en felicidad.`);
+      nextTaxes = value;
     } else if (type === 'security') {
       setSecurityBudget(value);
-      addLog(`Seguridad: Presupuesto de videovigilancia y patrullaje ajustado a ${value}%.`);
+      nextSecurity = value;
     } else if (type === 'subsidy') {
       setWaterSubsidy(value);
-      addLog(`Finanzas: Subsidio de red hidráulica ajustado al ${value}%.`);
+      nextSubsidy = value;
     }
+
+    fetchSimulation(structures, nextTaxes, nextSecurity, nextSubsidy, activeTimeline);
   };
 
   // Ciclo de animación del Canvas Isométrico
@@ -432,15 +542,17 @@ const WorldBoxSimulator = ({ pythonApiUrl = 'http://localhost:5001' }) => {
 
     if (closestAgent) {
       setSelectedAgent(closestAgent);
+      fetchAgentComparison(closestAgent.agent_id);
       addLog(`Auditoría: Seleccionado grupo #${closestAgent.agent_id} (${closestAgent.sector}) - Representa: ${closestAgent.weight || 10} habs.`);
     } else {
       setSelectedAgent(null);
+      setAgentComparison(null);
     }
   };
 
   const handleReset = () => {
     setStructures([]);
-    fetchSimulation([]);
+    fetchSimulation([], taxes, securityBudget, waterSubsidy, activeTimeline);
     addLog('Simulador restablecido a condiciones iniciales.');
   };
 
@@ -547,6 +659,72 @@ const WorldBoxSimulator = ({ pythonApiUrl = 'http://localhost:5001' }) => {
 
       {/* 2. Barra de Herramientas y Mapeo de Políticas */}
       <div className="w-full lg:w-[360px] flex flex-col gap-6">
+
+        {/* 🌀 Gestor de Multiversos (Líneas Temporales Divergentes) */}
+        <div className="bg-[#090d16] border border-[#1e293b]/60 p-5 rounded-2xl shadow-xl flex flex-col gap-4">
+          <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider border-b border-[#1e293b] pb-2 flex items-center justify-between">
+            <span>🌀 Gestor de Multiversos</span>
+            <span className="text-[10px] bg-[#38bdf8]/10 text-[#38bdf8] px-2 py-0.5 rounded-full font-mono font-bold">
+              {timelines.length} Hilos
+            </span>
+          </h3>
+
+          <div className="flex flex-col gap-2">
+            <span className="text-[10px] text-slate-500 font-bold block">SELECCIÓN DE LÍNEA TEMPORAL</span>
+            <div className="flex flex-col gap-2 max-h-[160px] overflow-y-auto pr-1">
+              {timelines.map(t => (
+                <div 
+                  key={t.id} 
+                  onClick={() => handleTimelineChange(t.id)}
+                  className={`flex flex-col p-2.5 rounded-xl border cursor-pointer transition ${activeTimeline === t.id ? 'bg-[#38bdf8]/10 border-[#38bdf8] text-white shadow-[0_0_12px_rgba(56,189,248,0.15)]' : 'bg-[#0b0f19] border-[#1e293b]/40 text-slate-400 hover:border-slate-700'}`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold flex items-center gap-1.5">
+                      {t.id === 'realidad_base' ? '🌐' : '🌀'} {t.name}
+                    </span>
+                    {t.id !== 'realidad_base' && (
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteTimeline(t.id);
+                        }}
+                        className="text-slate-500 hover:text-red-400 text-xs px-1 transition"
+                        title="Eliminar línea temporal"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                  <span className="text-[9px] text-slate-500 mt-1 block">
+                    Felicidad: <span className="text-[#10b981] font-bold">{t.global_metrics?.avg_happiness?.toFixed(1)}%</span> | Aprob: <span className="text-[#38bdf8] font-bold">{t.global_metrics?.avg_gov_approval?.toFixed(1)}%</span>
+                  </span>
+                  
+                  {/* Pequeña barra visual de felicidad comparativa */}
+                  <div className="w-full bg-slate-800/40 h-1 rounded-full overflow-hidden mt-1.5 flex">
+                    <div className="bg-[#10b981] h-full" style={{ width: `${t.global_metrics?.avg_happiness || 50}%` }} />
+                    <div className="bg-slate-700 h-full flex-1" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <form onSubmit={handleCreateTimeline} className="flex gap-2 border-t border-[#1e293b]/30 pt-3">
+            <input 
+              type="text" 
+              placeholder="Nombre del nuevo universo..."
+              value={newTimelineName}
+              onChange={(e) => setNewTimelineName(e.target.value)}
+              className="bg-[#0b0f19] text-xs border border-[#1e293b]/50 rounded-lg px-2.5 py-1.5 outline-none flex-1 focus:border-[#38bdf8] text-slate-200"
+            />
+            <button 
+              type="submit"
+              className="bg-[#38bdf8]/20 hover:bg-[#38bdf8]/35 text-[#38bdf8] text-xs font-bold px-3 py-1.5 rounded-lg border border-[#38bdf8]/30 transition flex items-center gap-1 shrink-0"
+            >
+              Clonar
+            </button>
+          </form>
+        </div>
         
         {/* Métricas Globales en tiempo real */}
         <div className="bg-[#090d16] border border-[#1e293b]/60 p-5 rounded-2xl shadow-xl flex flex-col gap-4">
@@ -706,6 +884,32 @@ const WorldBoxSimulator = ({ pythonApiUrl = 'http://localhost:5001' }) => {
                   {selectedAgent.vote_intention === 'Morena' ? 'GOBIERNO' : 'OPOSICIÓN'}
                 </span>
               </div>
+
+              {/* 🧬 El Destino de Roy (Comparativa de Multiversos) */}
+              {agentComparison && Object.keys(agentComparison).length > 1 && (
+                <div className="border-t border-[#1e293b]/40 pt-3.5 mt-1.5 flex flex-col gap-2">
+                  <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">🧬 El Destino de Roy:</span>
+                  <div className="flex flex-col gap-2 max-h-[180px] overflow-y-auto pr-1">
+                    {Object.values(agentComparison).map(c => (
+                      <div key={c.timeline_id} className="bg-[#0b0f19] p-2 border border-[#1e293b]/30 rounded-xl flex flex-col gap-1.5">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[10px] font-bold text-slate-300">
+                            {c.timeline_id === activeTimeline ? '⭐ ' : ''}{c.timeline_name}
+                          </span>
+                          <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold ${c.vote_intention === 'Morena' ? 'bg-[#10b981]/20 text-[#10b981]' : 'bg-[#f97316]/20 text-[#f97316]'}`}>
+                            {c.vote_intention === 'Morena' ? 'GOBIERNO' : 'OPOSICIÓN'}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-1 text-[9px] text-slate-400">
+                          <div>Fel: <span className="text-[#10b981] font-bold font-mono">{c.happiness?.toFixed(0)}%</span></div>
+                          <div>Estrés: <span className="text-[#ef4444] font-bold font-mono">{c.economic_stress?.toFixed(0)}%</span></div>
+                          <div>Aprob: <span className="text-[#38bdf8] font-bold font-mono">{c.government_approval?.toFixed(0)}%</span></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="text-slate-500 text-center py-8 text-xs flex flex-col items-center gap-2">
