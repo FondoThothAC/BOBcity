@@ -34,6 +34,7 @@ import ImplementationPlan from './components/ImplementationPlan';
 import AgentRawView from './components/AgentRawView';
 import WorldBoxSimulator from './components/WorldBoxSimulator';
 import HunterDashboard from './components/HunterDashboard';
+import MultiverseAdmin from './components/MultiverseAdmin';
 
 import { applyTheme } from './themeManager';
 
@@ -813,6 +814,7 @@ export default function App() {
       { id: 'map', label: 'Mapas de Dolor (GIS)', icon: <Map size={20} /> },
       { id: 'simulator', label: 'Sandbox ABM', icon: <Play size={20} /> },
       { id: 'worldbox', label: 'Simulador WorldBox', icon: <Play size={20} color="var(--neon-emerald)" /> },
+      { id: 'multiverso', label: 'Multiverso Admin', icon: <Sparkles size={20} color="var(--neon-cyan)" /> },
       { 
         id: 'gds-mega', 
         label: 'Gemelo GDS-MEGA', 
@@ -1021,6 +1023,9 @@ export default function App() {
           )}
           {activeTab === 'worldbox' && (
             <WorldBoxSimulator />
+          )}
+          {activeTab === 'multiverso' && (
+            <MultiverseAdmin />
           )}
           {activeTab === 'gds-mega' && (
             <GDSMegaVisualizer 

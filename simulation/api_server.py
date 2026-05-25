@@ -236,6 +236,87 @@ class SimulationAPIHandler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps({"status": "success", "agent_id": agent_id, "comparison": comparison}, ensure_ascii=False).encode('utf-8'))
             return
 
+        # --- ROY'S LIFE: Perfil narrativo completo de un agente en un universo ---
+        if requested_path.startswith("/api/multiverse/roys-life"):
+            from urllib.parse import urlparse, parse_qs
+            parsed_url = urlparse(requested_path)
+            query_params = parse_qs(parsed_url.query)
+            agent_id = int(query_params.get("agent_id", [0])[0])
+            timeline_id = query_params.get("timeline_id", ["realidad_base"])[0]
+            
+            global TIMELINES
+            model = get_timeline(timeline_id)
+            profile = model.get_agent_profile(agent_id)
+            
+            # Generar comparación entre todos los universos para este agente
+            multiverse_comparison = {}
+            for tid, m in TIMELINES.items():
+                p = m.get_agent_profile(agent_id)
+                if p:
+                    multiverse_comparison[tid] = {
+                        "timeline_name": "Realidad Base" if tid == "realidad_base" else tid.replace("_", " ").title(),
+                        "happiness": p["happiness"],
+                        "economic_stress": p["economic_stress"],
+                        "frustration": p["frustration"],
+                        "government_approval": p["government_approval"],
+                        "mental_state": p["mental_state"],
+                        "vote_intention": p["vote_intention"]
+                    }
+            
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json; charset=utf-8')
+            self._set_cors_headers()
+            self.end_headers()
+            self.wfile.write(json.dumps({
+                "status": "success", 
+                "profile": profile, 
+                "multiverse_comparison": multiverse_comparison
+            }, ensure_ascii=False).encode('utf-8'))
+            return
+
+        # --- DISTRIBUCIÓN DE ESTADOS MENTALES (HMM) ---
+        if requested_path.startswith("/api/multiverse/mental-distribution"):
+            from urllib.parse import urlparse, parse_qs
+            parsed_url = urlparse(requested_path)
+            query_params = parse_qs(parsed_url.query)
+            timeline_id = query_params.get("timeline_id", ["realidad_base"])[0]
+            
+            global TIMELINES
+            model = get_timeline(timeline_id)
+            distribution = model._get_mental_distribution()
+            
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json; charset=utf-8')
+            self._set_cors_headers()
+            self.end_headers()
+            self.wfile.write(json.dumps({
+                "status": "success", 
+                "timeline_id": timeline_id,
+                "tick": model.tick,
+                "mental_distribution": distribution,
+                "history": model.history[-50:]  # Últimos 50 ticks para gráficos
+            }, ensure_ascii=False).encode('utf-8'))
+            return
+
+        # --- ESTADO DE LOS DIOSES IA AUTÓNOMOS ---
+        if requested_path.startswith("/api/deities/status"):
+            deities = [
+                {"id": "thoth", "nombre": "𓁟 Thoth", "dominio": "Conocimiento y Datos", "estado": "activo", "tarea_actual": "Recopilación de KPIs INEGI/DENUE (2000 indicadores)", "progreso": 72},
+                {"id": "anubis", "nombre": "𓁢 Anubis", "dominio": "OSINT y Riesgo", "estado": "activo", "tarea_actual": "Escaneo nocturno de fuentes RSS y Nitter", "progreso": 45},
+                {"id": "horus", "nombre": "𓅃 Horus", "dominio": "Infraestructura y GIS", "estado": "activo", "tarea_actual": "Detección de zonas muertas en el mapa", "progreso": 88},
+                {"id": "ra", "nombre": "𓁛 Ra", "dominio": "Economía y Energía", "estado": "activo", "tarea_actual": "Cálculo de SDE: d(Stress)/dt por AGEB", "progreso": 60},
+                {"id": "isis", "nombre": "𓆇 Isis", "dominio": "Sociedad y Bienestar", "estado": "activo", "tarea_actual": "Ejecución de Cadenas de Markov (HMM)", "progreso": 55},
+                {"id": "sejmet", "nombre": "𓃭 Sejmet", "dominio": "Seguridad y Conflicto", "estado": "en_espera", "tarea_actual": "Modelando escenarios de disturbio potencial", "progreso": 30},
+                {"id": "ptah", "nombre": "𓊪 Ptah", "dominio": "Predicción Electoral", "estado": "activo", "tarea_actual": "Monte Carlo: convergencia de multiversos electorales", "progreso": 40}
+            ]
+            
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json; charset=utf-8')
+            self._set_cors_headers()
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "success", "deities": deities}, ensure_ascii=False).encode('utf-8'))
+            return
+
         # Secure Gateway API Endpoint to pull captured citizen data from local machine
         if requested_path.startswith("/api/secure-export"):
             auth_key = self.headers.get("X-Secure-Gateway-Key", "")

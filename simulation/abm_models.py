@@ -1,9 +1,35 @@
 # simulation/abm_models.py
 # MDD: Model-Driven Development - Mathematical Opinion Dynamics Engine
+# PDD: Cadenas de Markov Ocultas (HMM) + Monte Carlo + SDE para Ingeniería Social
 
 import numpy as np
 import random
-from typing import List, Dict, Any
+import copy
+import math
+from typing import List, Dict, Any, Optional
+
+# =====================================================================
+# CONSTANTES DEL MOTOR DE INGENIERÍA SOCIAL
+# =====================================================================
+
+# Estados Mentales del Ciudadano (Cadena de Markov Oculta)
+MENTAL_STATES = ['satisfecho', 'preocupado', 'frustrado', 'radicalizado']
+
+# Matriz de Transición Base (probabilidades de pasar de un estado a otro)
+# Filas = Estado Actual, Columnas = Siguiente Estado
+# [satisfecho, preocupado, frustrado, radicalizado]
+BASE_TRANSITION_MATRIX = np.array([
+    [0.70, 0.25, 0.04, 0.01],  # satisfecho    -> mayormente se queda satisfecho
+    [0.15, 0.55, 0.25, 0.05],  # preocupado    -> tiende a quedarse o empeorar
+    [0.05, 0.20, 0.55, 0.20],  # frustrado     -> difícil de recuperar
+    [0.02, 0.08, 0.30, 0.60],  # radicalizado  -> muy persistente
+])
+
+# Nombres narrativos para la generación de historias (Roy's Life)
+NOMBRES_MASCULINOS = ['Carlos', 'Miguel', 'José', 'Juan', 'Pedro', 'Roberto', 'Fernando', 'Diego', 'Alejandro', 'Ricardo']
+NOMBRES_FEMENINOS = ['María', 'Ana', 'Guadalupe', 'Rosa', 'Carmen', 'Sofía', 'Valentina', 'Lucía', 'Isabella', 'Elena']
+APELLIDOS = ['López', 'García', 'Hernández', 'Martínez', 'González', 'Rodríguez', 'Pérez', 'Sánchez', 'Ramírez', 'Torres']
+COLONIAS = ['Palo Verde', 'Centro', 'Las Quintas', 'Villa de Seris', 'Olivares', 'Sahuaro', 'Balderrama', 'El Choyal', 'Loma Linda', 'Bachoco']
 
 class CitizenAgent:
     def __init__(self, agent_id: int, sector: str, initial_opinion: float, epsilon: float, mu: float):
@@ -138,6 +164,7 @@ class GISSandboxModel:
     Modelo de Simulación Espacial (Sandbox GIS) para Hermosillo u otras ciudades.
     MDD / DDD: Calcula el impacto de obras viales (cierres), puentes e infraestructuras de agua
     en las poblaciones sintéticas geolocalizadas.
+    PDD: Integra Cadenas de Markov Ocultas (HMM) para estados mentales de los ciudadanos.
     """
     def __init__(self, lat: float, lon: float, num_agents: int = 500, policies: dict = None):
         self.lat = lat
@@ -146,6 +173,8 @@ class GISSandboxModel:
         self.agents = []
         self.active_macro_events = []
         self.policies = policies or {"taxes": 12.0, "security": 60.0, "subsidy": 30.0}
+        self.tick = 0  # Contador de iteraciones temporales del mundo
+        self.history = []  # Historial de métricas por tick para gráficos de divergencia
         self._fetch_macro_shocks()
         self._initialize_population()
 
@@ -206,6 +235,13 @@ class GISSandboxModel:
             # Integrar Population Scaler
             scaler_data = calculate_agent_weight_and_kpis(i, home_section, sector)
             
+            # Generar identidad narrativa para Roy's Life
+            genero = r.choice(['M', 'F'])
+            nombre = r.choice(NOMBRES_MASCULINOS if genero == 'M' else NOMBRES_FEMENINOS)
+            apellido = r.choice(APELLIDOS)
+            edad = r.randint(18, 72)
+            colonia = r.choice(COLONIAS)
+            
             self.agents.append({
                 "agent_id": i,
                 "sector": sector,
@@ -225,7 +261,17 @@ class GISSandboxModel:
                 "base_government_approval": scaler_data["base_government_approval"],
                 "government_approval": scaler_data["base_government_approval"],
                 "frustration": 0.0,
-                "vote_intention": "Morena"
+                "vote_intention": "Morena",
+                # --- HMM: Estado Mental (Cadena de Markov Oculta) ---
+                "mental_state": "satisfecho",
+                "mental_state_history": ["satisfecho"],
+                # --- Roy's Life: Identidad Narrativa ---
+                "nombre": nombre,
+                "apellido": apellido,
+                "edad": edad,
+                "genero": genero,
+                "colonia": colonia,
+                "diario": []  # Entradas narrativas generadas por tick
             })
 
     def _haversine(self, c1, c2):
@@ -351,6 +397,9 @@ class GISSandboxModel:
                 agent["vote_intention"] = "Morena"
             else:
                 agent["vote_intention"] = "Oposición"
+            
+            # 5. CADENA DE MARKOV OCULTA (HMM): Transición de Estado Mental
+            self._update_mental_state(agent)
 
     def get_metrics(self) -> dict:
         """
@@ -449,6 +498,193 @@ class GISSandboxModel:
             "global_metrics": global_metrics,
             "section_metrics": section_metrics,
             "sample_agents": sample_agents,
-            "active_macro_events": self.active_macro_events
+            "active_macro_events": self.active_macro_events,
+            "tick": self.tick
         }
+
+    def _update_mental_state(self, agent: dict):
+        """
+        PDD/HMM: Actualiza el estado mental del agente usando Cadenas de Markov Ocultas.
+        La matriz de transición se modifica dinámicamente por las condiciones del agente.
+        """
+        current_idx = MENTAL_STATES.index(agent["mental_state"])
+        
+        # Copiar la matriz base y modificarla según las condiciones del agente
+        transition = BASE_TRANSITION_MATRIX[current_idx].copy()
+        
+        # Factores que ACELERAN la radicalización (empujan hacia la derecha de la cadena)
+        if agent["happiness"] < 30:
+            # Muy infeliz: mayor probabilidad de empeorar
+            transition[3] += 0.15  # Más probabilidad de radicalización
+            transition[2] += 0.10  # Más probabilidad de frustración
+            transition[0] -= 0.20  # Menos probabilidad de estar satisfecho
+        
+        if agent["economic_stress"] > 70:
+            transition[2] += 0.12
+            transition[3] += 0.08
+            transition[0] -= 0.15
+        
+        if agent["water_pain"] > 60:
+            transition[2] += 0.08
+            transition[0] -= 0.08
+        
+        # Factores que RECUPERAN al agente (empujan hacia la izquierda)
+        if agent["government_approval"] > 65:
+            transition[0] += 0.15
+            transition[3] -= 0.10
+        
+        if agent["happiness"] > 70:
+            transition[0] += 0.20
+            transition[2] -= 0.10
+            transition[3] -= 0.08
+        
+        # Normalizar para que sumen 1.0
+        transition = np.clip(transition, 0.01, 1.0)
+        transition /= transition.sum()
+        
+        # Transición estocástica (lanzamiento de dado probabilístico)
+        new_state_idx = np.random.choice(len(MENTAL_STATES), p=transition)
+        agent["mental_state"] = MENTAL_STATES[new_state_idx]
+        agent["mental_state_history"].append(agent["mental_state"])
+
+    def advance_tick(self, structures: list, policies: dict = None):
+        """
+        Avanza un tick temporal completo del mundo.
+        Ejecuta update_simulation + guarda historial para gráficos de divergencia.
+        """
+        self.tick += 1
+        self.update_simulation(structures, policies)
+        
+        # Guardar snapshot de métricas para el historial de divergencia
+        metrics = self.get_metrics()
+        self.history.append({
+            "tick": self.tick,
+            "avg_happiness": metrics["global_metrics"]["avg_happiness"],
+            "avg_frustration": metrics["global_metrics"]["avg_frustration"],
+            "avg_economic_stress": metrics["global_metrics"]["avg_economic_stress"],
+            "avg_gov_approval": metrics["global_metrics"]["avg_gov_approval"],
+            "vote_morena_pct": metrics["global_metrics"]["vote_share"]["Morena"],
+            # Distribución de estados mentales (HMM)
+            "mental_distribution": self._get_mental_distribution()
+        })
+        return metrics
+
+    def _get_mental_distribution(self) -> dict:
+        """Calcula la distribución porcentual de estados mentales en toda la población."""
+        total = len(self.agents)
+        if total == 0:
+            return {s: 0.0 for s in MENTAL_STATES}
+        counts = {s: 0 for s in MENTAL_STATES}
+        for a in self.agents:
+            counts[a["mental_state"]] = counts.get(a["mental_state"], 0) + 1
+        return {s: round(counts[s] / total * 100.0, 1) for s in MENTAL_STATES}
+
+    def get_agent_profile(self, agent_id: int) -> Optional[dict]:
+        """
+        Roy's Life: Retorna el perfil completo de un agente para la ficha narrativa.
+        """
+        for a in self.agents:
+            if a["agent_id"] == agent_id:
+                return {
+                    "agent_id": a["agent_id"],
+                    "nombre": a.get("nombre", f"Agente #{agent_id}"),
+                    "apellido": a.get("apellido", ""),
+                    "edad": a.get("edad", 30),
+                    "genero": a.get("genero", "M"),
+                    "sector": a["sector"],
+                    "colonia": a.get("colonia", "Centro"),
+                    "home_section": a["home_section"],
+                    "happiness": round(a["happiness"], 1),
+                    "water_pain": round(a["water_pain"], 1),
+                    "transit_pain": round(a["transit_pain"], 1),
+                    "economic_stress": round(a["economic_stress"], 1),
+                    "frustration": round(a["frustration"], 1),
+                    "government_approval": round(a["government_approval"], 1),
+                    "mental_state": a["mental_state"],
+                    "mental_state_history": a.get("mental_state_history", []),
+                    "vote_intention": a["vote_intention"],
+                    "diario": a.get("diario", [])
+                }
+        return None
+
+    def clone(self) -> 'GISSandboxModel':
+        """
+        Clona el estado completo del modelo para crear un universo paralelo.
+        El nuevo universo es una copia exacta del momento actual, divergiendo desde aquí.
+        """
+        cloned = GISSandboxModel.__new__(GISSandboxModel)
+        cloned.lat = self.lat
+        cloned.lon = self.lon
+        cloned.num_agents = self.num_agents
+        cloned.agents = copy.deepcopy(self.agents)
+        cloned.active_macro_events = copy.deepcopy(self.active_macro_events)
+        cloned.policies = copy.deepcopy(self.policies)
+        cloned.tick = self.tick
+        cloned.history = copy.deepcopy(self.history)
+        return cloned
+
+
+# =====================================================================
+# MOTOR DE MONTE CARLO PARA CONVERGENCIA DE MULTIVERSOS
+# =====================================================================
+
+def run_monte_carlo_divergence(base_model: GISSandboxModel, structures: list,
+                                policy_variants: list, num_ticks: int = 30,
+                                num_runs: int = 50) -> dict:
+    """
+    PDD: Ejecuta N simulaciones de Monte Carlo partiendo del mismo estado base
+    con pequeñas variaciones de ruido estadístico para encontrar el 'Camino Crítico'.
+    
+    Retorna la distribución de resultados para que el Admin vea:
+    'En el X% de los futuros, esta política funcionó.'
+    """
+    results = []
+    
+    for run_idx in range(num_runs):
+        # Clonar el modelo base para esta corrida
+        universe = base_model.clone()
+        
+        # Aplicar la variante de política con ruido aleatorio
+        noisy_policies = {}
+        for key, val in (policy_variants[0] if policy_variants else universe.policies).items():
+            # Ruido gaussiano del ±5% para simular incertidumbre
+            noise = np.random.normal(0, float(val) * 0.05)
+            noisy_policies[key] = max(0.0, float(val) + noise)
+        
+        # Ejecutar N ticks de simulación
+        for t in range(num_ticks):
+            universe.advance_tick(structures, noisy_policies)
+        
+        # Recolectar el resultado final
+        final_metrics = universe.get_metrics()
+        mental_dist = universe._get_mental_distribution()
+        
+        results.append({
+            "run_id": run_idx,
+            "final_happiness": final_metrics["global_metrics"]["avg_happiness"],
+            "final_frustration": final_metrics["global_metrics"]["avg_frustration"],
+            "final_vote_morena": final_metrics["global_metrics"]["vote_share"]["Morena"],
+            "radicalizado_pct": mental_dist.get("radicalizado", 0.0),
+            "frustrado_pct": mental_dist.get("frustrado", 0.0)
+        })
+    
+    # Calcular estadísticas de convergencia
+    happiness_values = [r["final_happiness"] for r in results]
+    radical_values = [r["radicalizado_pct"] for r in results]
+    vote_values = [r["final_vote_morena"] for r in results]
+    
+    # Porcentaje de futuros donde la política "funcionó" (felicidad > 50 Y radicalización < 15%)
+    success_count = sum(1 for r in results if r["final_happiness"] > 50 and r["radicalizado_pct"] < 15)
+    
+    return {
+        "num_runs": num_runs,
+        "num_ticks": num_ticks,
+        "success_rate_pct": round(success_count / num_runs * 100.0, 1),
+        "happiness_mean": round(float(np.mean(happiness_values)), 1),
+        "happiness_std": round(float(np.std(happiness_values)), 1),
+        "radicalization_mean_pct": round(float(np.mean(radical_values)), 1),
+        "vote_morena_mean_pct": round(float(np.mean(vote_values)), 1),
+        "convergence_summary": f"En el {round(success_count / num_runs * 100.0)}% de los {num_runs} futuros simulados, esta política mantuvo la estabilidad social.",
+        "individual_runs": results[:10]  # Solo los primeros 10 para no saturar la respuesta
+    }
 
