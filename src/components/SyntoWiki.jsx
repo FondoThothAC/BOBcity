@@ -447,9 +447,39 @@ Cédula ciudadana firmada digitalmente con sal criptográfica local. Los datos d
       setBrainLogs(prev => [
         ...prev,
         `📥 [Claude Brain Skill] Instando: openclaw wiki compile ...`,
-        `📝 [Compilador] Generando caché JSON de inferencia en '.openclaw-wiki/cache/agent-digest.json'`,
-        `✅ [Sync] Bóveda de Obsidian sincronizada e indexada exitosamente.`
+        `📝 [Compilador] Consultando al Agente Recolector OSINT en la bóveda local...`
       ]);
+      
+      fetch('http://localhost:5001/api/wiki/sync')
+        .then(res => res.json())
+        .then(data => {
+          if(data.status === 'success' && data.articles) {
+            // Filtrar para no duplicar si ya existen
+            const newArticles = data.articles.filter(newArt => !articles.some(a => a.id === newArt.id));
+            if(newArticles.length > 0) {
+              setArticles(prev => [...newArticles, ...prev]);
+              setBrainLogs(prev => [
+                ...prev,
+                `✅ [Sync] Bóveda de Obsidian sincronizada. ${newArticles.length} nuevas notas OSINT importadas.`
+              ]);
+              window.dispatchEvent(new CustomEvent('civic-toast', {
+                detail: { message: `SyntoWiki: ${newArticles.length} nuevas notas cargadas.`, type: 'success' }
+              }));
+            } else {
+              setBrainLogs(prev => [
+                ...prev,
+                `✅ [Sync] Bóveda de Obsidian sincronizada. No hay notas nuevas.`
+              ]);
+            }
+          }
+        })
+        .catch(err => {
+          setBrainLogs(prev => [
+            ...prev,
+            `❌ [Error] Falló la sincronización con el Agente OSINT: ${err.message}`
+          ]);
+        });
+
     } else if (action === 'lint') {
       setBrainLogs(prev => [
         ...prev,
