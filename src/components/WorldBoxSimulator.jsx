@@ -306,26 +306,27 @@ const WorldBoxSimulator = ({ pythonApiUrl = 'http://localhost:5001' }) => {
           const isGov = agent.vote_intention === "Morena";
           const agentColor = isGov ? '#10b981' : '#f97316'; // Verde o Naranja
 
-          // Dibujar cuerpo del agente
+          // Dibujar cuerpo del agente (radio dinámico basado en peso poblacional)
+          const agentRadius = Math.max(2, Math.min(6, (agent.weight || 10) / 4));
           ctx.fillStyle = agentColor;
           ctx.beginPath();
-          ctx.arc(pt.x, pt.y, 3, 0, 2 * Math.PI);
+          ctx.arc(pt.x, pt.y, agentRadius, 0, 2 * Math.PI);
           ctx.fill();
 
           // Sombra neon del agente
           ctx.strokeStyle = agentColor + '66';
-          ctx.lineWidth = 1;
+          ctx.lineWidth = agentRadius > 3 ? 2 : 1;
           ctx.stroke();
 
           // Dibujar emoji temporal de frustración sobre la cabeza si su felicidad es crítica
-          if (agent.happiness < 40 && Math.sin(time * 0.005 + index) > 0.8) {
+          if (agent.government_approval < 40 && Math.sin(time * 0.005 + index) > 0.8) {
             ctx.fillStyle = '#ef4444';
             ctx.font = '10px sans-serif';
-            ctx.fillText("😡", pt.x - 5, pt.y - 8);
-          } else if (agent.happiness > 75 && Math.sin(time * 0.005 + index) > 0.9) {
+            ctx.fillText("😡", pt.x - 5, pt.y - (agentRadius + 5));
+          } else if (agent.government_approval > 75 && Math.sin(time * 0.005 + index) > 0.9) {
             ctx.fillStyle = '#10b981';
             ctx.font = '10px sans-serif';
-            ctx.fillText("😊", pt.x - 5, pt.y - 8);
+            ctx.fillText("😊", pt.x - 5, pt.y - (agentRadius + 5));
           }
         });
       }
@@ -421,7 +422,7 @@ const WorldBoxSimulator = ({ pythonApiUrl = 'http://localhost:5001' }) => {
 
     if (closestAgent) {
       setSelectedAgent(closestAgent);
-      addLog(`Auditoría: Seleccionado Ciudadano #${closestAgent.agent_id} (${closestAgent.sector}).`);
+      addLog(`Auditoría: Seleccionado grupo #${closestAgent.agent_id} (${closestAgent.sector}) - Representa: ${closestAgent.weight || 10} habs.`);
     } else {
       setSelectedAgent(null);
     }
@@ -566,9 +567,9 @@ const WorldBoxSimulator = ({ pythonApiUrl = 'http://localhost:5001' }) => {
             </div>
 
             <div className="bg-[#0b0f19] p-3 border border-[#1e293b]/40 rounded-xl">
-              <span className="text-[10px] text-slate-500 block">DOLOR DE TRÁNSITO</span>
-              <span className="text-lg font-semibold text-[#f97316]">
-                {globalMetrics.avg_transit_pain?.toFixed(1)}%
+              <span className="text-[10px] text-slate-500 block">APROBACIÓN GOBIERNO</span>
+              <span className={`text-lg font-semibold ${(globalMetrics.avg_gov_approval || 50) > 50 ? 'text-[#10b981]' : 'text-[#ef4444]'}`}>
+                {(globalMetrics.avg_gov_approval || 50).toFixed(1)}%
               </span>
             </div>
           </div>
@@ -652,20 +653,13 @@ const WorldBoxSimulator = ({ pythonApiUrl = 'http://localhost:5001' }) => {
               </div>
 
               <div className="flex justify-between">
+                <span className="text-slate-400">Población Representada:</span>
+                <span className="font-semibold text-slate-200">{selectedAgent.weight || 10} personas</span>
+              </div>
+
+              <div className="flex justify-between">
                 <span className="text-slate-400">Sector Social:</span>
                 <span className="font-semibold text-slate-200 capitalize">{selectedAgent.sector}</span>
-              </div>
-
-              <div className="flex justify-between">
-                <span className="text-slate-400">Ubicación Residencial:</span>
-                <span className="font-semibold text-slate-300">Sec. {selectedAgent.home_section}</span>
-              </div>
-
-              <div className="flex justify-between">
-                <span className="text-slate-400">Dolor de Agua:</span>
-                <span className={`font-semibold ${selectedAgent.water_pain > 60 ? 'text-[#ef4444]' : 'text-slate-300'}`}>
-                  {selectedAgent.water_pain?.toFixed(1)}%
-                </span>
               </div>
 
               <div className="flex justify-between">
@@ -675,10 +669,24 @@ const WorldBoxSimulator = ({ pythonApiUrl = 'http://localhost:5001' }) => {
                 </span>
               </div>
 
+              <div className="flex justify-between">
+                <span className="text-slate-400">Frustración Social:</span>
+                <span className={`font-semibold ${(selectedAgent.frustration || 0) > 60 ? 'text-[#ef4444]' : 'text-[#f97316]'}`}>
+                  {(selectedAgent.frustration || 0).toFixed(1)}%
+                </span>
+              </div>
+              
+              <div className="flex justify-between">
+                <span className="text-slate-400">Estrés Económico:</span>
+                <span className={`font-semibold ${(selectedAgent.economic_stress || 50) > 60 ? 'text-[#ef4444]' : 'text-slate-300'}`}>
+                  {(selectedAgent.economic_stress || 50).toFixed(1)}%
+                </span>
+              </div>
+
               <div className="flex justify-between items-center border-t border-[#1e293b]/40 pt-2.5">
-                <span className="text-slate-400">Felicidad Individual:</span>
-                <span className={`text-sm font-bold ${selectedAgent.happiness > 60 ? 'text-[#10b981]' : 'text-[#ef4444]'}`}>
-                  {selectedAgent.happiness?.toFixed(1)}%
+                <span className="text-slate-400">Aprobación de Gobierno:</span>
+                <span className={`text-sm font-bold ${(selectedAgent.government_approval || 50) > 50 ? 'text-[#10b981]' : 'text-[#ef4444]'}`}>
+                  {(selectedAgent.government_approval || 50).toFixed(1)}%
                 </span>
               </div>
 

@@ -148,6 +148,11 @@ class GISSandboxModel:
 
     def _initialize_population(self):
         import random
+        import sys
+        import os
+        sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+        from population_scaler import calculate_agent_weight_and_kpis
+        
         # Usar semilla para mantener consistencia física-temporal
         r = random.Random(42)
         
@@ -185,6 +190,9 @@ class GISSandboxModel:
             dist_home_work = self._haversine(home_coords, work_coords)
             base_transit_pain = min(90.0, 20.0 + dist_home_work * 12.0 + r.uniform(0.0, 15.0))
             
+            # Integrar Population Scaler
+            scaler_data = calculate_agent_weight_and_kpis(i, home_section, sector)
+            
             self.agents.append({
                 "agent_id": i,
                 "sector": sector,
@@ -198,6 +206,12 @@ class GISSandboxModel:
                 "water_pain": base_water_pain,
                 "transit_pain": base_transit_pain,
                 "happiness": 50.0,
+                "weight": scaler_data["weight"],
+                "base_economic_stress": scaler_data["base_economic_stress"],
+                "economic_stress": scaler_data["base_economic_stress"],
+                "base_government_approval": scaler_data["base_government_approval"],
+                "government_approval": scaler_data["base_government_approval"],
+                "frustration": 0.0,
                 "vote_intention": "Morena"
             })
 
@@ -258,11 +272,23 @@ class GISSandboxModel:
             
             agent["transit_pain"] = max(5.0, min(100.0, agent["base_transit_pain"] + transit_penalty - bridge_discount))
             
-            # 3. Recalcular felicidad y preferencia electoral
-            avg_pain = (agent["water_pain"] + agent["transit_pain"]) / 2.0
-            agent["happiness"] = max(0.0, min(100.0, 100.0 - avg_pain))
+            # 3. Recalcular KPIs extendidos (Frustración, Economía, Gobierno)
+            # El tráfico impacta directamente en la frustración
+            agent["frustration"] = max(0.0, min(100.0, (agent["transit_pain"] * 0.6) + (agent["water_pain"] * 0.4)))
             
-            if agent["happiness"] > 55.0:
+            # El estrés económico se agrava por el dolor de tránsito (costo de gasolina, pérdida de tiempo)
+            econ_penalty = transit_penalty * 0.2
+            agent["economic_stress"] = max(0.0, min(100.0, agent["base_economic_stress"] + econ_penalty))
+            
+            # Aprobación de Gobierno cae si la frustración sube
+            frustration_impact = agent["frustration"] * 0.7
+            agent["government_approval"] = max(0.0, min(100.0, agent["base_government_approval"] - frustration_impact + bridge_discount + (40.0 if water_served else 0.0)))
+            
+            # 4. Recalcular felicidad y preferencia electoral
+            avg_pain = (agent["water_pain"] + agent["transit_pain"] + agent["economic_stress"]) / 3.0
+            agent["happiness"] = max(0.0, min(100.0, 100.0 - avg_pain + (agent["government_approval"] * 0.2)))
+            
+            if agent["government_approval"] > 50.0 and agent["happiness"] > 45.0:
                 agent["vote_intention"] = "Morena"
             else:
                 agent["vote_intention"] = "Oposición"
@@ -273,22 +299,28 @@ class GISSandboxModel:
         """
         import numpy as np
         
-        happiness_list = [a["happiness"] for a in self.agents]
-        water_pain_list = [a["water_pain"] for a in self.agents]
-        transit_pain_list = [a["transit_pain"] for a in self.agents]
-        vote_intentions = [a["vote_intention"] for a in self.agents]
+        happiness_list = [a["happiness"] * a["weight"] for a in self.agents]
+        water_pain_list = [a["water_pain"] * a["weight"] for a in self.agents]
+        transit_pain_list = [a["transit_pain"] * a["weight"] for a in self.agents]
+        frustration_list = [a["frustration"] * a["weight"] for a in self.agents]
+        econ_stress_list = [a["economic_stress"] * a["weight"] for a in self.agents]
+        gov_approval_list = [a["government_approval"] * a["weight"] for a in self.agents]
         
-        total = len(self.agents)
-        vote_morena = vote_intentions.count("Morena")
-        vote_oposion = vote_intentions.count("Oposición")
+        total_population = sum(a["weight"] for a in self.agents)
+        vote_morena = sum(a["weight"] for a in self.agents if a["vote_intention"] == "Morena")
+        vote_oposion = sum(a["weight"] for a in self.agents if a["vote_intention"] == "Oposición")
         
         global_metrics = {
-            "avg_happiness": float(np.mean(happiness_list)) if total else 50.0,
-            "avg_water_pain": float(np.mean(water_pain_list)) if total else 40.0,
-            "avg_transit_pain": float(np.mean(transit_pain_list)) if total else 30.0,
+            "avg_happiness": float(np.sum(happiness_list) / total_population) if total_population else 50.0,
+            "avg_water_pain": float(np.sum(water_pain_list) / total_population) if total_population else 40.0,
+            "avg_transit_pain": float(np.sum(transit_pain_list) / total_population) if total_population else 30.0,
+            "avg_frustration": float(np.sum(frustration_list) / total_population) if total_population else 30.0,
+            "avg_economic_stress": float(np.sum(econ_stress_list) / total_population) if total_population else 45.0,
+            "avg_gov_approval": float(np.sum(gov_approval_list) / total_population) if total_population else 50.0,
+            "total_simulated_population": total_population,
             "vote_share": {
-                "Morena": (vote_morena / total * 100.0) if total else 50.0,
-                "Oposición": (vote_oposion / total * 100.0) if total else 50.0
+                "Morena": (vote_morena / total_population * 100.0) if total_population else 50.0,
+                "Oposición": (vote_oposion / total_population * 100.0) if total_population else 50.0
             }
         }
         
@@ -297,23 +329,29 @@ class GISSandboxModel:
             sec_id = f"{s_idx:04d}"
             sec_agents = [a for a in self.agents if a["home_section"] == sec_id]
             if sec_agents:
-                sec_happiness = [a["happiness"] for a in sec_agents]
-                sec_water = [a["water_pain"] for a in sec_agents]
-                sec_transit = [a["transit_pain"] for a in sec_agents]
-                sec_votes = [a["vote_intention"] for a in sec_agents]
+                sec_happiness = [a["happiness"] * a["weight"] for a in sec_agents]
+                sec_water = [a["water_pain"] * a["weight"] for a in sec_agents]
+                sec_transit = [a["transit_pain"] * a["weight"] for a in sec_agents]
+                sec_frust = [a["frustration"] * a["weight"] for a in sec_agents]
+                sec_gov = [a["government_approval"] * a["weight"] for a in sec_agents]
+                sec_econ = [a["economic_stress"] * a["weight"] for a in sec_agents]
                 
-                sec_total = len(sec_agents)
-                sec_morena = sec_votes.count("Morena")
+                sec_pop = sum(a["weight"] for a in sec_agents)
+                sec_morena = sum(a["weight"] for a in sec_agents if a["vote_intention"] == "Morena")
                 
                 section_metrics[sec_id] = {
-                    "avg_happiness": float(np.mean(sec_happiness)),
-                    "avg_water_pain": float(np.mean(sec_water)),
-                    "avg_transit_pain": float(np.mean(sec_transit)),
+                    "avg_happiness": float(np.sum(sec_happiness) / sec_pop),
+                    "avg_water_pain": float(np.sum(sec_water) / sec_pop),
+                    "avg_transit_pain": float(np.sum(sec_transit) / sec_pop),
+                    "avg_frustration": float(np.sum(sec_frust) / sec_pop),
+                    "avg_gov_approval": float(np.sum(sec_gov) / sec_pop),
+                    "avg_economic_stress": float(np.sum(sec_econ) / sec_pop),
+                    "simulated_population": sec_pop,
                     "militants_percent": {
-                        "MORENA": int(sec_morena / sec_total * 100.0),
-                        "PAN": int((sec_total - sec_morena) * 0.6 / sec_total * 100.0),
-                        "PRI": int((sec_total - sec_morena) * 0.2 / sec_total * 100.0),
-                        "MC": int((sec_total - sec_morena) * 0.2 / sec_total * 100.0)
+                        "MORENA": int(sec_morena / sec_pop * 100.0),
+                        "PAN": int((sec_pop - sec_morena) * 0.6 / sec_pop * 100.0),
+                        "PRI": int((sec_pop - sec_morena) * 0.2 / sec_pop * 100.0),
+                        "MC": int((sec_pop - sec_morena) * 0.2 / sec_pop * 100.0)
                     }
                 }
             else:
@@ -321,6 +359,10 @@ class GISSandboxModel:
                     "avg_happiness": 50.0,
                     "avg_water_pain": 40.0,
                     "avg_transit_pain": 30.0,
+                    "avg_frustration": 30.0,
+                    "avg_gov_approval": 50.0,
+                    "avg_economic_stress": 45.0,
+                    "simulated_population": 0,
                     "militants_percent": {"MORENA": 40, "PAN": 30, "PRI": 15, "MC": 15}
                 }
                 
@@ -335,6 +377,10 @@ class GISSandboxModel:
                 "work_section": a["work_section"],
                 "water_pain": a["water_pain"],
                 "transit_pain": a["transit_pain"],
+                "frustration": a["frustration"],
+                "economic_stress": a["economic_stress"],
+                "government_approval": a["government_approval"],
+                "weight": a["weight"],
                 "happiness": a["happiness"],
                 "vote_intention": a["vote_intention"]
             })
