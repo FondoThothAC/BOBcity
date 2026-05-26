@@ -30,6 +30,7 @@ import MasterConsole from './components/MasterConsole';
 import ClientOnboarding from './components/ClientOnboarding';
 import SocialGraph3D from './components/SocialGraph3D';
 import SyntoWiki from './components/SyntoWiki';
+import UnifiedCommandCenter from './components/UnifiedCommandCenter';
 import GDSMegaVisualizer from './components/GDSMegaVisualizer';
 import GDSMicroSimulator from './components/GDSMicroSimulator';
 import ImplementationPlan from './components/ImplementationPlan';
@@ -973,6 +974,7 @@ export default function App() {
               {activeTab === 'map' && "Visualizando capas de calor de insatisfacción ciudadana."}
               {activeTab === 'simulator' && "Prueba políticas y simula dinámicas de opinión."}
               {activeTab === 'worldbox' && "Aplica leyes de gobernación local y observa el enjambre de agentes en tiempo real."}
+              {activeTab === 'osiris-global' && "Centro de Comando Unificado OSINT, radar LEO y visor geográfico."}
               {activeTab === 'gds-mega' && "Visualización profunda del Gemelo Digital Social a micro y macro escala."}
               {activeTab === 'gds-micro' && "Inferencia cognitiva del gemelo digital usando modelos pequeños locales."}
               {activeTab === 'predictor' && "Probabilidad de victoria basada en perfiles y propuestas."}
@@ -1036,7 +1038,7 @@ export default function App() {
             <MultiverseAdmin />
           )}
           {activeTab === 'osiris-global' && (
-            <GlobalOsirisMap />
+            <UnifiedCommandCenter agents={agents} clients={clients} />
           )}
           {activeTab === 'gds-mega' && (
             <GDSMegaVisualizer 

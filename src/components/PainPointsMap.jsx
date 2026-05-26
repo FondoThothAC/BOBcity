@@ -117,7 +117,7 @@ function VoterParticles({ agents }) {
   );
 }
 
-export default function PainPointsMap({ agents }) {
+export default function PainPointsMap({ agents, externalCenter }) {
   const [activeCategory, setActiveCategory] = useState("TENSION"); 
   // Categorías de Mapa: TENSION, POLITICAL, SOCIOECONOMIC, CROSSOVER
   const [activeLayer, setActiveLayer] = useState("ALL_PAIN"); 
@@ -1707,6 +1707,7 @@ export default function PainPointsMap({ agents }) {
               style={{ height: '100%', width: '100%', borderRadius: '6px' }}
             >
               <ChangeMapView center={mapCenter} zoom={mapZoom} />
+              {externalCenter && <ChangeMapView center={externalCenter} zoom={13} />}
               <MapPopupController activeTool={activeTool} />
 
               <TileLayer
