@@ -3,9 +3,9 @@
 > vite
 
 
-  VITE v5.4.21  ready in 144 ms
+  VITE v5.4.21  ready in 165 ms
 
   ➜  Local:   http://localhost:3335/
   ➜  Network: http://192.168.1.14:3335/
   ➜  Network: http://192.168.64.1:3335/
-7:40:54 PM [vite] hmr update /src/components/PainPointsMap.jsx
+7:51:38 PM [vite] hmr update /src/components/HunterDashboard.jsx

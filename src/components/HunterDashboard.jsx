@@ -85,10 +85,10 @@ export default function HunterDashboard() {
   return (
     <div style={{
       display: 'grid',
-      gridTemplateColumns: '280px 1fr 320px',
-      gridTemplateRows: 'auto 1fr 200px',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+      gridAutoRows: 'min-content',
       gap: '1.5rem',
-      height: '85vh',
+      minHeight: '85vh',
       padding: '1rem',
       fontFamily: '"Outfit", sans-serif',
       color: '#E2E8F0',

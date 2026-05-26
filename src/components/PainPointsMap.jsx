@@ -334,11 +334,12 @@ export default function PainPointsMap({ agents }) {
         .then(data => {
           if (data && data.features) {
             const mappedFeatures = data.features.map((f, idx) => {
-              const name = f.properties.name || f.properties.ESTADO || '';
+              const name = f.properties?.name || f.properties?.ESTADO || '';
               const normalizedName = name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s/g, '');
               const stateKey = Object.keys(MEXICO_STATES).find(k => k.toLowerCase().replace(/_/g, '') === normalizedName) || 'CDMX';
               
               return {
+
                 ...f,
                 properties: {
                   ...f.properties,
