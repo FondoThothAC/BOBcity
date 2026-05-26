@@ -33,6 +33,17 @@ function MapClickEvents({ activeTool, onPlace }) {
   return null;
 }
 
+// Componente controlador para cerrar popups de Leaflet cuando se activa una herramienta de edición (exclusión mutua)
+function MapPopupController({ activeTool }) {
+  const map = useMap();
+  useEffect(() => {
+    if (activeTool) {
+      map.closePopup();
+    }
+  }, [activeTool, map]);
+  return null;
+}
+
 // Componente de partículas de votantes animados para el mapa
 function VoterParticles({ agents }) {
   const [progress, setProgress] = useState(0);
@@ -1074,9 +1085,13 @@ export default function PainPointsMap({ agents }) {
 
     layer.on({
       click: (e) => {
-        if (activeTool === 'closure') {
+        if (activeTool) {
           L.DomEvent.stopPropagation(e);
           layer.closePopup();
+          // Cerrado diferido para mitigar el comportamiento nativo de Leaflet en popups vinculados
+          setTimeout(() => {
+            layer.closePopup();
+          }, 10);
           handlePlaceStructure(e.latlng.lat, e.latlng.lng, props.seccion);
           return;
         }
@@ -1453,6 +1468,7 @@ export default function PainPointsMap({ agents }) {
               style={{ height: '100%', width: '100%', borderRadius: '6px' }}
             >
               <ChangeMapView center={mapCenter} zoom={mapZoom} />
+              <MapPopupController activeTool={activeTool} />
 
               <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
@@ -1487,7 +1503,7 @@ export default function PainPointsMap({ agents }) {
                       }}
                       eventHandlers={{
                         click: (e) => {
-                          if (activeTool === 'closure') {
+                          if (activeTool) {
                             handlePlaceStructure(e.latlng.lat, e.latlng.lng, poly.id);
                             return;
                           }
@@ -1499,8 +1515,9 @@ export default function PainPointsMap({ agents }) {
                         }
                       }}
                     >
-                      <Popup>
-                        <div style={{ minWidth: '260px', fontFamily: 'Inter, sans-serif', color: '#fff' }}>
+                      {!activeTool && (
+                        <Popup>
+                          <div style={{ minWidth: '260px', fontFamily: 'Inter, sans-serif', color: '#fff' }}>
                           <h3 style={{ margin: '0 0 0.25rem 0', color: 'white', fontSize: '0.95rem', fontWeight: '800' }}>
                             {poly.name}
                           </h3>
@@ -1650,6 +1667,7 @@ export default function PainPointsMap({ agents }) {
 
                         </div>
                       </Popup>
+                      )}
                     </Polygon>
                   );
                 })
@@ -1668,21 +1686,23 @@ export default function PainPointsMap({ agents }) {
                     weight: 1.5
                   }}
                 >
-                  <Popup>
-                    <div style={{ minWidth: '220px', fontFamily: 'Inter, sans-serif', color: '#fff' }}>
-                      <h4 style={{ margin: '0 0 0.25rem 0', color: 'var(--neon-purple)', fontSize: '0.85rem', fontWeight: '800' }}>
-                        🏫 {school.nombre}
-                      </h4>
-                      <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
-                        Actividad: {school.actividad}
+                  {!activeTool && (
+                    <Popup>
+                      <div style={{ minWidth: '220px', fontFamily: 'Inter, sans-serif', color: '#fff' }}>
+                        <h4 style={{ margin: '0 0 0.25rem 0', color: 'var(--neon-purple)', fontSize: '0.85rem', fontWeight: '800' }}>
+                          🏫 {school.nombre}
+                        </h4>
+                        <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
+                          Actividad: {school.actividad}
+                        </div>
+                        <div style={{ fontSize: '0.7rem', display: 'flex', flexDirection: 'column', gap: '0.2rem', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '0.4rem' }}>
+                          <div><strong>Colonia:</strong> {school.colonia || 'N/A'}</div>
+                          <div><strong>Código Postal (CP):</strong> {school.codigo_postal || 'N/A'}</div>
+                          <div><strong>ID Registro DENUE:</strong> {school.id}</div>
+                        </div>
                       </div>
-                      <div style={{ fontSize: '0.7rem', display: 'flex', flexDirection: 'column', gap: '0.2rem', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '0.4rem' }}>
-                        <div><strong>Colonia:</strong> {school.colonia || 'N/A'}</div>
-                        <div><strong>Código Postal (CP):</strong> {school.codigo_postal || 'N/A'}</div>
-                        <div><strong>ID Registro DENUE:</strong> {school.id}</div>
-                      </div>
-                    </div>
-                  </Popup>
+                    </Popup>
+                  )}
                 </CircleMarker>
               ))}
               {/* Elementos del Sandbox GIS de Infraestructura */}
