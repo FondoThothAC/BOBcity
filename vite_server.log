@@ -3,22 +3,7 @@
 > vite
 
 
-  VITE v5.4.21  ready in 294 ms
+  VITE v5.4.21  ready in 138 ms
 
   ➜  Local:   http://localhost:3335/
   ➜  Network: http://192.168.1.14:3335/
-2:34:04 AM [vite] page reload fondothoth-landing/index.html
-2:34:12 AM [vite] page reload fondothoth-landing/dist/index.html
-2:45:24 AM [vite] hmr update /src/index.css
-2:48:46 AM [vite] hmr update /src/index.css
-2:58:46 AM [vite] hmr update /src/components/WorldBoxSimulator.jsx
-1:14:53 PM [vite] page reload fondothoth-landing/dist/index.html
-1:26:09 PM [vite] hmr update /src/components/PainPointsMap.jsx
-1:37:50 PM [vite] hmr update /src/components/GlobalOsirisMap.jsx
-1:37:51 PM [vite] ✨ new dependencies optimized: three
-1:37:51 PM [vite] ✨ optimized dependencies changed. reloading
-1:38:23 PM [vite] hmr update /src/components/WorldBoxSimulator.jsx
-1:42:07 PM [vite] hmr update /src/components/GlobalOsirisMap.jsx
-1:42:40 PM [vite] hmr update /src/components/WorldBoxSimulator.jsx
-1:51:35 PM [vite] hmr update /src/components/PainPointsMap.jsx
-1:52:06 PM [vite] hmr update /src/components/PainPointsMap.jsx

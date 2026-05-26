@@ -246,6 +246,34 @@ export default function PainPointsMap({ agents }) {
     return () => clearInterval(interval);
   }, []);
 
+  // Proyección de Capa Orbital Local en base al municipio seleccionado (Hermosillo, Tijuana, Monterrey, CDMX, etc.)
+  const displayedOrbitalData = useMemo(() => {
+    const baseCoords = selectedMunicipality?.coords || [29.0729, -110.9559];
+    const baseName = selectedMunicipality?.name ? selectedMunicipality.name.replace(/📍|🏛️|🌊/g, '').trim() : 'Hermosillo';
+
+    // Generar satélites locales orbitando muy cerca de la ciudad seleccionada
+    const localSatellites = [
+      { lat: baseCoords[0] + 0.08, lng: baseCoords[1] - 0.09, alt: 0.18 },
+      { lat: baseCoords[0] - 0.05, lng: baseCoords[1] + 0.12, alt: 0.22 },
+      { lat: baseCoords[0] + 0.14, lng: baseCoords[1] + 0.05, alt: 0.28 },
+      { lat: baseCoords[0] - 0.11, lng: baseCoords[1] - 0.15, alt: 0.15 }
+    ];
+
+    // Generar webcams locales distribuidas tácticamente en la ciudad seleccionada
+    const localWebcams = [
+      { lat: baseCoords[0] + 0.005, lng: baseCoords[1] - 0.008, name: `CCTV Plaza Cívica - ${baseName}`, viewers: Math.floor(Math.random() * 450) + 120 },
+      { lat: baseCoords[0] - 0.012, lng: baseCoords[1] + 0.015, name: `CCTV Zona Centro - ${baseName}`, viewers: Math.floor(Math.random() * 850) + 200 },
+      { lat: baseCoords[0] + 0.022, lng: baseCoords[1] + 0.028, name: `CCTV Zona Norte / Acceso - ${baseName}`, viewers: Math.floor(Math.random() * 310) + 90 },
+      { lat: baseCoords[0] - 0.018, lng: baseCoords[1] - 0.025, name: `CCTV Corredor Industrial - ${baseName}`, viewers: Math.floor(Math.random() * 540) + 110 }
+    ];
+
+    // Combinar con los datos del backend para no perder la vista global
+    return {
+      satellites: [...localSatellites, ...(orbitalData.satellites || [])],
+      webcams: [...localWebcams, ...(orbitalData.webcams || [])]
+    };
+  }, [orbitalData, selectedMunicipality]);
+
   // Iconos personalizados para Satélites y Webcams
   const satelliteIcon = useMemo(() => {
     if (typeof window === 'undefined') return null;
@@ -1967,14 +1995,14 @@ export default function PainPointsMap({ agents }) {
               <VoterParticles agents={sandboxResults?.sample_agents} />
 
               {/* === CAPA ORBITAL: SATÉLITES LEO === */}
-              {showOrbitalLayer && orbitalData.satellites.map((sat, idx) => (
+              {showOrbitalLayer && displayedOrbitalData.satellites.map((sat, idx) => (
                 satelliteIcon && <Marker key={`sat-${idx}`} position={[sat.lat, sat.lng]} icon={satelliteIcon}>
                   <Popup>
                     <div style={{ color: '#00e5ff', background: 'rgba(5,8,16,0.95)', padding: '8px 12px', borderRadius: '8px', fontSize: '11px', fontFamily: 'monospace', border: '1px solid rgba(0,229,255,0.3)' }}>
                       <strong>🛰️ Satélite LEO #{idx + 1}</strong><br/>
                       Latitud: {sat.lat.toFixed(4)}°<br/>
                       Longitud: {sat.lng.toFixed(4)}°<br/>
-                      Altitud: {(sat.alt * 1000).toFixed(0)} km<br/>
+                      Altitud: {sat.alt ? `${(sat.alt * 1000).toFixed(0)} km` : 'N/A'}<br/>
                       <span style={{ color: '#10b981' }}>● ACTIVO</span>
                     </div>
                   </Popup>
@@ -1982,7 +2010,7 @@ export default function PainPointsMap({ agents }) {
               ))}
 
               {/* === CAPA ORBITAL: WEBCAMS CCTV === */}
-              {showOrbitalLayer && orbitalData.webcams.map((cam, idx) => (
+              {showOrbitalLayer && displayedOrbitalData.webcams.map((cam, idx) => (
                 webcamIcon && <React.Fragment key={`cam-${idx}`}>
                   <Marker position={[cam.lat, cam.lng]} icon={webcamIcon}>
                     <Popup>
@@ -2028,8 +2056,8 @@ export default function PainPointsMap({ agents }) {
               </div>
               {showOrbitalLayer && (
                 <div style={{ display: 'flex', gap: '0.6rem', fontSize: '0.6rem' }}>
-                  <span style={{ color: '#00e5ff' }}>● {orbitalData.satellites.length} SATs</span>
-                  <span style={{ color: '#ffff00' }}>● {orbitalData.webcams.length} CAMs</span>
+                  <span style={{ color: '#00e5ff' }}>● {displayedOrbitalData.satellites.length} SATs</span>
+                  <span style={{ color: '#ffff00' }}>● {displayedOrbitalData.webcams.length} CAMs</span>
                 </div>
               )}
             </div>

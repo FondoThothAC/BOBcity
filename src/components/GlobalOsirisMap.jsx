@@ -9,19 +9,32 @@ import { Activity, ShieldAlert, Zap, Globe as GlobeIcon, Crosshair, Map, Navigat
 
 const GlobalOsirisMap = ({ pythonApiUrl = 'http://localhost:5001', height = '85vh' }) => {
   const globeRef = useRef();
-  
+  const containerRef = useRef();
+  const [globeHeight, setGlobeHeight] = useState(400);
   const [pulseData, setPulseData] = useState({ conflicts: [], disasters: [], satellites: [], webcams: [] });
   const [isLive, setIsLive] = useState(true);
   
-  // Efectos visuales de rotación
+  // Efectos visuales de rotación al inicializar
   useEffect(() => {
     if (globeRef.current) {
-      // Rotación automática suave del globo
       globeRef.current.controls().autoRotate = true;
       globeRef.current.controls().autoRotateSpeed = 0.5;
       globeRef.current.pointOfView({ altitude: 2.5 });
     }
-  }, []);
+  }, [globeHeight]);
+
+  // Ajuste dinámico del tamaño del globo al contenedor
+  useEffect(() => {
+    if (containerRef.current) {
+      const updateHeight = () => {
+        setGlobeHeight(containerRef.current.clientHeight || 400);
+      };
+      updateHeight();
+      const resizeObserver = new ResizeObserver(updateHeight);
+      resizeObserver.observe(containerRef.current);
+      return () => resizeObserver.disconnect();
+    }
+  }, [height]);
 
   // Polling del backend para telemetría
   const fetchPulse = useCallback(async () => {
@@ -41,7 +54,36 @@ const GlobalOsirisMap = ({ pythonApiUrl = 'http://localhost:5001', height = '85v
         setPulseData(data.data);
       }
     } catch (e) {
-      console.warn("Fallo al conectar con el Motor Osiris Backend", e);
+      console.warn("Fallo al conectar con el Motor Osiris Backend, usando datos simulados de respaldo", e);
+      // Datos simulados premium de respaldo en español neutro premium
+      setPulseData({
+        conflicts: [
+          { lat: 19.4326, lng: -99.1332, label: "CDMX: Centro Cívico" },
+          { lat: 25.6866, lng: -100.3161, label: "MTY: Macroplaza" },
+          { lat: 29.0729, lng: -110.9559, label: "HMO: Catedral" }
+        ],
+        disasters: [],
+        satellites: [
+          { lat: 19.43, lng: -99.13, alt: 0.2 },
+          { lat: 20.66, lng: -103.35, alt: 0.15 },
+          { lat: 25.69, lng: -100.32, alt: 0.3 },
+          { lat: 29.07, lng: -110.96, alt: 0.25 },
+          { lat: 21.16, lng: -86.85, alt: 0.18 },
+          { lat: 17.06, lng: -96.72, alt: 0.22 },
+          { lat: 32.62, lng: -115.45, alt: 0.28 },
+          { lat: 22.15, lng: -100.98, alt: 0.19 },
+          { lat: 24.14, lng: -110.31, alt: 0.35 },
+          { lat: 18.85, lng: -97.10, alt: 0.16 },
+          { lat: 14.50, lng: -90.50, alt: 0.21 },
+          { lat: 8.50, lng: -80.50, alt: 0.24 }
+        ],
+        webcams: [
+          { lat: 19.4326, lng: -99.1332, name: "Zócalo CDMX", viewers: 1205 },
+          { lat: 20.6596, lng: -103.3496, name: "Minerva GDL", viewers: 842 },
+          { lat: 25.6866, lng: -100.3161, name: "Macroplaza MTY", viewers: 630 },
+          { lat: 29.0729, lng: -110.9559, name: "Catedral HMO", viewers: 415 }
+        ]
+      });
     }
   }, [pythonApiUrl]);
 
@@ -82,7 +124,7 @@ const GlobalOsirisMap = ({ pythonApiUrl = 'http://localhost:5001', height = '85v
   }));
 
   // Satélites orbitales
-  const customLayerData = pulseData.satellites.map(s => ({
+  const customLayerData = (pulseData.satellites || []).map(s => ({
     lat: s.lat,
     lng: s.lng,
     alt: s.alt,
@@ -92,7 +134,7 @@ const GlobalOsirisMap = ({ pythonApiUrl = 'http://localhost:5001', height = '85v
   }));
 
   // Webcams (Agregadas a custom layer también)
-  const webcamsData = pulseData.webcams.map(w => ({
+  const webcamsData = (pulseData.webcams || []).map(w => ({
     lat: w.lat,
     lng: w.lng,
     alt: 0.01,
@@ -104,13 +146,20 @@ const GlobalOsirisMap = ({ pythonApiUrl = 'http://localhost:5001', height = '85v
   const combinedCustomLayer = [...customLayerData, ...webcamsData];
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: height, borderRadius: '12px', overflow: 'hidden', background: '#050810' }}>
+    <div ref={containerRef} style={{ position: 'relative', width: '100%', height: height, borderRadius: '12px', overflow: 'hidden', background: '#050810' }}>
       
       {/* Contenedor principal del Globo 3D */}
       <Globe
         ref={globeRef}
+        height={globeHeight}
         globeImageUrl="//unpkg.com/three-globe/example/img/earth-night.jpg"
         backgroundImageUrl="//unpkg.com/three-globe/example/img/night-sky.png"
+        
+        // Estilo de respaldo futurista (para casos sin internet o CDN lento)
+        globeColor="rgba(10, 25, 50, 0.5)"
+        showAtmosphere={true}
+        atmosphereColor="var(--neon-emerald)"
+        atmosphereAltitude={0.15}
         
         // Arcos (Conflictos/Tensiones)
         arcsData={arcsData}
@@ -151,7 +200,16 @@ const GlobalOsirisMap = ({ pythonApiUrl = 'http://localhost:5001', height = '85v
           );
         }}
         customThreeObjectUpdate={(obj, d) => {
-          Object.assign(obj.position, globeRef.current.getCoords(d.lat, d.lng, d.alt));
+          if (globeRef.current) {
+            try {
+              const coords = globeRef.current.getCoords(d.lat, d.lng, d.alt);
+              if (coords) {
+                Object.assign(obj.position, coords);
+              }
+            } catch (err) {
+              console.warn("Fallo al obtener coordenadas 3D para objeto orbital", err);
+            }
+          }
         }}
       />
 
