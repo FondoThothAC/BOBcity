@@ -326,6 +326,17 @@ h1, h2, h3, h4, .brand-font {
   margin-bottom: 1.5rem;
 }
 
+.workspace-grid-2 > * {
+  min-width: 0;
+  min-height: 0;
+}
+
+@media (max-width: 1024px) {
+  .workspace-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
 .workspace-grid-1-1 {
   display: grid;
   grid-template-columns: 1fr 1fr;
