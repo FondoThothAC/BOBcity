@@ -1,364 +1,155 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { 
   Network, 
   Search, 
   Sliders, 
-  ShieldAlert, 
-  Compass, 
-  HelpCircle, 
-  ExternalLink,
-  Brain,
   Filter,
-  CheckCircle,
-  Database,
-  Cpu
+  Brain,
+  Cpu,
+  Layers,
+  Box,
+  User,
+  Building,
+  Smartphone,
+  Bot
 } from 'lucide-react';
 
-export default function SocialGraph3D({ agents = [] }) {
-  const canvasRef = useRef(null);
-  const containerRef = useRef(null);
+import ForceGraph2D from 'react-force-graph-2d';
+import ForceGraph3D from 'react-force-graph-3d';
 
-  // States for filter and search
-  const [minBotScore, setMinBotScore] = useState(0.0);
-  const [selectedCommunity, setSelectedCommunity] = useState('all');
+// Funciones generadoras de datos (Mock Data estilo Palantir Ontology)
+const generateGraphData = () => {
+  const nodes = [];
+  const links = [];
+  
+  const types = ['Persona', 'Empresa', 'Telefono', 'Bot'];
+  
+  // Nodos Centrales (Targets)
+  nodes.push({ id: 'target_1', name: 'Julio "El Patrón" C.', type: 'Persona', risk: 0.9, sector: 'Política' });
+  nodes.push({ id: 'target_2', name: 'Inmobiliaria Fantasma SA', type: 'Empresa', risk: 0.85, sector: 'Comercial' });
+  nodes.push({ id: 'target_3', name: '@bot_network_lead', type: 'Bot', risk: 0.95, sector: 'Digital' });
+  nodes.push({ id: 'target_4', name: '+52 662 123 4567', type: 'Telefono', risk: 0.6, sector: 'Comunicaciones' });
+
+  // Crear red aleatoria alrededor de los targets
+  for (let i = 0; i < 80; i++) {
+    const isBot = Math.random() < 0.15;
+    const type = isBot ? 'Bot' : types[Math.floor(Math.random() * (types.length - 1))];
+    const risk = isBot ? (0.7 + Math.random() * 0.3) : Math.random() * 0.5;
+    
+    nodes.push({
+      id: `node_${i}`,
+      name: type === 'Persona' ? `Ciudadano ${i}` : type === 'Empresa' ? `Comercio ${i}` : type === 'Bot' ? `@cuenta_falsa_${i}` : `+52 662 000 ${1000+i}`,
+      type: type,
+      risk: parseFloat(risk.toFixed(2)),
+      sector: 'General'
+    });
+  }
+
+  // Enlaces de Targets a Nodos
+  for (let i = 0; i < 40; i++) {
+    links.push({
+      source: `target_${Math.floor(Math.random() * 4) + 1}`,
+      target: `node_${Math.floor(Math.random() * 80)}`,
+      relation: ['Accionista', 'Familiar', 'Transfirió a', 'Llamó a', 'Retuiteó a'][Math.floor(Math.random() * 5)]
+    });
+  }
+
+  // Enlaces de Nodos a Nodos
+  for (let i = 0; i < 50; i++) {
+    links.push({
+      source: `node_${Math.floor(Math.random() * 80)}`,
+      target: `node_${Math.floor(Math.random() * 80)}`,
+      relation: ['Llamó a', 'Compañero', 'Conexión IP'][Math.floor(Math.random() * 3)]
+    });
+  }
+
+  return { nodes, links };
+};
+
+export default function SocialGraph3D() {
+  const containerRef = useRef(null);
+  
+  const [graphData, setGraphData] = useState({ nodes: [], links: [] });
+  const [dimensions, setDimensions] = useState({ width: 800, height: 500 });
+  const [viewMode, setViewMode] = useState('2D'); // '2D' or '3D'
+  
+  // Filters & State
   const [searchQuery, setSearchQuery] = useState('');
+  const [minRisk, setMinRisk] = useState(0.0);
   const [selectedNode, setSelectedNode] = useState(null);
-  const [hoveredNode, setHoveredNode] = useState(null);
-  const [isRotating, setIsRotating] = useState(true);
-  const [gnnStatus, setGnnStatus] = useState('idle'); // 'idle', 'running', 'done'
+  const [gnnStatus, setGnnStatus] = useState('idle');
   const [gnnLogs, setGnnLogs] = useState([]);
 
-  // 3D Orbital Projection state variables
-  const [rotationAngleX, setRotationAngleX] = useState(0.01);
-  const [rotationAngleY, setRotationAngleY] = useState(0.005);
-  const [nodes, setNodes] = useState([]);
-  const [links, setLinks] = useState([]);
-
-  // Interaction vectors
-  const isDragging = useRef(false);
-  const lastMousePos = useRef({ x: 0, y: 0 });
-  const angles = useRef({ alpha: 0.1, beta: 0.2 }); // X & Y rotation angles
-
-  // Generate topology data using agents or synthetic clusters
   useEffect(() => {
-    // We will generate a structured cívico-social graph representing Hermosillo social conversation nodes.
-    const tempNodes = [];
-    const tempLinks = [];
-    const communitiesCount = 4;
-
-    // Create 80 conversation nodes with GNN features
-    for (let i = 0; i < 85; i++) {
-      const community = i % communitiesCount;
-      // High-probability bot clusters in community 3 and 1
-      const isBotSeed = (community === 3 && Math.random() < 0.65) || (community === 1 && Math.random() < 0.25) || (Math.random() < 0.05);
-      const botScore = isBotSeed ? (0.65 + Math.random() * 0.32) : (Math.random() * 0.35);
-      
-      // Node sectors matching SPEC.md
-      const sectors = ['comerciantes', 'estudiantes', 'asalariados', 'jubilados', 'hogar'];
-      const sector = sectors[i % sectors.length];
-
-      // Random 3D spherical positions for coordinates
-      const u = Math.random();
-      const v = Math.random();
-      const theta = u * 2.0 * Math.PI;
-      const phi = Math.acos(2.0 * v - 1.0);
-      const radius = 160 + Math.random() * 90; // Spherical dispersion
-
-      tempNodes.push({
-        id: i,
-        name: `Node_${i < 10 ? '0' + i : i}`,
-        label: isBotSeed ? `@inf_bot_${i}` : `@ciudadano_her_${i}`,
-        sector: sector,
-        botScore: parseFloat(botScore.toFixed(3)),
-        community: community,
-        isBot: botScore > 0.6,
-        x3d: radius * Math.sin(phi) * Math.cos(theta),
-        y3d: radius * Math.sin(phi) * Math.sin(theta),
-        z3d: radius * Math.cos(phi),
-        x2d: 0,
-        y2d: 0,
-        depth: 0,
-        size: isBotSeed ? 8 : 4.5 + Math.random() * 3,
-        centrality: parseFloat((0.1 + Math.random() * 0.85).toFixed(2)),
-        stance: i % 2 === 0 ? 'Candidato A' : 'Candidato B',
-        sentiment: parseFloat((-1 + Math.random() * 2).toFixed(2))
-      });
-    }
-
-    // Connect nodes by proximity and community structures to simulate social networks
-    for (let i = 0; i < tempNodes.length; i++) {
-      // Connect to at least 2 nodes within the same community
-      let connectedCount = 0;
-      for (let j = i + 1; j < tempNodes.length; j++) {
-        const nodeA = tempNodes[i];
-        const nodeB = tempNodes[j];
-        const sameComm = nodeA.community === nodeB.community;
-        const bothBots = nodeA.isBot && nodeB.isBot;
-        
-        // High connection probability for bots (coordinated campaign simulation)
-        const connectionProb = bothBots ? 0.45 : sameComm ? 0.15 : 0.015;
-        
-        if (Math.random() < connectionProb && connectedCount < 6) {
-          tempLinks.push({
-            source: i,
-            target: j,
-            type: bothBots ? 'coordinated' : sameComm ? 'intra-community' : 'bridge',
-            weight: bothBots ? 1.5 : 0.8
-          });
-          connectedCount++;
-        }
-      }
-    }
-
-    setNodes(tempNodes);
-    setLinks(tempLinks);
+    setGraphData(generateGraphData());
   }, []);
 
-  // Canvas drawing, 3D projection, and rendering loop
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    let animationFrameId;
-
-    const resizeCanvas = () => {
-      const rect = containerRef.current.getBoundingClientRect();
-      canvas.width = rect.width;
-      canvas.height = 500;
+    const handleResize = () => {
+      if (containerRef.current) {
+        setDimensions({
+          width: containerRef.current.offsetWidth,
+          height: 500
+        });
+      }
     };
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
-    // Render loop
-    const render = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const centerX = canvas.width / 2;
-      const centerY = canvas.height / 2;
-
-      // 1. Apply 3D rotation matrix
-      if (isRotating && !isDragging.current) {
-        angles.current.alpha += rotationAngleX;
-        angles.current.beta += rotationAngleY;
-      }
-
-      const cosAlpha = Math.cos(angles.current.alpha);
-      const sinAlpha = Math.sin(angles.current.alpha);
-      const cosBeta = Math.cos(angles.current.beta);
-      const sinBeta = Math.sin(angles.current.beta);
-
-      // Rotate and project nodes
-      const projectedNodes = nodes.map(node => {
-        // Rotate X
-        let y1 = node.y3d * cosAlpha - node.z3d * sinAlpha;
-        let z1 = node.z3d * cosAlpha + node.y3d * sinAlpha;
-
-        // Rotate Y
-        let x2 = node.x3d * cosBeta - z1 * sinBeta;
-        let z2 = z1 * cosBeta + node.x3d * sinBeta;
-
-        // Perspective factor
-        const fov = 400;
-        const scale = fov / (fov + z2); // Closer nodes look larger, further look smaller
-
-        return {
-          ...node,
-          x2d: centerX + x2 * scale,
-          y2d: centerY + y1 * scale,
-          depth: z2, // Store z-depth for sorting
-          renderedSize: Math.max(1, node.size * scale)
-        };
-      });
-
-      // Filter nodes based on panel settings
-      const filteredProjectedNodes = projectedNodes.filter(node => {
-        const matchesBot = node.botScore >= minBotScore;
-        const matchesCommunity = selectedCommunity === 'all' || node.community.toString() === selectedCommunity;
-        const matchesSearch = searchQuery === '' || 
-          node.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          node.sector.toLowerCase().includes(searchQuery.toLowerCase());
-        return matchesBot && matchesCommunity && matchesSearch;
-      });
-
-      const activeIds = new Set(filteredProjectedNodes.map(n => n.id));
-
-      // 2. Draw Links (Edges)
-      links.forEach(link => {
-        const sourceNode = filteredProjectedNodes.find(n => n.id === link.source);
-        const targetNode = filteredProjectedNodes.find(n => n.id === link.target);
-
-        if (sourceNode && targetNode) {
-          ctx.beginPath();
-          ctx.moveTo(sourceNode.x2d, sourceNode.y2d);
-          ctx.lineTo(targetNode.x2d, targetNode.y2d);
-
-          // Color coded edges
-          if (link.type === 'coordinated') {
-            // Hot red pulse for bots coordinated sharing
-            ctx.strokeStyle = 'rgba(239, 68, 68, 0.28)';
-            ctx.lineWidth = 1.6;
-          } else {
-            ctx.strokeStyle = 'rgba(148, 163, 184, 0.05)';
-            ctx.lineWidth = 0.8;
-          }
-          ctx.stroke();
-        }
-      });
-
-      // Sort nodes by depth (painter's algorithm) so front nodes render on top of back nodes
-      const sortedNodes = [...filteredProjectedNodes].sort((a, b) => b.depth - a.depth);
-
-      // 3. Draw Nodes
-      sortedNodes.forEach(node => {
-        const isSelected = selectedNode && selectedNode.id === node.id;
-        const isHovered = hoveredNode && hoveredNode.id === node.id;
-
-        ctx.beginPath();
-        ctx.arc(node.x2d, node.y2d, node.renderedSize * (isSelected ? 1.6 : isHovered ? 1.4 : 1), 0, 2 * Math.PI);
-
-        // Core colors from SPEC.md: Humans green/blue, Bots red glow
-        let nodeColor = 'rgba(59, 130, 246, 0.7)'; // Default blue
-        if (node.isBot) {
-          nodeColor = 'rgba(239, 68, 68, 0.9)'; // Neon red for bot
-        } else if (node.community === 0) {
-          nodeColor = 'rgba(16, 185, 129, 0.8)'; // Emerald
-        } else if (node.community === 1) {
-          nodeColor = 'rgba(139, 92, 246, 0.8)'; // Purple
-        } else if (node.community === 2) {
-          nodeColor = 'rgba(245, 158, 11, 0.8)'; // Amber
-        }
-
-        ctx.fillStyle = nodeColor;
-        ctx.fill();
-
-        // Highlighting borders
-        if (node.isBot) {
-          ctx.strokeStyle = 'rgba(239, 68, 68, 0.5)';
-          ctx.lineWidth = 2;
-          ctx.stroke();
-          
-          // Draw subtle pulsing outer aura for extreme bot scores
-          if (node.botScore > 0.8) {
-            ctx.beginPath();
-            ctx.arc(node.x2d, node.y2d, node.renderedSize * 2.2, 0, 2 * Math.PI);
-            ctx.strokeStyle = 'rgba(239, 68, 68, 0.15)';
-            ctx.stroke();
-          }
-        } else if (isSelected || isHovered) {
-          ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = 1.5;
-          ctx.stroke();
-        }
-
-        // Draw names for highlighted or bot nodes
-        if (isSelected || isHovered || (node.isBot && node.botScore > 0.85)) {
-          ctx.font = '10px monospace';
-          ctx.fillStyle = node.isBot ? '#f87171' : '#f1f5f9';
-          ctx.textAlign = 'center';
-          ctx.fillText(node.label, node.x2d, node.y2d - node.renderedSize - 6);
-        }
-      });
-
-      // Update projected locations back in local state ref for clicking
-      canvas.projectedNodes = projectedNodes;
-
-      animationFrameId = requestAnimationFrame(render);
-    };
-
-    render();
-
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-      window.removeEventListener('resize', resizeCanvas);
-    };
-  }, [nodes, links, selectedNode, hoveredNode, minBotScore, selectedCommunity, searchQuery, isRotating, rotationAngleX, rotationAngleY]);
-
-  // Mouse handlers for dragging/orbiting the sphere
-  const handleMouseDown = (e) => {
-    isDragging.current = true;
-    lastMousePos.current = { x: e.clientX, y: e.clientY };
+  const getNodeColor = (node) => {
+    if (selectedNode && selectedNode.id === node.id) return '#ffffff';
+    if (node.type === 'Bot') return '#ef4444'; // Red
+    if (node.type === 'Persona') return '#3b82f6'; // Blue
+    if (node.type === 'Empresa') return '#f59e0b'; // Amber
+    if (node.type === 'Telefono') return '#10b981'; // Emerald
+    return '#94a3b8';
   };
 
-  const handleMouseMove = (e) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-
-    // Handle dragging/rotating sphere
-    if (isDragging.current) {
-      const deltaX = e.clientX - lastMousePos.current.x;
-      const deltaY = e.clientY - lastMousePos.current.y;
-
-      angles.current.alpha += deltaY * 0.007;
-      angles.current.beta += deltaX * 0.007;
-
-      lastMousePos.current = { x: e.clientX, y: e.clientY };
-      return;
-    }
-
-    // Handle hovering detection
-    if (canvas.projectedNodes) {
-      let foundHover = null;
-      for (const node of canvas.projectedNodes) {
-        const dx = mouseX - node.x2d;
-        const dy = mouseY - node.y2d;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-
-        if (distance < node.renderedSize + 6) {
-          foundHover = node;
-          break;
-        }
-      }
-      setHoveredNode(foundHover);
-    }
+  const getNodeSize = (node) => {
+    let size = node.risk > 0.8 ? 8 : 4;
+    if (selectedNode && selectedNode.id === node.id) size += 4;
+    return size;
   };
 
-  const handleMouseUp = (e) => {
-    isDragging.current = false;
-  };
+  // Filtrado de Nodos
+  const filteredData = useMemo(() => {
+    const filteredNodes = graphData.nodes.filter(node => {
+      const matchSearch = node.name.toLowerCase().includes(searchQuery.toLowerCase()) || node.type.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchRisk = node.risk >= minRisk;
+      return matchSearch && matchRisk;
+    });
 
-  const handleCanvasClick = (e) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    const nodeIds = new Set(filteredNodes.map(n => n.id));
 
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
+    const filteredLinks = graphData.links.filter(link => {
+      const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+      const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+      return nodeIds.has(sourceId) && nodeIds.has(targetId);
+    });
 
-    if (canvas.projectedNodes) {
-      let foundNode = null;
-      for (const node of canvas.projectedNodes) {
-        const dx = mouseX - node.x2d;
-        const dy = mouseY - node.y2d;
-        const distance = Math.sqrt(dx * dx + dy * dy);
+    return { nodes: filteredNodes, links: filteredLinks };
+  }, [graphData, searchQuery, minRisk]);
 
-        if (distance < node.renderedSize + 8) {
-          foundNode = node;
-          break;
-        }
-      }
-      setSelectedNode(foundNode);
-      if (foundNode) {
-        window.dispatchEvent(new CustomEvent('civic-toast', {
-          detail: { message: `Investigando nodo: ${foundNode.label} (${foundNode.sector})`, type: 'info' }
-        }));
-      }
-    }
-  };
+  const handleNodeClick = useCallback((node) => {
+    setSelectedNode(node);
+    window.dispatchEvent(new CustomEvent('civic-toast', {
+      detail: { message: `Investigando entidad: ${node.name} (${node.type})`, type: 'info' }
+    }));
+  }, []);
 
-  // Run simulated Graph Neural Network Detection pipeline
+  // Simulación de GNN (Pipeline)
   const runGnnPipeline = () => {
     setGnnStatus('running');
     setGnnLogs([]);
     
     const steps = [
       { text: "🛰️ Invocando GraphSAGE de 3 capas local...", wait: 600 },
-      { text: "📊 Cargando topología de relaciones y co-hashtags de Twitter local...", wait: 1200 },
-      { text: "🔍 Analizando patrones anómalos de co-mención (Umbral de similitud semántica > 0.85)...", wait: 2000 },
-      { text: "⚙️ Corriendo CommunityAwareGCN para agrupar proyecciones vectoriales...", wait: 2800 },
-      { text: "🛡️ RoGBot + CAGCL clasificados: 28 de 85 nodos marcados como amplificación artificial.", wait: 3500 }
+      { text: "📊 Cargando topología de relaciones y co-apariciones...", wait: 1200 },
+      { text: "🔍 Analizando patrones anómalos (Umbral de similitud > 0.85)...", wait: 2000 },
+      { text: "⚙️ Corriendo CommunityAwareGCN...", wait: 2800 },
+      { text: "🛡️ Clasificación terminada: Se detectaron redes de bots y flujos ilícitos.", wait: 3500 }
     ];
 
     steps.forEach((step, idx) => {
@@ -366,7 +157,7 @@ export default function SocialGraph3D({ agents = [] }) {
         setGnnLogs(prev => [...prev, step.text]);
         if (idx === steps.length - 1) {
           setGnnStatus('done');
-          setMinBotScore(0.6); // Auto-filter to show bots
+          setMinRisk(0.5); // Auto filter
           window.dispatchEvent(new CustomEvent('civic-toast', {
             detail: { message: "GNN Pipeline: Clasificación completada con éxito.", type: "success" }
           }));
@@ -375,22 +166,54 @@ export default function SocialGraph3D({ agents = [] }) {
     });
   };
 
+  // Obtener conexiones directas del nodo seleccionado
+  const getDirectConnections = () => {
+    if (!selectedNode) return [];
+    return filteredData.links.filter(l => {
+      const sourceId = typeof l.source === 'object' ? l.source.id : l.source;
+      const targetId = typeof l.target === 'object' ? l.target.id : l.target;
+      return sourceId === selectedNode.id || targetId === selectedNode.id;
+    }).map(l => {
+      const sourceId = typeof l.source === 'object' ? l.source.id : l.source;
+      const isSource = sourceId === selectedNode.id;
+      const otherNodeId = isSource ? (typeof l.target === 'object' ? l.target.id : l.target) : sourceId;
+      const otherNode = filteredData.nodes.find(n => n.id === otherNodeId);
+      return { relation: l.relation, otherNode, direction: isSource ? 'out' : 'in' };
+    }).filter(c => c.otherNode);
+  };
+
   return (
-    <div ref={containerRef} className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', background: 'rgba(15, 23, 42, 0.45)', padding: '2rem' }}>
+    <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', background: 'rgba(15, 23, 42, 0.45)', padding: '2rem' }}>
       
       {/* Title block */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h2 style={{ fontSize: '1.4rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
             <Network size={24} className="neon-icon" style={{ color: 'var(--neon-purple)' }} />
-            Visualización de Grafo Social 3D & GNN Detector de Bots
+            Object Explorer (Link Analysis)
           </h2>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-            Topología tridimensional interactiva de la conversación cívica y detección de campañas coordinadas.
+            Topología de grafos interactiva estilo Palantir. Inspección profunda de entidades, flujos financieros y redes operativas.
           </p>
         </div>
 
         <div style={{ display: 'flex', gap: '0.5rem' }}>
+          {/* 2D / 3D Switch */}
+          <div style={{ display: 'flex', background: 'rgba(0,0,0,0.3)', borderRadius: '8px', padding: '0.2rem', border: '1px solid var(--border-glass)' }}>
+            <button 
+              onClick={() => setViewMode('2D')}
+              style={{ padding: '0.4rem 0.8rem', borderRadius: '6px', fontSize: '0.8rem', background: viewMode === '2D' ? 'var(--neon-blue)' : 'transparent', color: viewMode === '2D' ? '#fff' : 'var(--text-secondary)', fontWeight: viewMode === '2D' ? 'bold' : 'normal', transition: 'all 0.2s' }}
+            >
+              <Layers size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} /> 2D
+            </button>
+            <button 
+              onClick={() => setViewMode('3D')}
+              style={{ padding: '0.4rem 0.8rem', borderRadius: '6px', fontSize: '0.8rem', background: viewMode === '3D' ? 'var(--neon-purple)' : 'transparent', color: viewMode === '3D' ? '#fff' : 'var(--text-secondary)', fontWeight: viewMode === '3D' ? 'bold' : 'normal', transition: 'all 0.2s' }}
+            >
+              <Box size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} /> 3D
+            </button>
+          </div>
+
           <button 
             onClick={runGnnPipeline} 
             disabled={gnnStatus === 'running'}
@@ -404,161 +227,124 @@ export default function SocialGraph3D({ agents = [] }) {
             }}
           >
             <Brain size={16} style={{ marginRight: '6px', verticalAlign: 'middle', display: 'inline' }} />
-            Ejecutar Clasificador GNN (RoGBot)
+            Ejecutar Clasificador GNN
           </button>
         </div>
       </div>
 
-      {/* Main interactive visualizer area */}
+      {/* Main visualizer area */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '1.5rem', minHeight: '500px' }} className="responsive-grid">
         
-        {/* Left Side: 3D interactive Canvas sphere */}
-        <div style={{ position: 'relative', border: '1px solid var(--border-glass)', borderRadius: '12px', background: '#050811', overflow: 'hidden', cursor: isDragging.current ? 'grabbing' : 'grab' }}>
-          
-          {/* Orbital compass widget */}
-          <div style={{ position: 'absolute', top: '15px', left: '15px', display: 'flex', gap: '0.5rem', zIndex: 5 }}>
-            <button 
-              onClick={() => setIsRotating(!isRotating)} 
-              className="btn-outline"
-              style={{ fontSize: '0.7rem', padding: '0.25rem 0.5rem', background: isRotating ? 'rgba(139, 92, 246, 0.15)' : 'transparent', color: isRotating ? 'var(--neon-purple)' : 'var(--text-secondary)', borderColor: isRotating ? 'var(--neon-purple)' : 'var(--border-glass)' }}
-            >
-              <Compass size={12} style={{ marginRight: '4px', display: 'inline', verticalAlign: 'middle' }} />
-              {isRotating ? 'Auto-Rotación Activa' : 'Pausar Rotación'}
-            </button>
-          </div>
-
-          <canvas
-            ref={canvasRef}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
-            onClick={handleCanvasClick}
-            style={{ display: 'block', width: '100%' }}
-          />
-
-          {/* Hover preview tooltip */}
-          {hoveredNode && (
-            <div style={{
-              position: 'absolute',
-              bottom: '15px',
-              left: '15px',
-              background: 'rgba(15, 23, 42, 0.9)',
-              backdropFilter: 'blur(8px)',
-              border: '1px solid var(--border-glass)',
-              borderRadius: '8px',
-              padding: '0.6rem 0.8rem',
-              fontSize: '0.75rem',
-              pointerEvents: 'none',
-              zIndex: 10,
-              animation: 'scaleIn 0.15s ease'
-            }}>
-              <div style={{ fontWeight: '700', color: hoveredNode.isBot ? 'var(--neon-rose)' : '#fff' }}>
-                {hoveredNode.label} {hoveredNode.isBot && '🤖 [BOT DE DETECTOR]'}
-              </div>
-              <div style={{ color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-                Sector: {hoveredNode.sector} | Bot Score: {hoveredNode.botScore}
-              </div>
-            </div>
+        {/* Left Side: Force Graph Container */}
+        <div ref={containerRef} style={{ border: '1px solid var(--border-glass)', borderRadius: '12px', background: '#050811', overflow: 'hidden', position: 'relative' }}>
+          {filteredData.nodes.length > 0 ? (
+            viewMode === '2D' ? (
+              <ForceGraph2D
+                width={dimensions.width}
+                height={dimensions.height}
+                graphData={filteredData}
+                nodeLabel="name"
+                nodeColor={getNodeColor}
+                nodeRelSize={4}
+                nodeVal={getNodeSize}
+                linkColor={() => 'rgba(255,255,255,0.1)'}
+                linkDirectionalArrowLength={3.5}
+                linkDirectionalArrowRelPos={1}
+                onNodeClick={handleNodeClick}
+                backgroundColor="#050811"
+              />
+            ) : (
+              <ForceGraph3D
+                width={dimensions.width}
+                height={dimensions.height}
+                graphData={filteredData}
+                nodeLabel="name"
+                nodeColor={getNodeColor}
+                nodeResolution={16}
+                nodeVal={getNodeSize}
+                linkColor={() => 'rgba(255,255,255,0.1)'}
+                linkDirectionalArrowLength={3.5}
+                linkDirectionalArrowRelPos={1}
+                onNodeClick={handleNodeClick}
+                backgroundColor="#050811"
+              />
+            )
+          ) : (
+             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', color: 'var(--text-muted)' }}>
+               No hay nodos que coincidan con los filtros.
+             </div>
           )}
+
+          {/* Ontología Leyenda Rápida */}
+          <div style={{ position: 'absolute', bottom: '15px', left: '15px', display: 'flex', flexDirection: 'column', gap: '0.4rem', background: 'rgba(0,0,0,0.6)', padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--border-glass)', fontSize: '0.65rem' }}>
+             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><div style={{ width: 8, height: 8, borderRadius: '50%', background: '#3b82f6' }}></div> Persona</div>
+             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><div style={{ width: 8, height: 8, borderRadius: '50%', background: '#f59e0b' }}></div> Empresa</div>
+             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><div style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981' }}></div> Teléfono</div>
+             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><div style={{ width: 8, height: 8, borderRadius: '50%', background: '#ef4444' }}></div> Bot / Riesgo Alto</div>
+          </div>
         </div>
 
-        {/* Right Side: Filters, Details & GNN logs */}
+        {/* Right Side: Object Explorer Panel */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           
           {/* Node Details Card */}
-          <div className="inner-card" style={{ padding: '1.25rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-glass)', borderRadius: '10px' }}>
+          <div className="inner-card" style={{ padding: '1.25rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-glass)', borderRadius: '10px', flex: '1' }}>
             <h3 style={{ fontSize: '0.9rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fff', borderBottom: '1px solid var(--border-glass)', paddingBottom: '0.5rem', marginBottom: '0.75rem' }}>
               <Sliders size={16} style={{ color: 'var(--neon-blue)' }} />
-              Inspección de Nodo
+              Inspector de Entidad
             </h3>
 
             {selectedNode ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.8rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontWeight: '800', color: selectedNode.isBot ? 'var(--neon-rose)' : '#fff', fontSize: '0.95rem' }}>{selectedNode.label}</span>
-                  <span className={`tag-badge`} style={{
-                    background: selectedNode.isBot ? 'rgba(239, 68, 68, 0.12)' : 'rgba(16, 185, 129, 0.12)',
-                    color: selectedNode.isBot ? 'var(--neon-rose)' : 'var(--neon-emerald)',
-                    borderColor: selectedNode.isBot ? 'var(--neon-rose)' : 'var(--neon-emerald)',
-                    fontSize: '0.65rem',
-                    padding: '0.15rem 0.5rem',
-                    borderRadius: '4px',
-                    border: '1px solid'
-                  }}>
-                    {selectedNode.isBot ? '🤖 BOT CLASIFICADO' : '🟢 HUMANO VERIFICADO'}
+                  <span style={{ fontWeight: '800', color: '#fff', fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    {selectedNode.type === 'Persona' && <User size={16} style={{ color: '#3b82f6' }} />}
+                    {selectedNode.type === 'Empresa' && <Building size={16} style={{ color: '#f59e0b' }} />}
+                    {selectedNode.type === 'Telefono' && <Smartphone size={16} style={{ color: '#10b981' }} />}
+                    {selectedNode.type === 'Bot' && <Bot size={16} style={{ color: '#ef4444' }} />}
+                    {selectedNode.name}
                   </span>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem', marginTop: '0.25rem' }}>
                   <div>
-                    <span style={{ color: 'var(--text-secondary)', display: 'block', fontSize: '0.65rem', textTransform: 'uppercase' }}>Sector Social:</span>
-                    <strong style={{ color: '#fff', fontSize: '0.85rem' }}>{selectedNode.sector}</strong>
+                    <span style={{ color: 'var(--text-secondary)', display: 'block', fontSize: '0.65rem', textTransform: 'uppercase' }}>Clase / Tipo:</span>
+                    <strong style={{ color: '#fff', fontSize: '0.85rem' }}>{selectedNode.type}</strong>
                   </div>
                   <div>
-                    <span style={{ color: 'var(--text-secondary)', display: 'block', fontSize: '0.65rem', textTransform: 'uppercase' }}>Afinidad de Voto:</span>
-                    <strong style={{ color: selectedNode.stance.includes('A') ? 'var(--neon-blue)' : 'var(--neon-purple)', fontSize: '0.85rem' }}>{selectedNode.stance}</strong>
-                  </div>
-                  <div>
-                    <span style={{ color: 'var(--text-secondary)', display: 'block', fontSize: '0.65rem', textTransform: 'uppercase' }}>Centralidad de Grado:</span>
-                    <strong style={{ color: '#fff', fontSize: '0.85rem' }}>{selectedNode.centrality}</strong>
-                  </div>
-                  <div>
-                    <span style={{ color: 'var(--text-secondary)', display: 'block', fontSize: '0.65rem', textTransform: 'uppercase' }}>Nivel de Riesgo GNN:</span>
-                    <strong style={{ 
-                      color: selectedNode.botScore > 0.75 ? 'var(--neon-rose)' : selectedNode.botScore > 0.4 ? 'var(--neon-amber)' : 'var(--neon-emerald)', 
-                      fontSize: '0.85rem' 
-                    }}>
-                      {selectedNode.botScore > 0.75 ? 'Crítico (Alto)' : selectedNode.botScore > 0.4 ? 'Sospechoso (Medio)' : 'Seguro (Bajo)'}
+                    <span style={{ color: 'var(--text-secondary)', display: 'block', fontSize: '0.65rem', textTransform: 'uppercase' }}>Nivel de Riesgo:</span>
+                    <strong style={{ color: selectedNode.risk > 0.75 ? 'var(--neon-rose)' : selectedNode.risk > 0.4 ? 'var(--neon-amber)' : 'var(--neon-emerald)', fontSize: '0.85rem' }}>
+                      {(selectedNode.risk * 100).toFixed(1)}%
                     </strong>
                   </div>
                 </div>
 
-                {/* Micro Barra de Progreso para Probabilidad de Bot */}
+                {/* Vínculos Directos */}
                 <div style={{ borderTop: '1px dashed var(--border-glass)', paddingTop: '0.6rem', marginTop: '0.25rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
-                    <span>Probabilidad de Automatización (Bot Score):</span>
-                    <strong style={{ color: selectedNode.isBot ? 'var(--neon-rose)' : 'var(--neon-emerald)' }}>
-                      {(selectedNode.botScore * 100).toFixed(1)}%
-                    </strong>
-                  </div>
-                  <div style={{ height: '8px', background: 'rgba(255,255,255,0.06)', borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.04)' }}>
-                    <div style={{ 
-                      width: `${selectedNode.botScore * 100}%`, 
-                      height: '100%', 
-                      background: selectedNode.botScore > 0.75 
-                        ? 'linear-gradient(90deg, #7f1d1d 0%, var(--neon-rose) 100%)' 
-                        : selectedNode.botScore > 0.4 
-                        ? 'linear-gradient(90deg, #d97706 0%, var(--neon-amber) 100%)'
-                        : 'linear-gradient(90deg, #064e3b 0%, var(--neon-emerald) 100%)',
-                      transition: 'width 0.5s ease-out'
-                    }}></div>
-                  </div>
-                </div>
-
-                {/* Análisis de Sentimiento NLP */}
-                <div style={{ borderTop: '1px dashed var(--border-glass)', paddingTop: '0.6rem', marginTop: '0.25rem' }}>
-                  <span style={{ color: 'var(--text-secondary)', display: 'block', fontSize: '0.65rem', marginBottom: '0.25rem' }}>Análisis de Sentimiento NLP (BETO):</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <div style={{ flex: 1, height: '8px', background: 'rgba(255,255,255,0.06)', borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.04)' }}>
-                      <div style={{ 
-                        width: `${((selectedNode.sentiment + 1) / 2) * 100}%`, 
-                        height: '100%', 
-                        background: selectedNode.sentiment > 0 
-                          ? 'linear-gradient(90deg, #059669 0%, var(--neon-emerald) 100%)' 
-                          : 'linear-gradient(90deg, #dc2626 0%, var(--neon-rose) 100%)',
-                        transition: 'width 0.5s ease-out'
-                      }}></div>
-                    </div>
-                    <span style={{ fontSize: '0.75rem', fontWeight: '800', color: selectedNode.sentiment > 0 ? 'var(--neon-emerald)' : 'var(--neon-rose)' }}>
-                      {selectedNode.sentiment > 0 ? `+${selectedNode.sentiment}` : selectedNode.sentiment}
-                    </span>
+                  <span style={{ color: 'var(--text-secondary)', display: 'block', fontSize: '0.65rem', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Vínculos Directos Detectados:</span>
+                  
+                  <div style={{ maxHeight: '180px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.4rem', paddingRight: '4px' }}>
+                    {getDirectConnections().map((conn, idx) => (
+                      <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.03)', padding: '0.4rem', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.05)', fontSize: '0.7rem' }}>
+                        <span style={{ color: 'var(--text-muted)' }}>{conn.direction === 'out' ? '→' : '←'}</span>
+                        <span style={{ color: 'var(--neon-purple)', fontWeight: 'bold' }}>{conn.relation}</span>
+                        <span 
+                          style={{ color: '#fff', textDecoration: 'underline', cursor: 'pointer' }}
+                          onClick={() => handleNodeClick(conn.otherNode)}
+                        >
+                          {conn.otherNode.name}
+                        </span>
+                      </div>
+                    ))}
+                    {getDirectConnections().length === 0 && (
+                      <div style={{ color: 'var(--text-muted)', fontSize: '0.7rem', fontStyle: 'italic' }}>Sin vínculos directos en el grafo actual.</div>
+                    )}
                   </div>
                 </div>
               </div>
             ) : (
-              <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textAlign: 'center', padding: '1rem 0' }}>
-                Haz clic en cualquier nodo de la esfera 3D para inspeccionar sus características de GNN y perfil demográfico.
+              <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textAlign: 'center', padding: '2rem 0' }}>
+                Haz clic en cualquier nodo del grafo para desplegar su ficha de inteligencia y vínculos.
               </div>
             )}
           </div>
@@ -571,14 +357,12 @@ export default function SocialGraph3D({ agents = [] }) {
             </h3>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', fontSize: '0.8rem' }}>
-              
-              {/* Search label */}
               <div>
-                <label style={{ color: 'var(--text-secondary)', display: 'block', fontSize: '0.65rem', marginBottom: '0.25rem' }}>Buscar por cuenta/sector:</label>
+                <label style={{ color: 'var(--text-secondary)', display: 'block', fontSize: '0.65rem', marginBottom: '0.25rem' }}>Buscar Entidad:</label>
                 <div style={{ position: 'relative' }}>
                   <input 
                     type="text" 
-                    placeholder="Ej. @inf_bot_ o estudiantes"
+                    placeholder="Ej. Inmobiliaria o Julio..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="premium-input"
@@ -588,85 +372,45 @@ export default function SocialGraph3D({ agents = [] }) {
                 </div>
               </div>
 
-              {/* Bot Probability Threshold Slider */}
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
-                  <span>Umbral de Bot Score (RoGBot):</span>
-                  <strong style={{ color: minBotScore > 0.6 ? 'var(--neon-rose)' : 'var(--text-primary)' }}>&gt;= {minBotScore}</strong>
+                  <span>Nivel de Riesgo Mínimo:</span>
+                  <strong style={{ color: minRisk > 0.6 ? 'var(--neon-rose)' : 'var(--text-primary)' }}>&gt;= {(minRisk*100).toFixed(0)}%</strong>
                 </div>
                 <input 
                   type="range" 
                   min="0.0" 
-                  max="0.9" 
-                  step="0.1" 
-                  value={minBotScore}
-                  onChange={(e) => setMinBotScore(parseFloat(e.target.value))}
+                  max="0.95" 
+                  step="0.05" 
+                  value={minRisk}
+                  onChange={(e) => setMinRisk(parseFloat(e.target.value))}
                   style={{ width: '100%', accentColor: 'var(--neon-rose)' }}
                 />
-              </div>
-
-              {/* Community select */}
-              <div>
-                <label style={{ color: 'var(--text-secondary)', display: 'block', fontSize: '0.65rem', marginBottom: '0.25rem' }}>Filtrar por Comunidad (GCN Clusters):</label>
-                <select
-                  value={selectedCommunity}
-                  onChange={(e) => setSelectedCommunity(e.target.value)}
-                  className="premium-input"
-                  style={{ fontSize: '0.75rem', padding: '0.35rem', width: '100%' }}
-                >
-                  <option value="all">Todas las comunidades</option>
-                  <option value="0">Comunidad 0 (Humana - Comerciantes)</option>
-                  <option value="1">Comunidad 1 (Parcialmente automatizada)</option>
-                  <option value="2">Comunidad 2 (Humana - Estudiantes)</option>
-                  <option value="3">Comunidad 3 (Coordinación de Bots Detectada)</option>
-                </select>
               </div>
             </div>
           </div>
 
           {/* GNN Status console logs */}
-          <div style={{ flex: 1, background: '#020408', border: '1px solid var(--border-glass)', borderRadius: '10px', padding: '0.75rem', fontFamily: 'monospace', fontSize: '0.65rem', maxHeight: '140px', overflowY: 'auto' }}>
+          <div style={{ background: '#020408', border: '1px solid var(--border-glass)', borderRadius: '10px', padding: '0.75rem', fontFamily: 'monospace', fontSize: '0.65rem', maxHeight: '110px', overflowY: 'auto' }}>
             <div style={{ color: 'var(--neon-cyan)', fontWeight: 'bold', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.3rem', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
               <Cpu size={10} />
               GNN PIPELINE EXECUTION LOGS
             </div>
             
             {gnnLogs.map((log, idx) => (
-              <div key={idx} style={{ color: log.includes('✅') ? 'var(--neon-emerald)' : log.includes('⚠️') ? 'var(--neon-rose)' : 'var(--text-secondary)', marginBottom: '0.25rem' }}>
+              <div key={idx} style={{ color: log.includes('✅') ? 'var(--neon-emerald)' : log.includes('🛡️') ? 'var(--neon-rose)' : 'var(--text-secondary)', marginBottom: '0.25rem' }}>
                 {log}
               </div>
             ))}
             {gnnLogs.length === 0 && (
-              <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '1rem 0' }}>
+              <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '0.5rem 0' }}>
                 Esperando ejecución de clasificador GNN...
               </div>
             )}
           </div>
 
         </div>
-
       </div>
-
-      {/* Footer statistics bar */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', borderTop: '1px solid var(--border-glass)', paddingTop: '1.25rem', marginTop: '0.5rem' }} className="responsive-grid">
-        <div style={{ textAlign: 'center' }}>
-          <span style={{ display: 'block', fontSize: '0.65rem', color: 'var(--text-secondary)' }}>Nodos Procesados</span>
-          <strong style={{ fontSize: '1.2rem', color: '#fff' }}>85</strong>
-        </div>
-        <div style={{ textAlign: 'center' }}>
-          <span style={{ display: 'block', fontSize: '0.65rem', color: 'var(--text-secondary)' }}>Conexiones Totales</span>
-          <strong style={{ fontSize: '1.2rem', color: '#fff' }}>148</strong>
-        </div>
-        <div style={{ textAlign: 'center' }}>
-          <span style={{ display: 'block', fontSize: '0.65rem', color: 'var(--text-secondary)' }}>Cuentas Sospechosas (Bot Score &gt; 0.6)</span>
-          <strong style={{ fontSize: '1.2rem', color: 'var(--neon-rose)' }}>28</strong>
-        </div>
-        <div style={{ textAlign: 'center' }}>
-          <span style={{ display: 'block', fontSize: '0.65rem', color: 'var(--text-secondary)' }}>Clusters Coordenados Detectados</span>
-          <strong style={{ fontSize: '1.2rem', color: 'var(--neon-purple)' }}>1 (Comunidad 3)</strong>
-        </div>
-      </div>
-
     </div>
   );
 }
