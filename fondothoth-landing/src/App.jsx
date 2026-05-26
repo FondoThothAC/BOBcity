@@ -1,3 +1,4 @@
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useScrollReveal } from './hooks';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
@@ -12,15 +13,13 @@ import SocialFeed from './components/SocialFeed';
 import Events from './components/Events';
 import Newsletter from './components/Newsletter';
 import Footer from './components/Footer';
+import Login from './components/Login';
+import AdminDashboard from './components/AdminDashboard';
 
-/**
- * App — Componente raíz que ensambla todas las secciones de la landing page.
- * Activa el hook de scroll reveal para animaciones al entrar al viewport.
- */
-function App() {
-  // Activar animaciones de scroll (IntersectionObserver)
+// Componente principal del landing
+function Landing() {
   useScrollReveal();
-
+  
   return (
     <>
       <Navbar />
@@ -49,6 +48,18 @@ function App() {
       </main>
       <Footer />
     </>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/admin" element={<AdminDashboard />} />
+      </Routes>
+    </Router>
   );
 }
 

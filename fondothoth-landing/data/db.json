@@ -1,0 +1,33 @@
+{
+  "config": {
+    "adsenseId": "ca-pub-XXXXXXXXXXXXXXXX",
+    "ga4Id": "G-XXXXXXXXXX"
+  },
+  "projects": [
+    {
+      "id": "1",
+      "title": "CívicaOS",
+      "description": "Sistema operativo ciudadano basado en Inteligencia Artificial. Gemelos digitales para mejorar la gestión pública y la participación.",
+      "image": "/assets/civicaos.jpg",
+      "tags": ["AI", "GovTech", "DeepTech"],
+      "link": "http://129.146.213.8"
+    },
+    {
+      "id": "2",
+      "title": "Laboratorio de Prototipos",
+      "description": "Espacio de fabricación e incubación de hardware. Combinamos electrónica y algoritmos para resolver problemas sociales.",
+      "image": "/assets/lab.jpg",
+      "tags": ["Hardware", "Maker", "IoT"],
+      "link": "#"
+    }
+  ],
+  "posts": [
+    {
+      "id": "1",
+      "title": "Convocatoria Abierta Hackathon 2026",
+      "content": "Buscamos desarrolladores, artistas y científicos para resolver retos urbanos con IA. ¡Regístrate ahora!",
+      "date": "2026-05-15",
+      "type": "announcement"
+    }
+  ]
+}

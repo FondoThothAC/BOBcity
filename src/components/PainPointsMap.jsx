@@ -9,6 +9,7 @@ import {
 } from '../models/dataModel';
 import { Filter, Droplet, Shield, Landmark, Flame, Users, MapPin, Database, ArrowLeft, Car, School, AlertTriangle, TrendingUp, DollarSign } from 'lucide-react';
 import realMetrics from '../data/real_electoral_metrics.json';
+import electoralScenarios from '../data/electoral_scenarios.json';
 
 // Helper Component para manejar el zoom y centrado dinámico de Leaflet de forma limpia
 function ChangeMapView({ center, zoom }) {
@@ -125,6 +126,50 @@ export default function PainPointsMap({ agents }) {
   // Sectores: ALL_SECTORS, jovenes, comerciantes, asalariados
   const [dataSourceMode, setDataSourceMode] = useState("SIMULATED"); 
   // Origen: SIMULATED, REAL_INGESTED
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  const allMunicipalities = useMemo(() => {
+    return electoralScenarios
+      .filter(item => item.level === "Municipio")
+      .map(item => {
+        const normalizedStateName = item.state.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s/g, '');
+        const stateKey = Object.keys(MEXICO_STATES).find(k => k.toLowerCase().replace(/_/g, '') === normalizedStateName) || 'CDMX';
+        return {
+          id: item.code.replace("MX-", "").replace("-MUN-", "_").replace("-", "_"),
+          name: item.name.replace("Alcaldía / Municipio de ", ""),
+          stateName: item.state,
+          stateKey: stateKey,
+          population: item.population || 100000
+        };
+      });
+  }, []);
+
+  const filteredMunicipalities = useMemo(() => {
+    if (!searchTerm) return [];
+    const term = searchTerm.toLowerCase();
+    return allMunicipalities
+      .filter(m => m.name.toLowerCase().includes(term) || m.stateName.toLowerCase().includes(term))
+      .slice(0, 15);
+  }, [searchTerm, allMunicipalities]);
+
+  const handleSelectUniversalCity = (cityObj) => {
+    const stateData = MEXICO_STATES[cityObj.stateKey] || MEXICO_STATES["CDMX"];
+    setSelectedState(stateData);
+    
+    setSelectedMunicipality({
+      id: cityObj.name.toUpperCase().replace(/\s/g, "_") + "_MUN", 
+      name: cityObj.name + ", " + cityObj.stateName,
+      coords: stateData.coords,
+      padronTotal: cityObj.population,
+      stateId: cityObj.stateKey,
+      size: 0.1
+    });
+    
+    setSearchTerm("");
+    setShowDropdown(false);
+  };
 
   // Selector del Catálogo de Indicadores del INEGI
   const [selectedInegiIndicator, setSelectedInegiIndicator] = useState("POBTOT");
@@ -1203,6 +1248,76 @@ export default function PainPointsMap({ agents }) {
                 {city.label}
               </button>
             ))}
+          </div>
+
+          {/* Buscador Universal de Municipios (2478) */}
+          <div style={{ position: 'relative', flex: 1, minWidth: '220px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(8,15,30,0.85)', padding: '0.2rem 0.6rem', borderRadius: '4px', border: '1px solid var(--border-glass)' }}>
+              <span style={{ marginRight: '0.4rem' }}>🔍</span>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setShowDropdown(e.target.value.length > 0);
+                }}
+                onFocus={() => {
+                  if (searchTerm.length > 0) setShowDropdown(true);
+                }}
+                onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+                placeholder="Buscar entre 2,478 municipios del país..."
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'white',
+                  fontSize: '0.75rem',
+                  fontWeight: '600',
+                  width: '100%',
+                  outline: 'none'
+                }}
+              />
+            </div>
+            {showDropdown && filteredMunicipalities.length > 0 && (
+              <div style={{
+                position: 'absolute',
+                top: '110%',
+                left: 0,
+                right: 0,
+                background: 'rgba(10, 18, 36, 0.95)',
+                border: '1px solid var(--neon-blue)',
+                borderRadius: '4px',
+                zIndex: 9999,
+                maxHeight: '200px',
+                overflowY: 'auto',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)',
+                backdropFilter: 'blur(10px)'
+              }}>
+                {filteredMunicipalities.map((city, idx) => (
+                  <div
+                    key={idx}
+                    onClick={() => handleSelectUniversalCity(city)}
+                    style={{
+                      padding: '0.4rem 0.6rem',
+                      cursor: 'pointer',
+                      borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                      fontSize: '0.75rem',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(0, 229, 255, 0.15)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'transparent';
+                    }}
+                  >
+                    <span style={{ color: 'white', fontWeight: '700' }}>{city.name}</span>
+                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.65rem' }}>{city.stateName}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
         </div>
