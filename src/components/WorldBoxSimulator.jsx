@@ -5,6 +5,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Play, Pause, RefreshCw, Plus, Shield, Droplet, Construction, HelpCircle, RotateCw, Layers } from 'lucide-react';
 import GartnerRadar from './GartnerRadar';
+import GlobalOsirisMap from './GlobalOsirisMap';
 
 const WorldBoxSimulator = ({ pythonApiUrl = 'http://localhost:5001' }) => {
   // Estados de control de simulación
@@ -1089,8 +1090,19 @@ const WorldBoxSimulator = ({ pythonApiUrl = 'http://localhost:5001' }) => {
           )}
         </div>
 
-        {/* 3. Panel OSINT: Gartner Radar */}
-        <GartnerRadar events={macroEvents} />
+        {/* 3. Panel OSINT: Gartner Radar & Inteligencia Orbital */}
+        <div className="flex flex-col gap-4">
+          <GartnerRadar events={macroEvents} />
+          
+          <div className="bg-[#090d16] border border-[#1e293b]/60 rounded-2xl shadow-xl overflow-hidden p-2">
+            <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider border-b border-[#1e293b] pb-2 mb-2 px-3 pt-2">
+              🛰️ Inteligencia Orbital (CCTV & Satélites LEO)
+            </h3>
+            <div style={{ pointerEvents: 'auto' }}>
+              <GlobalOsirisMap pythonApiUrl={pythonApiUrl} height="400px" />
+            </div>
+          </div>
+        </div>
 
       </div>
 

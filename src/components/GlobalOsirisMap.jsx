@@ -7,7 +7,7 @@ import Globe from 'react-globe.gl';
 import * as THREE from 'three';
 import { Activity, ShieldAlert, Zap, Globe as GlobeIcon, Crosshair, Map, Navigation, Wifi, Video } from 'lucide-react';
 
-const GlobalOsirisMap = ({ pythonApiUrl = 'http://localhost:5001' }) => {
+const GlobalOsirisMap = ({ pythonApiUrl = 'http://localhost:5001', height = '85vh' }) => {
   const globeRef = useRef();
   
   const [pulseData, setPulseData] = useState({ conflicts: [], disasters: [], satellites: [], webcams: [] });
@@ -104,7 +104,7 @@ const GlobalOsirisMap = ({ pythonApiUrl = 'http://localhost:5001' }) => {
   const combinedCustomLayer = [...customLayerData, ...webcamsData];
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '85vh', borderRadius: '12px', overflow: 'hidden', background: '#050810' }}>
+    <div style={{ position: 'relative', width: '100%', height: height, borderRadius: '12px', overflow: 'hidden', background: '#050810' }}>
       
       {/* Contenedor principal del Globo 3D */}
       <Globe

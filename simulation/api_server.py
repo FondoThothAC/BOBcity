@@ -204,6 +204,48 @@ class SimulationAPIHandler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps({"status": "success", "timelines": data}, ensure_ascii=False).encode('utf-8'))
             return
 
+        # --- OSIRIS GLOBAL PULSE ---
+        if requested_path.startswith("/api/osiris/global-pulse"):
+            import random
+            
+            # Generar datos simulados de telemetría global
+            satellites = []
+            for _ in range(15):
+                satellites.append({
+                    "lat": random.uniform(-60, 60),
+                    "lng": random.uniform(-180, 180),
+                    "alt": random.uniform(0.1, 0.4)
+                })
+                
+            webcams = [
+                {"lat": 19.4326, "lng": -99.1332, "name": "Zócalo CDMX", "viewers": random.randint(500, 2000)},
+                {"lat": 20.6596, "lng": -103.3496, "name": "Minerva GDL", "viewers": random.randint(300, 1000)},
+                {"lat": 25.6866, "lng": -100.3161, "name": "Macroplaza MTY", "viewers": random.randint(400, 1500)},
+                {"lat": 29.0729, "lng": -110.9559, "name": "Catedral HMO", "viewers": random.randint(100, 500)}
+            ]
+            
+            conflicts = [
+                {"lat": 48.8566, "lng": 2.3522, "label": "Protesta Laboral Paris"},
+                {"lat": 34.0522, "lng": -118.2437, "label": "Huelga Transporte LA"}
+            ]
+            
+            pulse_data = {
+                "status": "success",
+                "data": {
+                    "conflicts": conflicts,
+                    "disasters": [],
+                    "satellites": satellites,
+                    "webcams": webcams
+                }
+            }
+            
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json; charset=utf-8')
+            self._set_cors_headers()
+            self.end_headers()
+            self.wfile.write(json.dumps(pulse_data, ensure_ascii=False).encode('utf-8'))
+            return
+
         if requested_path.startswith("/api/multiverse/agent-comparison"):
             from urllib.parse import urlparse, parse_qs
             parsed_url = urlparse(requested_path)
