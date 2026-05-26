@@ -42,6 +42,7 @@ Hemos realizado una simulación interactiva completa en tiempo real utilizando e
   - **Socioeconómico (INEGI):** Buscador interactivo y selector del catálogo dinámico (Población, Educación, Empleo, Vivienda y Servicios).
   - **Crossover:** Permite realizar cruzamiento dinámico correlacionando variables de INEGI con el clima político-social usando operadores matemáticos y mapa de calor violeta-rosa neón.
 * **Estadísticas Deterministas en Popups:** Tooltips premium y popups con desglose de población censo, grado de escolaridad, ingreso familiar promedio y fuerza electoral estimada por partido político.
+* **Corrección de Diseño y Exclusión Mutua (Z-Index):** Reemplazo del posicionamiento absoluto por relativo en `.map-overlay-controls` en [index.css](file:///Volumes/SSD1TB/plataforma/src/index.css) para liberar el mapa y los controles de zoom de Leaflet. Integración del controlador de popups en [PainPointsMap.jsx](file:///Volumes/SSD1TB/plataforma/src/components/PainPointsMap.jsx) para cerrar y deshabilitar popups mientras las herramientas del Sandbox GIS estén activas.
 
 ---
 
