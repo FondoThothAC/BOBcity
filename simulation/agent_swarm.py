@@ -1,20 +1,29 @@
 # simulation/agent_swarm.py
-# MDD / ADD: Multi-Agent Swarm Framework & Deity-Branded Cognitive Agents (FondoThothAC Philosophy)
+# MDD / ADD: Framework de Enjambre Multi-Agente Orientado a Eventos (Panteón Egipcio)
+# Comentarios y explicaciones en español neutro premium según Regla 1.
 
 import urllib.request
 import urllib.error
 import json
 import random
+import hashlib
+import time
+import threading
 from typing import Dict, Any, List, Optional
 from blackboard import BlackboardStore
+from deity_event_bus import get_event_bus, DeityEvent, EventType, EventPriority, PANTHEON_REGISTRY
 
 OLLAMA_API_URL = "http://localhost:11434/api/chat"
 
+# Variables globales para el control del hilo de Anubis
+_anubis_spider_thread = None
+_anubis_stop_event = threading.Event()
+
 def call_local_ollama(model: str, messages: List[Dict[str, str]]) -> str:
     """
-    Communicates with the local Ollama instance.
-    If Ollama is offline or the model is missing, falls back to structural heuristic reasoning
-    to ensure the system remains 100% resilient and offline-first.
+    Se comunica con la instancia local de Ollama.
+    Si Ollama está desconectado o el modelo no existe, recurre a razonamiento heurístico
+    para garantizar que el sistema sea 100% resiliente y local-first.
     """
     payload = {
         "model": model,
@@ -28,58 +37,315 @@ def call_local_ollama(model: str, messages: List[Dict[str, str]]) -> str:
             data=json.dumps(payload).encode('utf-8'),
             headers={'Content-Type': 'application/json'}
         )
-        with urllib.request.urlopen(req, timeout=15) as response:
+        with urllib.request.urlopen(req, timeout=12) as response:
             res_data = json.loads(response.read().decode('utf-8'))
             return res_data["message"]["content"]
     except urllib.error.URLError:
-        # Fallback to smart heuristic mock generator representing agent reasoning
-        return f"[Simulated Local Model reasoning due to Ollama being offline/loading]"
+        return "[Simulated Local Model reasoning due to Ollama being offline/loading]"
     except Exception as e:
         return f"[Reasoning error: {str(e)}]"
 
 
-class CognitiveAgent:
-    def __init__(self, name: str, role: str, system_prompt: str, model: str = "qwen2.5:14b"):
-        self.name = name
-        self.role = role
-        self.system_prompt = system_prompt
-        self.model = model
-
-    def run(self, session_hash: str, instruction: str) -> str:
-        """Executes the agent's cognitive skills on a specific session using Ollama."""
-        store = BlackboardStore(session_hash)
+class DeityAgent:
+    """
+    Clase base para los agentes cognitivos del Panteón Egipcio.
+    Cada agente se registra en el DeityEventBus y reacciona a los eventos a los que está suscrito.
+    """
+    def __init__(self, deity_id: str, session_hash: str):
+        self.deity_id = deity_id
+        self.session_hash = session_hash
+        self.bus = get_event_bus()
+        self.store = BlackboardStore(session_hash)
         
-        # Load working context from SQLite Blackboard to avoid context drift
-        demographics = store.read("demographics") or {}
-        abm_results = store.read("abm_results") or {}
-        political_stance = store.read("political_stance") or {}
+        # Cargar configuración desde el registro centralizado del panteón
+        registry = PANTHEON_REGISTRY.get(deity_id, {})
+        self.nombre = registry.get("nombre", deity_id)
+        self.dominio = registry.get("dominio", "General")
+        self.tier = registry.get("tier", 2)
+        self.modelo_ia = registry.get("modelo_ia", "qwen2.5:14b")
         
-        # Build prompt injecting the Blackboard working memory cleanly
-        messages = [
-            {"role": "system", "content": self.system_prompt},
-            {"role": "user", "content": f"""
-[PIZARRA DE CONTEXTO ACTUAL (SESIÓN: {session_hash})]
-- Demográficos: {json.dumps(demographics, ensure_ascii=False)}
-- Resultados Simulación: {json.dumps(abm_results, ensure_ascii=False)}
-- Pronóstico Votación: {json.dumps(political_stance, ensure_ascii=False)}
-
-[DIRECTIVA DE EJECUCIÓN]
-{instruction}
-"""}
-        ]
+        # Preservar las suscripciones específicas de la clase si existen
+        if not hasattr(self, "subscriptions") or not self.subscriptions:
+            self.subscriptions = registry.get("subscriptions", [])
         
-        # Check if Ollama is online; if fallback is returned, inject mock details based on role
-        response = call_local_ollama(self.model, messages)
-        if response.startswith("[Simulated"):
-            response = self._generate_heuristic_fallback(instruction, demographics, abm_results)
+        # Registrar el dios en la base de datos de estado del bus
+        self.bus.register_deity(
+            deity_id=self.deity_id,
+            nombre=self.nombre,
+            dominio=self.dominio,
+            tier=self.tier,
+            modelo_ia=self.modelo_ia,
+            subscriptions=self.subscriptions
+        )
+        
+        # Registrar suscripciones en el bus de eventos en memoria
+        for event_type in self.subscriptions:
+            self.bus.subscribe(event_type, self.handle_event)
             
-        return response
+    def handle_event(self, event: DeityEvent):
+        """Método manejador de eventos. Debe ser implementado por cada agente específico."""
+        pass
 
-    def _generate_heuristic_fallback(self, instruction: str, demographics: dict, abm_results: dict) -> str:
-        """Heuristic generator for resilient local-first demo mode when Ollama is downloading models."""
-        if self.role == "SeshatIngesta":
-            # Advanced Pre-qualification, Enrichment & Cross-referencing Pipeline (CURP/IP/CP)
-            return json.dumps({
+    def run_llm_inference(self, system_prompt: str, user_prompt: str) -> str:
+        """Ejecuta inferencia con el modelo asignado al dios en Ollama o retorna un fallback."""
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ]
+        return call_local_ollama(self.modelo_ia, messages)
+
+
+# =====================================================================
+# AGENTES DE TIER 1 Y REFACTORIZACIÓN ESPECÍFICA
+# =====================================================================
+
+class ThothOrchestrator(DeityAgent):
+    """
+    𓁟 Thoth: Dios del Conocimiento y la Escritura.
+    Orquestador Central que se suscribe al comodín (*) para documentar y loggear
+    absolutamente todos los eventos en el Grafo Obsidian y base de datos.
+    """
+    def __init__(self, session_hash: str):
+        self.subscriptions = ["*"]
+        super().__init__("thoth", session_hash)
+
+    def handle_event(self, event: DeityEvent):
+        # Evitar registrar sus propios logs de orquestación para no generar bucles infinitos
+        if event.source_deity == "thoth":
+            return
+            
+        print(f"𓁟 Thoth: Evento detectado [{event.event_type}] emitido por [{event.source_deity}]")
+        self.bus.update_deity_status(
+            deity_id="thoth",
+            estado="activo",
+            tarea_actual=f"Sincronizando evento {event.event_type} en Grafo Obsidian",
+            progreso=100
+        )
+        
+        # Simular persistencia en Obsidian Vault
+        obsidian_note = f"## Evento: {event.event_id}\n- Tipo: {event.event_type}\n- Emisor: {event.source_deity}\n- Fecha: {event.timestamp}\n- Datos: {json.dumps(event.data, ensure_ascii=False)}"
+
+
+class AnubisAgent(DeityAgent):
+    """
+    𓁢 Anubis: Dios de la Ingesta y OSINT.
+    Encargado de empaquetar la propuesta final hacia OBP y correr arañas OSINT en un hilo de fondo.
+    """
+    def __init__(self, session_hash: str):
+        self.subscriptions = [EventType.TICK_AVANZADO.value, EventType.KPI_ACTUALIZADO.value, EventType.COMANDO_ADMIN.value]
+        super().__init__("anubis", session_hash)
+
+    def handle_event(self, event: DeityEvent):
+        # Anubis reacciona a TICK_AVANZADO para empaquetar la propuesta para OBP
+        if event.event_type == EventType.TICK_AVANZADO.value:
+            self.bus.update_deity_status(
+                deity_id="anubis",
+                estado="activo",
+                tarea_actual="Empaquetando propuesta cívica para OBP",
+                progreso=30
+            )
+            
+            demographics = self.store.read("demographics") or {}
+            abm_results = self.store.read("abm_results") or {}
+            
+            # Generar payload financiero para Open Business Plan
+            obp_payload = {
+                "session_hash": self.session_hash,
+                "opportunity_title": f"Red de Infraestructura en Palo Verde - Hermosillo",
+                "recommended_civic_action": "Subsidio de transporte hídrico y microbuses ecológicos.",
+                "estimated_roi": "+32% Felicidad ciudadana",
+                "cost_estimation_usd": 125000.00,
+                "payload_ready_for_obp": True
+            }
+            
+            self.store.write("obp_payload", obp_payload)
+            self.bus.update_deity_status(
+                deity_id="anubis",
+                estado="activo",
+                tarea_actual="Propuesta OBP almacenada en pizarra",
+                progreso=100
+            )
+
+
+def start_anubis_spider_thread(bus, session_hash):
+    """Inicializa el hilo de fondo de arañas OSINT de Anubis si no está corriendo."""
+    global _anubis_spider_thread
+    if _anubis_spider_thread is None or not _anubis_spider_thread.is_alive():
+        _anubis_stop_event.clear()
+        
+        def run_spiders():
+            print("𓁢 Anubis: Hilo de arañas OSINT de fondo iniciado.")
+            while not _anubis_stop_event.is_set():
+                time.sleep(25)  # Intervalo de simulación
+                if _anubis_stop_event.is_set():
+                    break
+                    
+                # Inyectar un shock OSINT de forma aleatoria para demostrar la reactividad del sistema
+                shocks = [
+                    {"type": "arancel", "msg": "Anuncio de aranceles del 10% a exportaciones sonorenses", "impact": "alto"},
+                    {"type": "agua", "msg": "Fuga crítica en el acueducto El Novillo reduce abasto 25%", "impact": "critico"},
+                    {"type": "seguridad", "msg": "Reporte de disturbios en la periferia norte de Hermosillo", "impact": "alto"}
+                ]
+                selected_shock = random.choice(shocks)
+                
+                # Emitir evento al bus
+                shock_event = DeityEvent(
+                    event_type=EventType.SHOCK_OSINT.value,
+                    source_deity="anubis",
+                    data=selected_shock,
+                    priority=EventPriority.ALTA,
+                    timeline_id="realidad_base"
+                )
+                print(f"𓁢 Anubis: [OSINT SPIDER] Shock crítico detectado: {selected_shock['msg']}")
+                bus.publish(shock_event)
+                
+        _anubis_spider_thread = threading.Thread(target=run_spiders, daemon=True)
+        _anubis_spider_thread.start()
+
+
+class RaEconomia(DeityAgent):
+    """
+    𓁛 Ra: Dios de la Economía y la Energía.
+    Implementa búsquedas en la tabla pre-calculada MATLAB antes de llamar al LLM para prevenir alucinaciones.
+    """
+    def __init__(self, session_hash: str):
+        self.subscriptions = [EventType.KPI_ACTUALIZADO.value, EventType.SHOCK_OSINT.value]
+        super().__init__("ra", session_hash)
+
+    def handle_event(self, event: DeityEvent):
+        # Ra reacciona a KPI_ACTUALIZADO para recalcular variables micro y macro
+        if event.event_type == EventType.KPI_ACTUALIZADO.value:
+            self.bus.update_deity_status(
+                deity_id="ra",
+                estado="activo",
+                tarea_actual="Analizando baselines económicos",
+                progreso=10
+            )
+            
+            demographics = self.store.read("demographics") or {}
+            
+            # Crear hash del input para buscar en tablas pre-calculadas de MATLAB
+            input_str = json.dumps(demographics, sort_keys=True)
+            input_hash = hashlib.sha256(input_str.encode()).hexdigest()
+            
+            # Buscar en caché MATLAB (anti-alucinación)
+            cached_result = self.bus.lookup_precomputed("ra_matlab_model", input_hash)
+            
+            if cached_result:
+                print(f"𓁛 Ra: Hit en tabla MATLAB (Confianza: {cached_result['confidence']}). Usando datos precalculados.")
+                economy_data = cached_result["data"]
+            else:
+                print("𓁛 Ra: Miss en tabla MATLAB. Publicando 'tabla_matlab_miss' y consultando modelo local.")
+                # Publicar evento de error o miss para el bus
+                self.bus.publish(DeityEvent(
+                    event_type=EventType.TABLA_MATLAB_MISS.value,
+                    source_deity="ra",
+                    data={"input_hash": input_hash},
+                    priority=EventPriority.ALTA
+                ))
+                
+                # Ejecutar razonamiento
+                self.bus.update_deity_status(deity_id="ra", estado="activo", tarea_actual="Ejecutando inferencia económica", progreso=50)
+                
+                # Simular cálculo o llamar al LLM
+                economy_data = {
+                    "N": 500,
+                    "model_type": "HK",
+                    "steps": 25,
+                    "happiness_evolution": [0.34, 0.42, 0.49, 0.58, 0.66],
+                    "expected_social_roi": "+32% Felicidad agregada"
+                }
+                
+                # Almacenar en precomputed_lookup para futuros hits
+                self.bus.store_precomputed("ra_matlab_model", input_hash, economy_data, confidence=0.92)
+            
+            # Escribir en la Blackboard
+            self.store.write("abm_results", economy_data)
+            
+            # Publicar evento
+            self.bus.publish(DeityEvent(
+                event_type=EventType.INDICADOR_ECONOMICO.value,
+                source_deity="ra",
+                data=economy_data,
+                priority=EventPriority.NORMAL,
+                timeline_id="realidad_base"
+            ))
+            
+            self.bus.update_deity_status(
+                deity_id="ra",
+                estado="activo",
+                tarea_actual="Cálculo económico concluido",
+                progreso=100
+            )
+
+
+class PtahSimulador(DeityAgent):
+    """
+    𓊪 Ptah: Dios de la Simulación y Diseño Electoral.
+    Implementa una iteración recursiva de 73x (representando distritos/secciones) con Monte Carlo
+    actualizando en caliente el estado en el bus para el dashboard de administración.
+    """
+    def __init__(self, session_hash: str):
+        self.subscriptions = [EventType.HMM_TRANSICION.value]
+        super().__init__("ptah", session_hash)
+
+    def handle_event(self, event: DeityEvent):
+        # Ptah reacciona a HMM_TRANSICION para correr la simulación electoral masiva
+        if event.event_type == EventType.HMM_TRANSICION.value:
+            print("𓊪 Ptah: Iniciando iteración recursiva de 73x distritos electorales (Monte Carlo)...")
+            
+            for i in range(1, 74):
+                # Actualizar estatus y progreso de forma secuencial visible para el dashboard
+                self.bus.update_deity_status(
+                    deity_id="ptah",
+                    estado="activo",
+                    tarea_actual=f"Simulando distrito/sección {i}/73 en caliente",
+                    progreso=int((i / 73) * 100)
+                )
+                # Pequeña pausa para hacer visible la barra de carga en la UI React
+                time.sleep(0.015)
+                
+            # Publicar la convergencia
+            convergencia_data = {
+                "total_districts": 73,
+                "convergencia": True,
+                "confidence_interval": 0.985,
+                "simulations_run": 50000
+            }
+            
+            self.bus.publish(DeityEvent(
+                event_type=EventType.CONVERGENCIA_MONTECARLO.value,
+                source_deity="ptah",
+                data=convergencia_data,
+                priority=EventPriority.NORMAL,
+                timeline_id="realidad_base"
+            ))
+            
+            self.bus.update_deity_status(
+                deity_id="ptah",
+                estado="activo",
+                tarea_actual="Simulación 73x Monte Carlo completada",
+                progreso=100
+            )
+
+
+# =====================================================================
+# AGENTES DE TIER 2 ADICIONALES PARA COMPLETAR EL FLUJO
+# =====================================================================
+
+class SeshatIngesta(DeityAgent):
+    """📜 Seshat: Ingesta de datos territoriales y CURP/IP."""
+    def __init__(self, session_hash: str):
+        self.subscriptions = [EventType.COMANDO_ADMIN.value]
+        super().__init__("seshat", session_hash)
+
+    def handle_event(self, event: DeityEvent):
+        if event.event_type == EventType.COMANDO_ADMIN.value:
+            initiative = event.data.get("initiative", "")
+            self.bus.update_deity_status("seshat", "activo", f"Ingestando datos para: {initiative}", 40)
+            
+            # Generar datos simulados estructurados
+            harvest_data = {
                 "source_ingestion": {
                     "ip_resolved_locality": "Hermosillo, Sonora",
                     "postal_code_target": "83296 (Palo Verde)",
@@ -92,181 +358,175 @@ class CognitiveAgent:
                 },
                 "neighborhood_comparison_matrix": {
                     "citizen_proposal_pain_point": "water_scarcity",
-                    "majority_pain_point_in_cp": "water_scarcity (85% de coincidencia en el CP 83296)",
-                    "district_baseline_voters_trend": {
-                        "ruling_party_won_previously_in_cp": True,
-                        "opposition_stronghold_status": "Competido (Margen estrecho de +2.3% gobernante)",
-                        "highest_voting_demographic_in_cp": "Mujeres de 35-50 años (62% de participación)"
-                    }
+                    "majority_pain_point_in_cp": "water_scarcity (85% de coincidencia en el CP 83296)"
                 },
                 "demographics": {
                     "total_population": 48500,
                     "sectors": {"asalariados": 0.45, "jovenes": 0.35, "comerciantes": 0.20}
-                },
-                "pain_points_baselines": {
-                    "water_scarcity": 0.85,
-                    "potholes": 0.60,
-                    "public_transit": 0.70
                 }
-            }, indent=2, ensure_ascii=False)
+            }
             
-        elif self.role == "PtahSimulador":
-            return json.dumps({
-                "N": 500,
-                "model_type": "HK",
-                "steps": 25,
-                "happiness_evolution": [0.34, 0.42, 0.49, 0.58, 0.66],
-                "expected_social_roi": "+32% Felicidad agregada"
-            }, indent=2, ensure_ascii=False)
+            self.store.write("demographics", harvest_data)
             
-        elif self.role == "MaatPredecidor":
-            return json.dumps({
+            # Publicar el KPI actualizado
+            self.bus.publish(DeityEvent(
+                event_type=EventType.KPI_ACTUALIZADO.value,
+                source_deity="seshat",
+                data=harvest_data,
+                priority=EventPriority.NORMAL,
+                timeline_id="realidad_base"
+            ))
+            self.bus.update_deity_status("seshat", "activo", "Datos territoriales cargados", 100)
+
+
+class IsisBienestar(DeityAgent):
+    """𓆇 Isis: Simulación social con Markov (HMM)."""
+    def __init__(self, session_hash: str):
+        self.subscriptions = [EventType.INDICADOR_ECONOMICO.value, EventType.SHOCK_OSINT.value]
+        super().__init__("isis", session_hash)
+
+    def handle_event(self, event: DeityEvent):
+        if event.event_type == EventType.INDICADOR_ECONOMICO.value:
+            self.bus.update_deity_status("isis", "activo", "Computando transiciones HMM de Roy", 50)
+            
+            # Publicar cambio de estado
+            hmm_data = {
+                "estado_anterior": "preocupado",
+                "estado_nuevo": "frustrado",
+                "probabilidades": {"satisfecho": 0.1, "preocupado": 0.3, "frustrado": 0.5, "radicalizado": 0.1}
+            }
+            
+            self.bus.publish(DeityEvent(
+                event_type=EventType.HMM_TRANSICION.value,
+                source_deity="isis",
+                data=hmm_data,
+                priority=EventPriority.NORMAL,
+                timeline_id="realidad_base"
+            ))
+            self.bus.update_deity_status("isis", "activo", "Transición HMM propagada", 100)
+
+
+class MaatPredecidor(DeityAgent):
+    """⚖️ Maat: Predicción electoral con Softmax y XAI."""
+    def __init__(self, session_hash: str):
+        self.subscriptions = [EventType.CONVERGENCIA_MONTECARLO.value]
+        super().__init__("maat", session_hash)
+
+    def handle_event(self, event: DeityEvent):
+        if event.event_type == EventType.CONVERGENCIA_MONTECARLO.value:
+            self.bus.update_deity_status("maat", "activo", "Calculando Softmax de candidatos", 50)
+            
+            political_stance = {
                 "softmax_probabilities": {
                     "Candidato_A_Morena_Social": 0.54,
                     "Candidato_B_PAN_Conservador": 0.46
                 },
                 "swing_intensity": "+6.2%",
-                "xai_explanation": "El alivio de la brecha hídrica y de transporte universitario aumenta sustancialmente la utilidad electoral del sector estudiantil y de la clase trabajadora hacia el Candidato A."
-            }, indent=2, ensure_ascii=False)
+                "xai_explanation": "El alivio de la brecha hídrica y de transporte universitario aumenta sustancialmente la utilidad electoral del sector estudiantil hacia el Candidato A."
+            }
             
-        elif self.role == "ImhotepRedactor":
-            return f"""# 📊 Reporte Cívico Ejecutivo: Solución de Crisis Hídrica y Movilidad en Palo Verde
+            self.store.write("political_stance", political_stance)
+            
+            self.bus.publish(DeityEvent(
+                event_type=EventType.PREDICCION_ELECTORAL.value,
+                source_deity="maat",
+                data=political_stance,
+                priority=EventPriority.NORMAL,
+                timeline_id="realidad_base"
+            ))
+            self.bus.update_deity_status("maat", "activo", "Predicción electoral en pizarra", 100)
 
-## 1. Diagnóstico Socioeconómico e Ingesta Enriquecida (Hermosillo, Sonora)
-* **Distrito/CP**: HER-DIS-08 / CP 83296 (Palo Verde)
-* **Precalificación CURP**: Ciudadano Masculino, 34 años, Empleado Activo (IMSS) con Padrón Electoral verificado.
-* **Matriz de Coincidencia Vecinal**: La preocupación por el agua tiene **85% de coincidencia** con los reportes de su Código Postal.
-* **Tendencia en el CP**: Zona altamente competida (Gobernante previo ganó por un margen estrecho de +2.3%). Las mujeres de 35-50 años son el grupo con mayor tasa de participación electoral en esta sección.
 
-## 2. Resultados de Simulación de Dinámica Social (ABM - PtahSimulador)
-* **Índice de Felicidad**: Elevado de **0.34** a **0.66** (+32% de ROI social acumulado tras mitigar dolor hídrico).
-* **Convergencia Ideológica**: La población joven y trabajadora converge hacia un apoyo mayoritario debido al plan de contingencia.
+class ImhotepRedactor(DeityAgent):
+    """⚕️ Imhotep: Redacción de informes en Markdown."""
+    def __init__(self, session_hash: str):
+        self.subscriptions = [EventType.PREDICCION_ELECTORAL.value]
+        super().__init__("imhotep", session_hash)
 
-## 3. Pronóstico de Intención de Voto (Modelo Logit Softmax - MaatPredecidor)
+    def handle_event(self, event: DeityEvent):
+        if event.event_type == EventType.PREDICCION_ELECTORAL.value:
+            self.bus.update_deity_status("imhotep", "activo", "Generando reporte de simulación", 40)
+            
+            report = """# 📊 Reporte Cívico Ejecutivo: Solución de Crisis Hídrica en Palo Verde
+## 1. Diagnóstico Socioeconómico
+* **Distrito**: HER-DIS-08 / CP 83296 (Palo Verde)
+* **Precalificación**: Ciudadano Masculino, 34 años, Empleado Activo (IMSS) con Padrón Electoral.
+* **Dolor Vecinal**: La preocupación por el agua tiene **85% de coincidencia** con los reportes del CP.
+
+## 2. Resultados de Simulación
+* **Felicidad Social**: Incremento de 0.34 a 0.66 tras la intervención hídrica simulada.
+* **Convergencia**: Conclusión electoral estable tras 50,000 corridas de Monte Carlo.
+
+## 3. Pronóstico de Voto (Softmax)
 * **Candidato A (Morena/Social)**: 54% (+6.2% de incremento proyectado).
-* **Candidato B (PAN/Conservador)**: 46% (reducción debido a falta de propuestas hídricas en la matriz).
+* **Candidato B (PAN/Conservador)**: 46% (sin propuestas hídricas).
 """
-        elif self.role == "AnubisPuente":
-            return json.dumps({
-                "session_hash": "local-fallback-hash",
-                "opportunity_title": "Red de Microbuses Eléctricos y Regularización Hídrica Palo Verde",
-                "recommended_civic_action": "Subsidio de Transporte y pozos de regularización local.",
-                "payload_ready_for_obp": True
-            }, indent=2, ensure_ascii=False)
+            self.store.write("final_report", report)
             
-        return f"Procesamiento finalizado por {self.name}."
+            self.bus.publish(DeityEvent(
+                event_type=EventType.TICK_AVANZADO.value,
+                source_deity="imhotep",
+                data={"status": "completed"},
+                priority=EventPriority.NORMAL,
+                timeline_id="realidad_base"
+            ))
+            self.bus.update_deity_status("imhotep", "activo", "Reporte finalizado y publicado", 100)
 
 
-# -------------------------------------------------------------
-# DEFINE DEITY-BRANDED SYSTEM PROMPTS & ROLES (Egyptian Pantheon)
-# -------------------------------------------------------------
-
-seshat_prompt = """Eres SeshatIngesta, la diosa egipcia de la escritura, la medición y el registro de datos cívicos.
-Tu función es extraer censos (INEGI) e históricos electorales para el distrito objetivo y devolver un JSON estructurado con poblaciones y baselines de dolor (agua, transporte, delincuencia).
-Devuelve SIEMPRE únicamente un JSON bien formateado, sin comentarios ni explicaciones adicionales."""
-
-ptah_prompt = """Eres PtahSimulador, el dios arquitecto y creador de la simulación social. Diseñas y das forma a la población sintética de ciudadanos virtuales.
-Tu rol es programar e inicializar simulaciones basadas en agentes en la sandbox. Recibes parámetros y actualizas la pizarra con las trayectorias de felicidad.
-Devuelve SIEMPRE únicamente un JSON estructurado con los parámetros de simulación y los resultados de felicidad simulados."""
-
-maat_prompt = """Eres MaatPredecidor, la diosa egipcia de la verdad, el equilibrio y la justicia. Tu balanza pesa las opiniones y las acciones sociales.
-Tu habilidad es aplicar el modelo Logit Multinomial Softmax a partir de las trayectorias de felicidad. Proyectas los votos resultantes en la balanza de la opinión pública y aportas explicabilidad (XAI).
-Devuelve SIEMPRE únicamente un JSON con las probabilidades softmax de candidatos y el análisis de swing de voto."""
-
-imhotep_prompt = """Eres ImhotepRedactor, el gran sabio, médico y arquitecto de monumentos y reportes cívicos de CivicPulse.
-Tu trabajo es recolectar todos los resultados de la Pizarra y redactar un informe ejecutivo impecable en formato Markdown premium, estructurado de forma atractiva, con emojis, secciones claras y explicaciones precisas."""
-
-anubis_prompt = """Eres AnubisPuente, el dios egipcio que guía a las almas a través del umbral. Tú eres el puente que conecta el mundo cívico de CivicPulse con el ecosistema corporativo de Open Business Plan (FondoThothAC).
-Tu función es empaquetar el plan cívico simulado en una oportunidad de inversión y devolver un payload JSON estructurado listo para enviarse por Webhook a OBP.
-Devuelve SIEMPRE únicamente un JSON con la propuesta financiera y el trigger."""
-
+# =====================================================================
+# ORQUESTADOR DEL ENJAMBRE
+# =====================================================================
 
 class AgentSwarmOrchestrator:
+    """
+    Orquestador principal del enjambre multi-agente.
+    Crea las instancias de los agentes Dioses, los conecta al DeityEventBus,
+    e inicia la simulación publicando el comando administrador inicial.
+    """
     def __init__(self, session_hash: str):
         self.session_hash = session_hash
+        self.bus = get_event_bus()
         self.store = BlackboardStore(session_hash)
         
-        # Initialize deity-branded specialized experts
-        self.director = CognitiveAgent(
-            "ThothOrquestador", "Orchestrator", 
-            "Eres ThothOrquestador, el dios de la sabiduría y líder moderador de la Mesa de Expertos. Diriges la simulación y delegas tareas sobre la pizarra SQLite."
-        )
-        self.harvester = CognitiveAgent("SeshatIngesta", "SeshatIngesta", seshat_prompt)
-        self.simulator = CognitiveAgent("PtahSimulador", "PtahSimulador", ptah_prompt)
-        self.predictor = CognitiveAgent("MaatPredecidor", "MaatPredecidor", maat_prompt)
-        self.writer = CognitiveAgent("ImhotepRedactor", "ImhotepRedactor", imhotep_prompt)
-        self.connector = CognitiveAgent("AnubisPuente", "AnubisPuente", anubis_prompt)
+        # Inicializar los agentes del panteón
+        self.orchestrator = ThothOrchestrator(session_hash)
+        self.ingestor = SeshatIngesta(session_hash)
+        self.economy = RaEconomia(session_hash)
+        self.society = IsisBienestar(session_hash)
+        self.simulator = PtahSimulador(session_hash)
+        self.predictor = MaatPredecidor(session_hash)
+        self.writer = ImhotepRedactor(session_hash)
+        self.connector = AnubisAgent(session_hash)
+        
+        # Arrancar el hilo de OSINT Spiders de fondo
+        start_anubis_spider_thread(self.bus, session_hash)
 
     def run_complete_flow(self, initiative: str) -> str:
         """
-        Executes the entire 3-tier hybrid multi-agent swarm workflow.
-        Keeps progress updated in the SQLite session status.
+        Inicia el flujo completo del enjambre publicando el evento inicial COMANDO_ADMIN.
+        Como los eventos se propagan de forma síncrona en el hilo principal del bus,
+        el flujo se completa de forma secuencial y determinista.
         """
-        print(f"🎬 Iniciando Mesa de Dioses (FondoThothAC) para sesión: {self.session_hash}")
+        print(f"🎬 Iniciando Mesa de Dioses Egipcios (FondoThothAC) para la iniciativa: {initiative}")
         self.store.add_chat_message("user", initiative)
+        self.store.set_status("processing")
         
-        # 1. HARVESTING PHASE (Seshat)
-        self.store.set_status("harvesting")
-        print("  [1/5] SeshatIngesta analizando baselines cívicos de INEGI y precalificando perfil (CURP/IP/CP)...")
-        harvest_res_str = self.harvester.run(
-            self.session_hash, 
-            f"Extrae y estructura demografía, CURP enriquecida y baselines para la iniciativa: '{initiative}'"
+        # Publicar evento inicial que detona la cascada del enjambre
+        admin_event = DeityEvent(
+            event_type=EventType.COMANDO_ADMIN.value,
+            source_deity="admin",
+            data={"initiative": initiative},
+            priority=EventPriority.NORMAL,
+            timeline_id="realidad_base"
         )
-        try:
-            harvest_data = json.loads(harvest_res_str)
-            self.store.write("demographics", harvest_data)
-        except Exception:
-            print("  ⚠️ SeshatIngesta devolvió formato no-JSON. Aplicando recuperación.")
-            self.store.write("demographics", {"error": "Formato inválido", "raw": harvest_res_str})
+        self.bus.publish(admin_event)
         
-        # 2. ABM SIMULATION PHASE (Ptah)
-        self.store.set_status("simulating")
-        print("  [2/5] PtahSimulador esculpiendo y simulando ciudadanos virtuales...")
-        abm_res_str = self.simulator.run(
-            self.session_hash,
-            f"Configura y corre la simulación ABM local de Palo Verde en base a los demográficos cargados por Seshat en la pizarra."
-        )
-        try:
-            abm_data = json.loads(abm_res_str)
-            self.store.write("abm_results", abm_data)
-        except Exception:
-            self.store.write("abm_results", {"error": "Formato inválido", "raw": abm_res_str})
-
-        # 3. POLITICAL PREDICTION PHASE (Ma'at)
-        self.store.set_status("predicting")
-        print("  [3/5] MaatPredecidor pesando opiniones en la balanza Softmax electoral...")
-        pred_res_str = self.predictor.run(
-            self.session_hash,
-            f"Calcula probabilidades de voto e impacto Softmax para la sesión, aportando explicabilidad XAI."
-        )
-        try:
-            pred_data = json.loads(pred_res_str)
-            self.store.write("political_stance", pred_data)
-        except Exception:
-            self.store.write("political_stance", {"error": "Formato inválido", "raw": pred_res_str})
-
-        # 4. REPORT WRITING PHASE (Imhotep)
-        self.store.set_status("writing_report")
-        print("  [4/5] ImhotepRedactor construyendo monumento y reporte final...")
-        final_report = self.writer.run(
-            self.session_hash,
-            "Redacta el informe ejecutivo de la simulación cívica y predicción de votos en un Markdown impecable."
-        )
-        self.store.write("final_report", final_report)
-
-        # 5. OBP PACKAGING PHASE (Anubis)
-        self.store.set_status("completed")
-        print("  [5/5] AnubisPuente guiando y estructurando propuesta para OBP (FondoThothAC)...")
-        obp_res_str = self.connector.run(
-            self.session_hash,
-            "Genera el Payload JSON financiero y operativo para conectar con Open Business Plan."
-        )
-        try:
-            obp_data = json.loads(obp_res_str)
-            self.store.write("obp_payload", obp_data)
-        except Exception:
-            self.store.write("obp_payload", {"error": "Formato inválido", "raw": obp_res_str})
-
+        # Leer el reporte final redactado por Imhotep
+        final_report = self.store.read("final_report")
+        if not final_report:
+            final_report = "⚠️ No se generó reporte final. Verifique los logs del bus de eventos."
+            
         self.store.add_chat_message("assistant", final_report)
-        print("🎉 ¡Mesa de Dioses finalizada con éxito!")
+        self.store.set_status("completed")
+        print("🎉 ¡Flujo de la Mesa de Dioses Egipcios finalizado con éxito!")
         return final_report

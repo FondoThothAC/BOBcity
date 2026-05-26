@@ -40,6 +40,64 @@ Implementaremos las siguientes sub-secciones dentro de la pestaña `gds-mega`:
 3. **Indicadores de Contención por Mecanismo:**
    - Panel que explica con precisión matemática cómo cada checkbox de mecanismo (Paneles Solares, Tarifa Plana, Vouchers de Agua) mitiga la pendiente de colapso y aplana la curva de riesgo en la evolución.
 
+### Tier 3 — Hardware Masivo (1-4x Bizon G9000 / ~640GB a 2.5TB VRAM)
+- **Mundos paralelos:** 50-200 simultáneos (hasta 5,000+ con 4x Bizon)
+- **Modelos IA en FP16 sin cuantizar y APIs Open/Privadas Potentes:**
+  - **Llama 3.1 70B (FP16):** El "Caballo de Batalla" — procesamiento de agentes en tiempo real.
+  - **Llama 3.1 400B:** El "Estratega Master" — análisis macroeconómico profundo distribuido.
+  - **DeepSeek-V3 / DeepSeek-R1 (671B MoE, open-weights):** El "Razonador Sistémico" — razonamiento lógico avanzado y calibración fina de enjambres cívicos.
+  - **GLM-4 / GLM-4-9B (Zhipu AI):** El "Matemático Estructurado" — optimizado para llamadas a herramientas (function calling) y estructuración tabular.
+  - **Kimi / Moonshot AI (Ultra-contexto):** El "Lector Histórico" — lectura de expedientes cívicos gigantescos sin pérdida de contexto.
+  - **MiniMax-Text (Modelos narrativos):** El "Generador Narrativo" — construcción de crónicas realistas sobre el multiverso.
+  - **Qwen 3.5 122B:** El "Matemático" — KPIs tabulares y probabilidades de impacto social.
+  - **Mistral Large 123B / Mistral Medium 3.5 128B:** El "Simulador de Multitudes" — decisiones heterogéneas a gran escala.
+  - **Llama 4 Maverick 128x17B:** El "Oráculo Paralelo" — inferencia masiva de miles de agentes simultáneos usando MoE de 128 expertos.
+- **Velocidad:** x1 a x10,000 (un año simulado ≈ 30 segundos a 5 minutos)
+- **Monte Carlo:** 200+ realidades alternas bifurcadas simultáneamente
+
+### Requisitos Físicos del Servidor (Tier 3)
+- **Espacio:** Cuarto dedicado de mínimo 3x3m con piso falso antiestático
+- **Refrigeración:** Sistema de enfriamiento líquido (loop cerrado) + A/C industrial 24/7 (~5,000W TDP por Bizon)
+- **Electricidad:** Circuito dedicado de 220V/50A con UPS de respaldo (≥10kVA)
+- **Red:** Conexión de fibra óptica simétrica ≥1Gbps (ideal 10Gbps entre nodos)
+- **CPU auxiliar:** AMD EPYC 9004 o Intel Xeon W-3400 (mínimo 64 cores para orquestación)
+
+---
+
+## 2. Fuentes de Datos Masivas (Nacionales e Internacionales)
+
+### Fuentes Nacionales (México)
+| Fuente | Tipo de Datos | Frecuencia |
+|---|---|---|
+| **INEGI** | Censos, ENIGH, ENOE, PIB estatal, IPC | Trimestral/Anual |
+| **DENUE** | Directorio de comercios y empresas georeferenciados | Mensual |
+| **DERFE/INE** | Padrón electoral, secciones, historial desde 1995 | Electoral |
+| **Banxico** | Tasas de interés, inflación, tipo de cambio, M1/M2 | Diario |
+| **CONEVAL** | Líneas de pobreza, carencias sociales, Gini | Bianual |
+| **CONAPO** | Proyecciones demográficas, migración, natalidad | Anual |
+| **SEMARNAT/CONAGUA** | Niveles de presas, precipitación, calidad del aire | Diario |
+| **SNSP** | Incidencia delictiva, denuncias, percepción de inseguridad | Mensual |
+
+### Fuentes Internacionales
+| Fuente | Tipo de Datos | Uso en CívicaOS |
+|---|---|---|
+| **BID (Banco Interamericano)** | Índices de desarrollo LAC, financiamiento | Benchmark regional |
+| **Banco Mundial** | PIB per cápita, IDH, Doing Business, Gini global | Comparativas internacionales |
+| **FMI** | Perspectivas económicas mundiales, deuda soberana | Shocks macro globales |
+| **Bloomberg / Yahoo Finance** | Mercados bursátiles, commodities, divisas | Impacto económico en tiempo real |
+| **Investing.com** | Indicadores técnicos, calendario económico | Eventos planificados |
+| **McKinsey Global Institute** | Reportes de tendencias, automatización, productividad | Escenarios a largo plazo |
+| **Gartner** | Hype Cycles tecnológicos, adopción digital | Impacto de nuevas tecnologías |
+| **El Economista / TechCrunch** | Noticias de impacto económico y tecnológico | OSINT en tiempo real |
+| **Oficina de Patentes (USPTO/IMPI)** | Nuevas tecnologías, adquisiciones de empresas | Disrupciones tecnológicas |
+| **SIPRI / ACLED** | Conflictos armados, gasto militar global | Geopolítica y shocks |
+| **Reuters / AP** | Guerras, pandemias, cierre de Canal de Suez, huelgas | Eventos de cisne negro |
+| **JP Morgan Research** | Tendencias de mercados, reportes de deuda, commodities | Shocks micro y macroeconómicos, pronósticos |
+| **LinkedIn Economic Graph** | Movilidad laboral, desempleo por sector, habilidades demandadas | Simulación de migración de talento y desempleo |
+| **TechCrunch / Crunchbase** | Fondos de inversión, startups, valuación tecnológica | Mapeo de disrupciones y tracción sectorial |
+| **Bloomberg Terminal API** | Datos históricos e intradiarios de macroeconomía global | Alimentación continua del motor Ra |
+| **World Economic Forum** | Informes de competitividad global y riesgos globales | Escenarios mundiales de mediano plazo |
+
 ---
 
 ## Verification Plan
