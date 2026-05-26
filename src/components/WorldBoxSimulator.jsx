@@ -3,13 +3,15 @@
 // Comentarios y textos en español neutro premium.
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, RefreshCw, Plus, Shield, Droplet, Construction, HelpCircle } from 'lucide-react';
+import { Play, Pause, RefreshCw, Plus, Shield, Droplet, Construction, HelpCircle, RotateCw, Layers } from 'lucide-react';
 import GartnerRadar from './GartnerRadar';
 
 const WorldBoxSimulator = ({ pythonApiUrl = 'http://localhost:5001' }) => {
   // Estados de control de simulación
   const [isRunning, setIsRunning] = useState(true);
   const [speed, setSpeed] = useState(1); // 1x, 2x, 5x
+  const [rotation, setRotation] = useState(0); // 0 = 0°, 1 = 90°, 2 = 180°, 3 = 270°
+  const [viewMode, setViewMode] = useState('voto'); // 'voto' | 'aprobacion' | 'estres'
   const [selectedAgent, setSelectedAgent] = useState(null);
   const [toolActive, setToolActive] = useState(null); // 'well' | 'closure' | 'bridge'
   const [structures, setStructures] = useState([
@@ -262,19 +264,31 @@ const WorldBoxSimulator = ({ pythonApiUrl = 'http://localhost:5001' }) => {
     const tileHeight = 16;
     const gridSize = 12; // Rejilla 12x12
 
-    // Transformación de coordenadas 2D a Isométrica
+    // Transformación de coordenadas 2D a Isométrica con soporte de rotación
     const toIso = (x, y, z = 0) => {
-      const isoX = cx + (x - y) * tileWidth;
-      const isoY = cy + (x + y) * tileHeight - z;
+      let rx = x;
+      let ry = y;
+      if (rotation === 1) { rx = y; ry = gridSize - 1 - x; }
+      else if (rotation === 2) { rx = gridSize - 1 - x; ry = gridSize - 1 - y; }
+      else if (rotation === 3) { rx = gridSize - 1 - y; ry = x; }
+
+      const isoX = cx + (rx - ry) * tileWidth;
+      const isoY = cy + (rx + ry) * tileHeight - z;
       return { x: isoX, y: isoY };
     };
 
-    // Transformación inversa: Isométrica a 2D
+    // Transformación inversa: Isométrica a 2D con soporte de rotación
     const fromIso = (isoX, isoY) => {
       const dx = isoX - cx;
       const dy = isoY - cy;
-      const x = (dx / tileWidth + dy / tileHeight) / 2;
-      const y = (dy / tileHeight - dx / tileWidth) / 2;
+      const rx = (dx / tileWidth + dy / tileHeight) / 2;
+      const ry = (dy / tileHeight - dx / tileWidth) / 2;
+      
+      let x = rx;
+      let y = ry;
+      if (rotation === 1) { x = gridSize - 1 - ry; y = rx; }
+      else if (rotation === 2) { x = gridSize - 1 - rx; y = gridSize - 1 - ry; }
+      else if (rotation === 3) { x = ry; y = gridSize - 1 - rx; }
       return { x, y };
     };
 
@@ -342,6 +356,23 @@ const WorldBoxSimulator = ({ pythonApiUrl = 'http://localhost:5001' }) => {
           ctx.stroke();
         }
       }
+
+      // 2.5 Dibujar Etiquetas de Referencia Geográfica (Landmarks)
+      const landmarks = [
+        { gridX: 6, gridY: 6, name: "📍 Centro", color: "rgba(212, 175, 55, 0.85)" },
+        { gridX: 2, gridY: 2, name: "📍 Norte (La Caridad)", color: "rgba(0, 255, 231, 0.75)" },
+        { gridX: 10, gridY: 10, name: "📍 Sur (Palo Verde)", color: "rgba(155, 107, 255, 0.75)" },
+        { gridX: 3, gridY: 9, name: "🌊 Río Sonora", color: "rgba(56, 189, 248, 0.75)" }
+      ];
+
+      landmarks.forEach(lm => {
+        const pt = toIso(lm.gridX, lm.gridY, 6);
+        ctx.fillStyle = lm.color;
+        ctx.font = 'bold 9px "Space Grotesk", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(lm.name, pt.x, pt.y);
+      });
+      ctx.textAlign = 'left'; // reset
 
       // 3. Dibujar Estructuras Colocadas (Wells, Bridges, Closures)
       structures.forEach(struct => {
@@ -419,12 +450,24 @@ const WorldBoxSimulator = ({ pythonApiUrl = 'http://localhost:5001' }) => {
           agent.current_lng = lng;
 
           const gridPos = geoToGrid(lat, lng);
-          // Dibujar levemente arriba según elevación
           const pt = toIso(gridPos.x, gridPos.y, 2);
 
-          // Color según intención de voto: Verde (Morena) vs Naranja/Rojo (Oposición)
-          const isGov = agent.vote_intention === "Morena";
-          const agentColor = isGov ? '#10b981' : '#f97316'; // Verde o Naranja
+          // Color según el Modo de Vista activo
+          let agentColor = '#38bdf8'; // fallback
+          if (viewMode === 'voto') {
+            const isGov = agent.vote_intention === "Morena";
+            agentColor = isGov ? '#10b981' : '#f97316'; // Verde (Morena) o Naranja (Oposición)
+          } else if (viewMode === 'aprobacion') {
+            const approval = agent.government_approval || 50;
+            if (approval > 70) agentColor = '#10b981'; // Alta Aprobación (Verde)
+            else if (approval > 40) agentColor = '#eab308'; // Media (Amarillo)
+            else agentColor = '#ef4444'; // Baja (Rojo)
+          } else if (viewMode === 'estres') {
+            const stress = agent.economic_stress || 50;
+            if (stress > 65) agentColor = '#ef4444'; // Alto Estrés (Rojo)
+            else if (stress > 35) agentColor = '#f97316'; // Moderado (Naranja)
+            else agentColor = '#10b981'; // Bajo (Verde)
+          }
 
           // Dibujar cuerpo del agente (radio dinámico basado en peso poblacional)
           const agentRadius = Math.max(2, Math.min(6, (agent.weight || 10) / 4));
@@ -466,7 +509,7 @@ const WorldBoxSimulator = ({ pythonApiUrl = 'http://localhost:5001' }) => {
     return () => {
       cancelAnimationFrame(requestRef.current);
     };
-  }, [agents, isRunning, speed, structures, toolActive]);
+  }, [agents, isRunning, speed, structures, toolActive, rotation, viewMode]);
 
   // Click en el Canvas para colocar estructuras o seleccionar agentes
   const handleCanvasClick = (e) => {
@@ -477,32 +520,6 @@ const WorldBoxSimulator = ({ pythonApiUrl = 'http://localhost:5001' }) => {
     const clickX = e.clientX - rect.left;
     const clickY = e.clientY - rect.top;
     
-    // Si hay herramienta activa, mapear y colocar
-    if (toolActive) {
-      // Mapear el click de vuelta a lat/lng aproximado usando limites geográficos
-      const pctX = clickX / canvas.width;
-      const pctY = clickY / canvas.height;
-      
-      const mapBounds = {
-        minLat: 29.04,
-        maxLat: 29.10,
-        minLng: -110.99,
-        maxLng: -110.92
-      };
-      
-      // Interpolación aproximada
-      const lng = mapBounds.minLng + pctX * (mapBounds.maxLng - mapBounds.minLng);
-      const lat = mapBounds.minLat + (1 - pctY) * (mapBounds.maxLat - mapBounds.minLat);
-      const randomSection = `000${Math.floor(Math.random() * 9) + 1}`;
-      
-      handlePlaceStructure(toolActive, lat, lng, randomSection);
-      return;
-    }
-
-    // Si no hay herramienta activa, buscar agente más cercano para desplegar detalles
-    let closestAgent = null;
-    let minDist = 25; // Radio máximo de click en píxeles
-
     const cx = canvas.width / 2;
     const cy = canvas.height / 2 - 20;
     const tileWidth = 32;
@@ -510,9 +527,14 @@ const WorldBoxSimulator = ({ pythonApiUrl = 'http://localhost:5001' }) => {
     const gridSize = 12;
 
     const toIso = (x, y, z = 0) => {
+      let rx = x;
+      let ry = y;
+      if (rotation === 1) { rx = y; ry = gridSize - 1 - x; }
+      else if (rotation === 2) { rx = gridSize - 1 - x; ry = gridSize - 1 - y; }
+      else if (rotation === 3) { rx = gridSize - 1 - y; ry = x; }
       return {
-        x: cx + (x - y) * tileWidth,
-        y: cy + (x + y) * tileHeight - z
+        x: cx + (rx - ry) * tileWidth,
+        y: cy + (rx + ry) * tileHeight - z
       };
     };
 
@@ -529,6 +551,34 @@ const WorldBoxSimulator = ({ pythonApiUrl = 'http://localhost:5001' }) => {
         y: ((lat - mapBounds.minLat) / (mapBounds.maxLat - mapBounds.minLat)) * gridSize
       };
     };
+
+    // Si hay herramienta activa, mapear y colocar con soporte de rotación
+    if (toolActive) {
+      const dx = clickX - cx;
+      const dy = clickY - cy;
+      const rx = (dx / tileWidth + dy / tileHeight) / 2;
+      const ry = (dy / tileHeight - dx / tileWidth) / 2;
+      
+      let x = rx;
+      let y = ry;
+      if (rotation === 1) { x = gridSize - 1 - ry; y = rx; }
+      else if (rotation === 2) { x = gridSize - 1 - rx; y = gridSize - 1 - ry; }
+      else if (rotation === 3) { x = ry; y = gridSize - 1 - rx; }
+      
+      const clampX = Math.max(0, Math.min(gridSize - 1, x));
+      const clampY = Math.max(0, Math.min(gridSize - 1, y));
+      
+      const lng = mapBounds.minLng + (clampX / gridSize) * (mapBounds.maxLng - mapBounds.minLng);
+      const lat = mapBounds.minLat + (clampY / gridSize) * (mapBounds.maxLat - mapBounds.minLat);
+      const randomSection = `000${Math.floor(Math.random() * 9) + 1}`;
+      
+      handlePlaceStructure(toolActive, lat, lng, randomSection);
+      return;
+    }
+
+    // Si no hay herramienta activa, buscar agente más cercano para desplegar detalles
+    let closestAgent = null;
+    let minDist = 25; // Radio máximo de click en píxeles
 
     agents.forEach(agent => {
       const gridPos = geoToGrid(agent.current_lat, agent.current_lng);
@@ -564,7 +614,7 @@ const WorldBoxSimulator = ({ pythonApiUrl = 'http://localhost:5001' }) => {
         <div className="p-4 bg-[#0f172a]/70 border-b border-[#1e293b]/50 flex justify-between items-center backdrop-blur-md">
           <div>
             <h2 className="text-lg font-semibold text-[#38bdf8] flex items-center gap-2">
-              🎮 Simulador Táctico: Sonora Sandbox
+              🎮 Simulador Táctico: Sonora Sandbox (Hermosillo)
             </h2>
             <p className="text-xs text-slate-400">
               Visualización a nivel micro de agentes transitando entre hogares (casa) y zonas de trabajo
@@ -592,6 +642,41 @@ const WorldBoxSimulator = ({ pythonApiUrl = 'http://localhost:5001' }) => {
               <RefreshCw size={16} />
             </button>
 
+            {/* Rotación */}
+            <button 
+              onClick={() => setRotation(prev => (prev + 1) % 4)} 
+              className="p-2 rounded-lg bg-[#0f172a] hover:bg-[#1e293b] text-[#D4AF37] transition flex items-center gap-1"
+              title="Rotar Vista 90°"
+            >
+              <RotateCw size={14} />
+              <span className="text-[10px] font-bold">Rotar</span>
+            </button>
+
+            {/* Selector de Modo de Vista */}
+            <div className="flex items-center bg-[#0f172a] border border-[#1e293b] rounded-lg p-0.5">
+              <button 
+                onClick={() => setViewMode('voto')}
+                className={`text-[10px] font-bold px-2 py-1 rounded transition ${viewMode === 'voto' ? 'bg-[#38bdf8]/20 text-[#38bdf8]' : 'text-slate-400 hover:text-slate-200'}`}
+                title="Mostrar intención de voto (Morena vs Oposición)"
+              >
+                Voto
+              </button>
+              <button 
+                onClick={() => setViewMode('aprobacion')}
+                className={`text-[10px] font-bold px-2 py-1 rounded transition ${viewMode === 'aprobacion' ? 'bg-[#10b981]/20 text-[#10b981]' : 'text-slate-400 hover:text-slate-200'}`}
+                title="Mostrar aprobación de gobierno"
+              >
+                Aprobación
+              </button>
+              <button 
+                onClick={() => setViewMode('estres')}
+                className={`text-[10px] font-bold px-2 py-1 rounded transition ${viewMode === 'estres' ? 'bg-[#ef4444]/20 text-[#ef4444]' : 'text-slate-400 hover:text-slate-200'}`}
+                title="Mostrar estrés económico"
+              >
+                Estrés
+              </button>
+            </div>
+
             {/* Velocidad */}
             <select 
               value={speed} 
@@ -613,23 +698,87 @@ const WorldBoxSimulator = ({ pythonApiUrl = 'http://localhost:5001' }) => {
             className="block w-full h-[420px]"
           />
 
+          {/* Leyenda Dinámica Flotante (Thoth-Tech Style) */}
+          <div className="absolute top-4 right-4 bg-[#0b0f19]/95 border border-[#D4AF37]/35 p-3 rounded-xl backdrop-blur-lg shadow-xl text-[10px] flex flex-col gap-2 max-w-[190px] z-20">
+            <span className="font-bold text-[#D4AF37] uppercase tracking-wider border-b border-[#D4AF37]/20 pb-1.5 flex items-center gap-1.5 font-mono">
+              <Layers size={11} /> Simbología
+            </span>
+            {viewMode === 'voto' && (
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#10b981] shadow-[0_0_6px_rgba(16,185,129,0.5)]" />
+                  <span>Voto Gobierno (Morena)</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#f97316] shadow-[0_0_6px_rgba(249,115,22,0.5)]" />
+                  <span>Voto Oposición</span>
+                </div>
+              </div>
+            )}
+            {viewMode === 'aprobacion' && (
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#10b981] shadow-[0_0_6px_rgba(16,185,129,0.5)]" />
+                  <span>Aprobación Alta (&gt;70%)</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#eab308] shadow-[0_0_6px_rgba(234,179,8,0.5)]" />
+                  <span>Aprobación Media (40%-70%)</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#ef4444] shadow-[0_0_6px_rgba(239,68,68,0.5)]" />
+                  <span>Aprobación Crítica (&lt;40%)</span>
+                </div>
+              </div>
+            )}
+            {viewMode === 'estres' && (
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#ef4444] shadow-[0_0_6px_rgba(239,68,68,0.5)]" />
+                  <span>Estrés Alto (&gt;65%)</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#f97316] shadow-[0_0_6px_rgba(249,115,22,0.5)]" />
+                  <span>Estrés Moderado (35%-65%)</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#10b981] shadow-[0_0_6px_rgba(16,185,129,0.5)]" />
+                  <span>Estrés Bajo (&lt;35%)</span>
+                </div>
+              </div>
+            )}
+            <div className="border-t border-slate-800/80 pt-1.5 mt-0.5 text-slate-400 flex flex-col gap-1">
+              <div className="flex items-center gap-1">
+                <span>🟢</span>
+                <span>Tamaño = Peso de Población</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span>😡 / 😊</span>
+                <span>Ánimo Extremo en vivo</span>
+              </div>
+              <div className="flex items-center gap-1 border-t border-slate-800/50 pt-1 mt-0.5 text-slate-500 font-mono text-[8px]">
+                <span>Noroeste = Top de Rejilla</span>
+              </div>
+            </div>
+          </div>
+
           {/* Menú de Herramientas para colocar en mapa */}
-          <div className="absolute bottom-4 left-4 flex gap-2 bg-[#0b0f19]/90 border border-[#1e293b]/80 p-2 rounded-xl backdrop-blur-lg shadow-xl">
+          <div className="absolute bottom-4 left-4 flex gap-2 bg-[#0b0f19]/90 border border-[#1e293b]/80 p-2 rounded-xl backdrop-blur-lg shadow-xl z-20">
             <button 
               onClick={() => setToolActive(toolActive === 'well' ? null : 'well')}
-              className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition ${toolActive === 'well' ? 'bg-[#0284c7] text-white' : 'bg-[#0f172a] hover:bg-[#1e293b] text-slate-300'}`}
+              className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition ${toolActive === 'well' ? 'bg-[#0284c7] text-white font-bold' : 'bg-[#0f172a] hover:bg-[#1e293b] text-slate-300'}`}
             >
               <Droplet size={14} /> Colocar Pozo
             </button>
             <button 
               onClick={() => setToolActive(toolActive === 'closure' ? null : 'closure')}
-              className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition ${toolActive === 'closure' ? 'bg-[#ef4444] text-white' : 'bg-[#0f172a] hover:bg-[#1e293b] text-slate-300'}`}
+              className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition ${toolActive === 'closure' ? 'bg-[#ef4444] text-white font-bold' : 'bg-[#0f172a] hover:bg-[#1e293b] text-slate-300'}`}
             >
               <Construction size={14} /> Obras Viales
             </button>
             <button 
               onClick={() => setToolActive(toolActive === 'bridge' ? null : 'bridge')}
-              className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition ${toolActive === 'bridge' ? 'bg-[#10b981] text-white' : 'bg-[#0f172a] hover:bg-[#1e293b] text-slate-300'}`}
+              className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition ${toolActive === 'bridge' ? 'bg-[#10b981] text-white font-bold' : 'bg-[#0f172a] hover:bg-[#1e293b] text-slate-300'}`}
             >
               <Plus size={14} /> Puente 3D
             </button>
@@ -637,7 +786,7 @@ const WorldBoxSimulator = ({ pythonApiUrl = 'http://localhost:5001' }) => {
 
           <button 
             onClick={handleReset} 
-            className="absolute bottom-4 right-4 text-xs bg-[#0f172a] hover:bg-[#ef4444]/20 hover:text-[#ef4444] text-slate-400 border border-[#1e293b] px-3 py-1.5 rounded-lg transition"
+            className="absolute bottom-4 right-4 text-xs bg-[#0f172a] hover:bg-[#ef4444]/20 hover:text-[#ef4444] text-slate-400 border border-[#1e293b] px-3 py-1.5 rounded-lg transition z-20"
           >
             Limpiar Obras
           </button>
