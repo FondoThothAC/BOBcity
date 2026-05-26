@@ -396,6 +396,32 @@ class SimulationAPIHandler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps({"status": "success", "graph": graph_data}, ensure_ascii=False).encode('utf-8'))
             return
 
+        # --- CREWAI ENDPOINT ---
+        if requested_path.startswith("/api/crewai/trigger-analysis"):
+            try:
+                from crewai_orchestrator import trigger_cctv_analysis
+                camera_name = "Cámara Desconocida"
+                event_description = "Análisis manual solicitado por Operador."
+                
+                if '?' in self.path:
+                    import urllib.parse
+                    query_components = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+                    if 'camera' in query_components:
+                        camera_name = query_components['camera'][0]
+                    if 'event' in query_components:
+                        event_description = query_components['event'][0]
+
+                result = trigger_cctv_analysis(camera_name, event_description)
+            except Exception as e:
+                result = f"[ERROR DE SISTEMA] No se pudo invocar a CrewAI: {str(e)}"
+                
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json; charset=utf-8')
+            self._set_cors_headers()
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "success", "result": result}, ensure_ascii=False).encode('utf-8'))
+            return
+
         # Secure Gateway API Endpoint to pull captured citizen data from local machine
         if requested_path.startswith("/api/secure-export"):
             auth_key = self.headers.get("X-Secure-Gateway-Key", "")

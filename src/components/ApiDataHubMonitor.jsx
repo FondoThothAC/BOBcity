@@ -122,6 +122,67 @@ const ApiDataHubMonitor = () => {
         ))}
       </div>
 
+      {/* SECCIÓN DE CCTV EN VIVO */}
+      <div style={{ marginTop: '2rem', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h3 style={{ margin: 0, fontSize: '1rem', color: 'white', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Camera size={18} color="var(--neon-emerald)" />
+            Live CCTV Feeds (Webcams de México / C5)
+          </h3>
+          <button className="btn-premium" style={{ fontSize: '0.75rem', padding: '0.4rem 0.8rem', background: 'rgba(16, 185, 129, 0.2)', border: '1px solid var(--neon-emerald)', color: 'var(--neon-emerald)' }}>
+            + Añadir Stream
+          </button>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+          
+          {/* Cámara 1 */}
+          <div style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid var(--border-glass)', borderRadius: '8px', overflow: 'hidden' }}>
+            <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%' }}>
+              <iframe 
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
+                src="https://www.youtube.com/embed/1-iR1lYj7J0?autoplay=1&mute=1" 
+                title="Zócalo CDMX" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowFullScreen
+              ></iframe>
+            </div>
+            <div style={{ padding: '0.8rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <span style={{ color: '#fff', fontSize: '0.85rem', fontWeight: 'bold', display: 'block' }}>Zócalo CDMX</span>
+                <span style={{ color: '#00e676', fontSize: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><div className="pulse-dot" style={{ background: '#00e676', width: '6px', height: '6px', borderRadius: '50%' }}></div> EN VIVO</span>
+              </div>
+              <button style={{ background: 'rgba(59, 130, 246, 0.2)', color: 'var(--neon-blue)', border: '1px solid var(--neon-blue)', padding: '0.3rem 0.6rem', borderRadius: '4px', fontSize: '0.7rem', cursor: 'pointer' }}>
+                Capturar & Analizar (CrewAI)
+              </button>
+            </div>
+          </div>
+
+          {/* Cámara 2 */}
+          <div style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid var(--border-glass)', borderRadius: '8px', overflow: 'hidden' }}>
+            <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%' }}>
+              <iframe 
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
+                src="https://www.youtube.com/embed/A1YxNYiyALg?autoplay=1&mute=1" 
+                title="Volcán Popocatépetl" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowFullScreen
+              ></iframe>
+            </div>
+            <div style={{ padding: '0.8rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <span style={{ color: '#fff', fontSize: '0.85rem', fontWeight: 'bold', display: 'block' }}>Volcán Popocatépetl</span>
+                <span style={{ color: '#00e676', fontSize: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><div className="pulse-dot" style={{ background: '#00e676', width: '6px', height: '6px', borderRadius: '50%' }}></div> EN VIVO</span>
+              </div>
+              <button style={{ background: 'rgba(59, 130, 246, 0.2)', color: 'var(--neon-blue)', border: '1px solid var(--neon-blue)', padding: '0.3rem 0.6rem', borderRadius: '4px', fontSize: '0.7rem', cursor: 'pointer' }}>
+                Capturar & Analizar (CrewAI)
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
     </div>
   );
 };
