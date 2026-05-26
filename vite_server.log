@@ -12,3 +12,6 @@
 7:53:59 PM [vite] hmr update /src/components/MultiverseAdmin.jsx
 8:02:37 PM [vite] changed tsconfig file detected: /Volumes/SSD1TB/plataforma/referencias_simulacion/osiris/tsconfig.json - Clearing cache and forcing full-reload to ensure TypeScript is compiled with updated config values.
 8:03:40 PM [vite] hmr update /src/index.css
+8:06:20 PM [vite] hmr update /src/App.jsx
+8:06:21 PM [vite] ✨ new dependencies optimized: react-globe.gl
+8:06:21 PM [vite] ✨ optimized dependencies changed. reloading

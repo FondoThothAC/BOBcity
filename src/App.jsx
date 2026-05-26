@@ -35,6 +35,7 @@ import AgentRawView from './components/AgentRawView';
 import WorldBoxSimulator from './components/WorldBoxSimulator';
 import HunterDashboard from './components/HunterDashboard';
 import MultiverseAdmin from './components/MultiverseAdmin';
+import GlobalOsirisMap from './components/GlobalOsirisMap';
 
 import { applyTheme } from './themeManager';
 
@@ -815,6 +816,7 @@ export default function App() {
       { id: 'simulator', label: 'Sandbox ABM', icon: <Play size={20} /> },
       { id: 'worldbox', label: 'Simulador WorldBox', icon: <Play size={20} color="var(--neon-emerald)" /> },
       { id: 'multiverso', label: 'Multiverso Admin', icon: <Sparkles size={20} color="var(--neon-cyan)" /> },
+      { id: 'osiris-global', label: 'Globo Osiris 3D', icon: <Globe size={20} color="var(--neon-emerald)" /> },
       { 
         id: 'gds-mega', 
         label: 'Gemelo GDS-MEGA', 
@@ -1026,6 +1028,9 @@ export default function App() {
           )}
           {activeTab === 'multiverso' && (
             <MultiverseAdmin />
+          )}
+          {activeTab === 'osiris-global' && (
+            <GlobalOsirisMap />
           )}
           {activeTab === 'gds-mega' && (
             <GDSMegaVisualizer 
