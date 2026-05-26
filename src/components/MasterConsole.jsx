@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { themes } from '../themeManager';
 import OrchestratorConsole from './OrchestratorConsole';
+import ApiDataHubMonitor from './ApiDataHubMonitor';
 import electoralScenarios from '../data/electoral_scenarios.json';
 
 export default function MasterConsole({ clients, onAddClient, onDeleteClient, onUpdateClient }) {
@@ -153,6 +154,13 @@ export default function MasterConsole({ clients, onAddClient, onDeleteClient, on
         >
           <Terminal size={14} style={{ marginRight: '0.35rem' }} />
           Orquestador Swarm OpenClaw
+        </button>
+        <button 
+          className={`segment-btn ${activeSubTab === 'datahub' ? 'active' : ''}`}
+          onClick={() => setActiveSubTab('datahub')}
+        >
+          <Globe size={14} style={{ marginRight: '0.35rem' }} />
+          DataHub OSINT
         </button>
         <button 
           className={`segment-btn ${activeSubTab === 'pipeline' ? 'active' : ''}`}
@@ -675,6 +683,12 @@ export default function MasterConsole({ clients, onAddClient, onDeleteClient, on
       {activeSubTab === 'openclaw' && (
         <div className="glass-card" style={{ padding: '0.5rem' }}>
           <OrchestratorConsole />
+        </div>
+      )}
+
+      {activeSubTab === 'datahub' && (
+        <div className="glass-card" style={{ padding: '0.5rem' }}>
+          <ApiDataHubMonitor />
         </div>
       )}
 

@@ -356,6 +356,46 @@ class SimulationAPIHandler(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps({"status": "success", "events": [], "error": str(e)}, ensure_ascii=False).encode('utf-8'))
             return
 
+        # --- MOTOR ONTOLÓGICO (PALANTIR GOTHAM TARGET WORKBENCH PARADIGM) ---
+        if requested_path.startswith("/api/gotham/network-graph"):
+            # Genera un grafo de relaciones de entidades anómalas (crimen, política, vehículos)
+            import random
+            nodes = [
+                {"id": "Persona_A", "group": 1, "label": "El Patrón (Sospechoso)", "type": "Person", "risk": 0.95},
+                {"id": "Vehiculo_1", "group": 2, "label": "Jeep Cherokee", "type": "Vehicle", "risk": 0.6},
+                {"id": "Direccion_X", "group": 3, "label": "Bodega Culiacán", "type": "Location", "risk": 0.8},
+                {"id": "Persona_B", "group": 1, "label": "Funcionario Y", "type": "Person", "risk": 0.75},
+                {"id": "Cuenta_Ban_1", "group": 4, "label": "Cuenta Offshore", "type": "Financial", "risk": 0.9},
+                {"id": "Evento_1", "group": 5, "label": "Reunión Detectada", "type": "Event", "risk": 0.5},
+            ]
+            
+            # Generar variabilidad
+            if random.random() > 0.5:
+                nodes.append({"id": "Persona_C", "group": 1, "label": "Operador Táctico", "type": "Person", "risk": 0.85})
+                
+            links = [
+                {"source": "Persona_A", "target": "Vehiculo_1", "value": 5, "label": "Es Dueño"},
+                {"source": "Persona_B", "target": "Vehiculo_1", "value": 3, "label": "Conductor Frecuente"},
+                {"source": "Vehiculo_1", "target": "Direccion_X", "value": 8, "label": "Visto en (CCTV)"},
+                {"source": "Persona_A", "target": "Cuenta_Ban_1", "value": 10, "label": "Transfiere a"},
+                {"source": "Persona_B", "target": "Cuenta_Ban_1", "value": 6, "label": "Recibe de"},
+                {"source": "Persona_A", "target": "Evento_1", "value": 4, "label": "Asistió"},
+                {"source": "Persona_B", "target": "Evento_1", "value": 4, "label": "Asistió"},
+            ]
+            
+            if len(nodes) > 6:
+                links.append({"source": "Persona_C", "target": "Evento_1", "value": 7, "label": "Coordinador"})
+                links.append({"source": "Persona_C", "target": "Direccion_X", "value": 5, "label": "Visto en"})
+
+            graph_data = {"nodes": nodes, "links": links}
+            
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json; charset=utf-8')
+            self._set_cors_headers()
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "success", "graph": graph_data}, ensure_ascii=False).encode('utf-8'))
+            return
+
         # Secure Gateway API Endpoint to pull captured citizen data from local machine
         if requested_path.startswith("/api/secure-export"):
             auth_key = self.headers.get("X-Secure-Gateway-Key", "")

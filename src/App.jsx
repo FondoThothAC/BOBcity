@@ -14,7 +14,8 @@ import {
   ShieldAlert,
   Network,
   BookOpen,
-  Award
+  Award,
+  Target
 } from 'lucide-react';
 
 import DashboardOverview from './components/DashboardOverview';
@@ -36,6 +37,7 @@ import WorldBoxSimulator from './components/WorldBoxSimulator';
 import HunterDashboard from './components/HunterDashboard';
 import MultiverseAdmin from './components/MultiverseAdmin';
 import GlobalOsirisMap from './components/GlobalOsirisMap';
+import GothamTargetWorkbench from './components/GothamTargetWorkbench';
 
 import { applyTheme } from './themeManager';
 
@@ -841,6 +843,7 @@ export default function App() {
       { id: 'social-graph', label: 'Grafo Social 3D & GNN', icon: <Network size={20} /> },
       { id: 'synto-wiki', label: 'Obsidian LLM Wiki', icon: <BookOpen size={20} /> },
       { id: 'osint-hunter', label: 'Agente El Cazador (OSINT)', icon: <Terminal size={20} color="#10B981" /> },
+      { id: 'anubis-target', label: 'Anubis Target Workbench', icon: <Target size={20} color="var(--neon-rose)" /> },
       { id: 'citizen-portal', label: 'Portal Ciudadano', icon: <Smile size={20} /> },
       { id: 'agent-raw', label: 'Datos Crudos & Bots', icon: <Terminal size={20} color="var(--neon-purple)" /> }
     );
@@ -958,6 +961,7 @@ export default function App() {
               {activeTab === 'social-graph' && "Detección de Bots y Coordinación GNN"}
               {activeTab === 'synto-wiki' && "Cerebro Digital & Synto LLM Wiki"}
               {activeTab === 'osint-hunter' && "Dashboard Autónomo OSINT 'El Cazador'"}
+              {activeTab === 'anubis-target' && "Anubis Target Workbench (Ontología)"}
               {activeTab === 'citizen-portal' && "ThothAgora • Portal de Participación Ciudadana"}
               {activeTab === 'implementation-plan' && "Plan de Acción Territorial Integrado"}
               {activeTab === 'agent-raw' && "Consola de Datos Crudos e Ingesta"}
@@ -976,6 +980,7 @@ export default function App() {
               {activeTab === 'social-graph' && "Análisis de cuentas automatizadas, amplificación y topología social 3D."}
               {activeTab === 'synto-wiki' && "Consultar la base de conocimiento local, notas Obsidian y logs de Claude Brain."}
               {activeTab === 'osint-hunter' && "Monitor en tiempo real del escaneo OSINT y rotación de proxys libres."}
+              {activeTab === 'anubis-target' && "Motor Ontológico de Vínculos Criminales estilo Palantir Gotham."}
               {activeTab === 'citizen-portal' && "Simulador y vista previa interactiva del portal ciudadano ThothAgora para registrar opiniones cívicas."}
               {activeTab === 'implementation-plan' && "Recomendaciones de políticas y obras públicas basadas en +1024 factores."}
               {activeTab === 'agent-raw' && "Ingesta en tiempo real, geolocalización, metadatos y detección de botnets por GNN."}
@@ -1060,6 +1065,9 @@ export default function App() {
           )}
           {activeTab === 'osint-hunter' && (
             <HunterDashboard />
+          )}
+          {activeTab === 'anubis-target' && (
+            <GothamTargetWorkbench />
           )}
           {activeTab === 'citizen-portal' && (
             <ThothAgoraPortal />
