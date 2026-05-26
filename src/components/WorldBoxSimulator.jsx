@@ -12,6 +12,7 @@ const WorldBoxSimulator = ({ pythonApiUrl = 'http://localhost:5001' }) => {
   const [speed, setSpeed] = useState(1); // 1x, 2x, 5x
   const [rotation, setRotation] = useState(0); // 0 = 0°, 1 = 90°, 2 = 180°, 3 = 270°
   const [viewMode, setViewMode] = useState('voto'); // 'voto' | 'aprobacion' | 'estres'
+  const [simCity, setSimCity] = useState('hermosillo');
   const [selectedAgent, setSelectedAgent] = useState(null);
   const [toolActive, setToolActive] = useState(null); // 'well' | 'closure' | 'bridge'
   const [structures, setStructures] = useState([
@@ -61,14 +62,15 @@ const WorldBoxSimulator = ({ pythonApiUrl = 'http://localhost:5001' }) => {
     updatedTaxes = taxes, 
     updatedSecurity = securityBudget, 
     updatedSubsidy = waterSubsidy, 
-    currentTimeline = activeTimeline
+    currentTimeline = activeTimeline,
+    updatedCity = simCity
   ) => {
     try {
       const res = await fetch(`${pythonApiUrl}/api/gis-sandbox/calculate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ciudad: 'hermosillo',
+          ciudad: updatedCity,
           timeline_id: currentTimeline,
           structures: updatedStructures,
           policies: {
@@ -614,11 +616,30 @@ const WorldBoxSimulator = ({ pythonApiUrl = 'http://localhost:5001' }) => {
         <div className="p-4 bg-[#0f172a]/70 border-b border-[#1e293b]/50 flex justify-between items-center backdrop-blur-md">
           <div>
             <h2 className="text-lg font-semibold text-[#38bdf8] flex items-center gap-2">
-              🎮 Simulador Táctico: Sonora Sandbox (Hermosillo)
+              🎮 Simulador Táctico: Sandbox Micro-Social
             </h2>
-            <p className="text-xs text-slate-400">
-              Visualización a nivel micro de agentes transitando entre hogares (casa) y zonas de trabajo
-            </p>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-xs text-slate-400">📍 Simular Ciudad:</span>
+              <select 
+                value={simCity}
+                onChange={(e) => {
+                  const newCity = e.target.value;
+                  setSimCity(newCity);
+                  fetchSimulation(structures, taxes, securityBudget, waterSubsidy, activeTimeline, newCity);
+                  addLog(`Simulador reconfigurado para la ciudad: ${newCity.toUpperCase()}`);
+                }}
+                className="bg-[#0f172a] text-[#00e5ff] border border-[#1e293b] rounded text-xs px-2 py-1 outline-none font-bold uppercase"
+              >
+                <option value="hermosillo">Hermosillo</option>
+                <option value="monterrey">Monterrey</option>
+                <option value="guadalajara">Guadalajara</option>
+                <option value="zapopan">Zapopan</option>
+                <option value="tijuana">Tijuana</option>
+                <option value="cajeme">Cajeme</option>
+                <option value="nogales">Nogales</option>
+                <option value="cdmx">CDMX (Fallback)</option>
+              </select>
+            </div>
           </div>
           
           <div className="flex items-center gap-3">

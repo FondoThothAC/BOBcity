@@ -4,12 +4,13 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Globe from 'react-globe.gl';
-import { Activity, ShieldAlert, Zap, Globe as GlobeIcon, Crosshair, Map, Navigation, Wifi } from 'lucide-react';
+import * as THREE from 'three';
+import { Activity, ShieldAlert, Zap, Globe as GlobeIcon, Crosshair, Map, Navigation, Wifi, Video } from 'lucide-react';
 
 const GlobalOsirisMap = ({ pythonApiUrl = 'http://localhost:5001' }) => {
   const globeRef = useRef();
   
-  const [pulseData, setPulseData] = useState({ conflicts: [], disasters: [], satellites: [] });
+  const [pulseData, setPulseData] = useState({ conflicts: [], disasters: [], satellites: [], webcams: [] });
   const [isLive, setIsLive] = useState(true);
   
   // Efectos visuales de rotación
@@ -28,6 +29,15 @@ const GlobalOsirisMap = ({ pythonApiUrl = 'http://localhost:5001' }) => {
       const res = await fetch(`${pythonApiUrl}/api/osiris/global-pulse`);
       const data = await res.json();
       if (data.status === 'success') {
+        // Simulamos algunas webcams si el backend no las envía aún
+        if (!data.data.webcams) {
+          data.data.webcams = [
+            { lat: 19.4326, lng: -99.1332, name: "Zócalo CDMX", viewers: 1205 },
+            { lat: 20.6596, lng: -103.3496, name: "Minerva GDL", viewers: 842 },
+            { lat: 25.6866, lng: -100.3161, name: "Macroplaza MTY", viewers: 630 },
+            { lat: 29.0729, lng: -110.9559, name: "Catedral HMO", viewers: 415 }
+          ];
+        }
         setPulseData(data.data);
       }
     } catch (e) {
@@ -76,9 +86,22 @@ const GlobalOsirisMap = ({ pythonApiUrl = 'http://localhost:5001' }) => {
     lat: s.lat,
     lng: s.lng,
     alt: s.alt,
-    size: 0.05,
-    color: '#00e5ff'
+    size: 0.04,
+    color: '#00e5ff',
+    type: 'satellite'
   }));
+
+  // Webcams (Agregadas a custom layer también)
+  const webcamsData = pulseData.webcams.map(w => ({
+    lat: w.lat,
+    lng: w.lng,
+    alt: 0.01,
+    size: 0.06,
+    color: '#ffff00',
+    type: 'webcam'
+  }));
+  
+  const combinedCustomLayer = [...customLayerData, ...webcamsData];
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '85vh', borderRadius: '12px', overflow: 'hidden', background: '#050810' }}>
@@ -113,11 +136,15 @@ const GlobalOsirisMap = ({ pythonApiUrl = 'http://localhost:5001' }) => {
         labelColor="color"
         labelResolution={2}
 
-        // Satélites LEO (Custom Layer)
-        customLayerData={customLayerData}
+        // Satélites LEO y Webcams (Custom Layer)
+        customLayerData={combinedCustomLayer}
         customThreeObject={d => {
-          // Import dynamic three logic
-          const THREE = require('three');
+          if (d.type === 'webcam') {
+            return new THREE.Mesh(
+              new THREE.BoxGeometry(d.size, d.size, d.size),
+              new THREE.MeshBasicMaterial({ color: d.color, wireframe: true })
+            );
+          }
           return new THREE.Mesh(
             new THREE.SphereGeometry(d.size),
             new THREE.MeshBasicMaterial({ color: d.color })
@@ -183,6 +210,13 @@ const GlobalOsirisMap = ({ pythonApiUrl = 'http://localhost:5001' }) => {
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: '#8892a4', marginBottom: '4px' }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Wifi size={12} color="#00e5ff"/> Satélites LEO Activos</span>
               <span style={{ color: '#fff', fontWeight: 700 }}>{pulseData.satellites.length}</span>
+            </div>
+          </div>
+          
+          <div style={{ background: 'rgba(0,0,0,0.4)', padding: '10px', borderRadius: '8px', borderLeft: '3px solid #ffff00' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: '#8892a4', marginBottom: '4px' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Video size={12} color="#ffff00"/> Red Webcams (CCTV)</span>
+              <span style={{ color: '#fff', fontWeight: 700 }}>{pulseData.webcams ? pulseData.webcams.length : 0}</span>
             </div>
           </div>
         </div>

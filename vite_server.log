@@ -14,3 +14,7 @@
 2:58:46 AM [vite] hmr update /src/components/WorldBoxSimulator.jsx
 1:14:53 PM [vite] page reload fondothoth-landing/dist/index.html
 1:26:09 PM [vite] hmr update /src/components/PainPointsMap.jsx
+1:37:50 PM [vite] hmr update /src/components/GlobalOsirisMap.jsx
+1:37:51 PM [vite] ✨ new dependencies optimized: three
+1:37:51 PM [vite] ✨ optimized dependencies changed. reloading
+1:38:23 PM [vite] hmr update /src/components/WorldBoxSimulator.jsx
