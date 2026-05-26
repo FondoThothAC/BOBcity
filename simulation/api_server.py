@@ -244,11 +244,11 @@ class SimulationAPIHandler(BaseHTTPRequestHandler):
                         })
                         
                     webcams = [
-                        {"lat": 19.4326, "lng": -99.1332, "name": "Zócalo CDMX", "viewers": random.randint(500, 2000)},
-                        {"lat": 20.6596, "lng": -103.3496, "name": "Minerva GDL", "viewers": random.randint(300, 1000)},
-                        {"lat": 25.6866, "lng": -100.3161, "name": "Macroplaza MTY", "viewers": random.randint(400, 1500)},
-                        {"lat": 29.0729, "lng": -110.9559, "name": "Catedral HMO", "viewers": random.randint(100, 500)},
-                        {"lat": 32.5149, "lng": -117.0382, "name": "Garita San Ysidro TIJ", "viewers": random.randint(1500, 4000)}
+                        {"lat": 19.4326, "lng": -99.1332, "name": "Zócalo CDMX", "viewers": random.randint(500, 2000), "stream_url": "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1"},
+                        {"lat": 20.6596, "lng": -103.3496, "name": "Minerva GDL", "viewers": random.randint(300, 1000), "stream_url": "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1"},
+                        {"lat": 25.6866, "lng": -100.3161, "name": "Macroplaza MTY", "viewers": random.randint(400, 1500), "stream_url": "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1"},
+                        {"lat": 29.0729, "lng": -110.9559, "name": "Catedral HMO", "viewers": random.randint(100, 500), "stream_url": "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1"},
+                        {"lat": 32.5149, "lng": -117.0382, "name": "Garita San Ysidro TIJ", "viewers": random.randint(1500, 4000), "stream_url": "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1"}
                     ]
                     
                     conflicts = [

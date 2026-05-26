@@ -32,6 +32,9 @@ export default function UnifiedCommandCenter({ agents, clients }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
+  
+  // Active Webcam popup in 3D Mode
+  const [activeWebcam, setActiveWebcam] = useState(null);
 
   const pythonApiUrl = 'http://localhost:5001';
 
@@ -146,7 +149,7 @@ export default function UnifiedCommandCenter({ agents, clients }) {
   }
   if (layers.webcams) {
     customLayerData.push(...(pulseData.webcams || []).map(w => ({
-      lat: w.lat, lng: w.lng, alt: 0.01, size: 0.06, color: '#ffff00', type: 'webcam'
+      ...w, lat: w.lat, lng: w.lng, alt: 0.01, size: 0.06, color: '#ffff00', type: 'webcam'
     })));
   }
 
@@ -351,6 +354,11 @@ export default function UnifiedCommandCenter({ agents, clients }) {
                   } catch (err) {}
                 }
               }}
+              onCustomLayerClick={(d) => {
+                if (d.type === 'webcam') {
+                  setActiveWebcam(d);
+                }
+              }}
             />
           ) : (
             <div style={{ width: '100%', height: '100%' }}>
@@ -362,6 +370,43 @@ export default function UnifiedCommandCenter({ agents, clients }) {
           {viewMode === '3D_ORBITAL' && (
             <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', pointerEvents: 'none', opacity: 0.2 }}>
               <Crosshair size={48} color="#00e5ff" strokeWidth={1} />
+            </div>
+          )}
+
+          {/* Active Webcam Overlay in 3D Mode */}
+          {viewMode === '3D_ORBITAL' && activeWebcam && (
+            <div className="glass-card scale-in" style={{ 
+              position: 'absolute', top: '16px', right: '16px', zIndex: 1000,
+              width: '320px', background: 'rgba(5, 8, 15, 0.95)', border: '1px solid rgba(255, 255, 0, 0.4)',
+              borderRadius: '8px', padding: '12px'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <h4 style={{ color: '#ffff00', margin: 0, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Video size={14} /> {activeWebcam.name}
+                </h4>
+                <button onClick={() => setActiveWebcam(null)} style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', fontSize: '1.2rem', padding: '0 4px' }}>&times;</button>
+              </div>
+              
+              {activeWebcam.stream_url ? (
+                <div style={{ width: '100%', height: '180px', borderRadius: '4px', overflow: 'hidden', marginBottom: '8px' }}>
+                  <iframe 
+                    src={activeWebcam.stream_url} 
+                    width="100%" 
+                    height="100%" 
+                    frameBorder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowFullScreen
+                  ></iframe>
+                </div>
+              ) : (
+                <div style={{ width: '100%', height: '180px', background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', marginBottom: '8px' }}>
+                  SIN SEÑAL
+                </div>
+              )}
+
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                Espectadores: <span style={{ color: '#10b981', fontWeight: 'bold' }}>{activeWebcam.viewers}</span> | Estado: <span style={{ color: '#00e676' }}>● EN VIVO</span>
+              </div>
             </div>
           )}
         </div>

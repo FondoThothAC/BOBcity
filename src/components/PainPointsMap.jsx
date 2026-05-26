@@ -2014,9 +2014,25 @@ export default function PainPointsMap({ agents, externalCenter }) {
               {showOrbitalLayer && displayedOrbitalData.webcams.map((cam, idx) => (
                 webcamIcon && <React.Fragment key={`cam-${idx}`}>
                   <Marker position={[cam.lat, cam.lng]} icon={webcamIcon}>
-                    <Popup>
-                      <div style={{ color: '#ffff00', background: 'rgba(5,8,16,0.95)', padding: '8px 12px', borderRadius: '8px', fontSize: '11px', fontFamily: 'monospace', border: '1px solid rgba(255,255,0,0.3)' }}>
-                        <strong>📹 {cam.name}</strong><br/>
+                    <Popup minWidth={280}>
+                      <div style={{ color: '#ffff00', background: 'rgba(5,8,16,0.95)', padding: '8px', borderRadius: '8px', fontSize: '11px', fontFamily: 'monospace', border: '1px solid rgba(255,255,0,0.3)', width: '280px' }}>
+                        <strong style={{ display: 'block', marginBottom: '6px' }}>📹 {cam.name}</strong>
+                        {cam.stream_url ? (
+                          <div style={{ width: '100%', height: '150px', marginBottom: '6px', borderRadius: '4px', overflow: 'hidden' }}>
+                            <iframe 
+                              src={cam.stream_url} 
+                              width="100%" 
+                              height="100%" 
+                              frameBorder="0" 
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                              allowFullScreen
+                            ></iframe>
+                          </div>
+                        ) : (
+                          <div style={{ padding: '20px 0', textAlign: 'center', background: 'rgba(0,0,0,0.5)', marginBottom: '6px' }}>
+                            CONECTANDO AL SATÉLITE...
+                          </div>
+                        )}
                         Espectadores: <span style={{ color: '#10b981', fontWeight: 'bold' }}>{cam.viewers}</span><br/>
                         Estado: <span style={{ color: '#00e676' }}>● EN VIVO</span>
                       </div>

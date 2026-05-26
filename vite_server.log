@@ -2,8 +2,10 @@
 > civic-pulse@0.5.0 dev
 > vite
 
+Port 3335 is in use, trying another one...
 
-  VITE v5.4.21  ready in 125 ms
+  VITE v5.4.21  ready in 96 ms
 
-  ➜  Local:   http://localhost:3335/
-  ➜  Network: http://192.168.1.14:3335/
+  ➜  Local:   http://localhost:3336/
+  ➜  Network: http://192.168.1.14:3336/
+  ➜  Network: http://169.254.65.6:3336/
