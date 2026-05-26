@@ -41,6 +41,42 @@ except ImportError:
                 "expected_social_roi": "+32% Felicidad agregada"
             }
 
+# Mapeo de códigos de estado del INEGI a sus coordenadas centroides correspondientes
+estado_coords = {
+    "01": (21.88, -102.29),  # Aguascalientes
+    "02": (30.5, -115.1),    # Baja California
+    "03": (26.0, -111.7),    # Baja California Sur
+    "04": (19.0, -90.5),     # Campeche
+    "05": (27.3, -101.7),    # Coahuila
+    "06": (19.1, -103.7),    # Colima
+    "07": (16.5, -92.5),     # Chiapas
+    "08": (28.6, -106.1),    # Chihuahua
+    "09": (19.35, -99.13),   # CDMX
+    "10": (24.5, -104.4),    # Durango
+    "11": (21.0, -101.3),    # Guanajuato
+    "12": (17.6, -100.0),    # Guerrero
+    "13": (20.5, -98.9),     # Hidalgo
+    "14": (20.6, -103.6),    # Jalisco
+    "15": (19.35, -99.6),    # EDOMEX
+    "16": (19.2, -101.9),    # Michoacán
+    "17": (18.8, -99.2),     # Morelos
+    "18": (21.8, -104.8),    # Nayarit
+    "19": (25.6, -99.9),     # Nuevo León
+    "20": (17.0, -96.5),     # Oaxaca
+    "21": (19.0, -97.9),     # Puebla
+    "22": (20.6, -99.8),     # Querétaro
+    "23": (19.5, -88.2),     # Quintana Roo
+    "24": (22.5, -100.5),    # San Luis Potosí
+    "25": (25.0, -107.5),    # Sinaloa
+    "26": (29.8, -110.9),    # Sonora
+    "27": (18.0, -92.6),     # Tabasco
+    "28": (24.2, -98.8),     # Tamaulipas
+    "29": (19.3, -98.2),     # Tlaxcala
+    "30": (19.5, -96.8),     # Veracruz
+    "31": (20.7, -89.0),     # Yucatán
+    "32": (23.1, -102.7)     # Zacatecas
+}
+
 # Generador de polígonos de alta precisión para fallback geográfico local-first
 def generate_mock_geojson(estado, ciudad_id):
     # Coordenadas exactas del centro de las ciudades
@@ -51,42 +87,6 @@ def generate_mock_geojson(estado, ciudad_id):
         'cdmx': (19.4326, -99.1332),
         'guadalajara': (20.6597, -103.3496),
         'queretaro': (20.5888, -100.3899)
-    }
-    
-    # Mapeo de códigos de estado del INEGI a sus coordenadas centroides correspondientes
-    estado_coords = {
-        "01": (21.88, -102.29),  # Aguascalientes
-        "02": (30.5, -115.1),    # Baja California
-        "03": (26.0, -111.7),    # Baja California Sur
-        "04": (19.0, -90.5),     # Campeche
-        "05": (27.3, -101.7),    # Coahuila
-        "06": (19.1, -103.7),    # Colima
-        "07": (16.5, -92.5),     # Chiapas
-        "08": (28.6, -106.1),    # Chihuahua
-        "09": (19.35, -99.13),   # CDMX
-        "10": (24.5, -104.4),    # Durango
-        "11": (21.0, -101.3),    # Guanajuato
-        "12": (17.6, -100.0),    # Guerrero
-        "13": (20.5, -98.9),     # Hidalgo
-        "14": (20.6, -103.6),    # Jalisco
-        "15": (19.35, -99.6),    # EDOMEX
-        "16": (19.2, -101.9),    # Michoacán
-        "17": (18.8, -99.2),     # Morelos
-        "18": (21.8, -104.8),    # Nayarit
-        "19": (25.6, -99.9),     # Nuevo León
-        "20": (17.0, -96.5),     # Oaxaca
-        "21": (19.0, -97.9),     # Puebla
-        "22": (20.6, -99.8),     # Querétaro
-        "23": (19.5, -88.2),     # Quintana Roo
-        "24": (22.5, -100.5),    # San Luis Potosí
-        "25": (25.0, -107.5),    # Sinaloa
-        "26": (29.8, -110.9),    # Sonora
-        "27": (18.0, -92.6),     # Tabasco
-        "28": (24.2, -98.8),     # Tamaulipas
-        "29": (19.3, -98.2),     # Tlaxcala
-        "30": (19.5, -96.8),     # Veracruz
-        "31": (20.7, -89.0),     # Yucatán
-        "32": (23.1, -102.7)     # Zacatecas
     }
     
     lat, lon = (19.4326, -99.1332)  # CDMX fallback por defecto
@@ -180,11 +180,11 @@ class SimulationAPIHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         """Serves static frontend files or health checks if not built yet"""
+        global TIMELINES
         requested_path = self.path
         
         # --- MULTIVERSE ENDPOINTS ---
         if requested_path.startswith("/api/multiverse/timelines"):
-            global TIMELINES
             get_timeline("realidad_base")
             
             data = []
@@ -210,7 +210,6 @@ class SimulationAPIHandler(BaseHTTPRequestHandler):
             query_params = parse_qs(parsed_url.query)
             agent_id = int(query_params.get("agent_id", [0])[0])
             
-            global TIMELINES
             get_timeline("realidad_base")
             
             comparison = {}
@@ -244,7 +243,6 @@ class SimulationAPIHandler(BaseHTTPRequestHandler):
             agent_id = int(query_params.get("agent_id", [0])[0])
             timeline_id = query_params.get("timeline_id", ["realidad_base"])[0]
             
-            global TIMELINES
             model = get_timeline(timeline_id)
             profile = model.get_agent_profile(agent_id)
             
@@ -281,7 +279,6 @@ class SimulationAPIHandler(BaseHTTPRequestHandler):
             query_params = parse_qs(parsed_url.query)
             timeline_id = query_params.get("timeline_id", ["realidad_base"])[0]
             
-            global TIMELINES
             model = get_timeline(timeline_id)
             distribution = model._get_mental_distribution()
             
@@ -858,6 +855,7 @@ class SimulationAPIHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         """Handle simulation and multi-agent swarm requests"""
+        global TIMELINES
         if self.path == "/run-simulation":
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
@@ -1004,7 +1002,6 @@ class SimulationAPIHandler(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps({"status": "error", "message": "timeline_id es requerido"}, ensure_ascii=False).encode('utf-8'))
                 return
                 
-            global TIMELINES
             base_model = get_timeline(base_timeline_id)
             
             import copy
@@ -1040,7 +1037,6 @@ class SimulationAPIHandler(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps({"status": "error", "message": "timeline_id no es válido o no se puede eliminar la Realidad Base"}, ensure_ascii=False).encode('utf-8'))
                 return
                 
-            global TIMELINES
             if timeline_id in TIMELINES:
                 del TIMELINES[timeline_id]
                 msg = f"Línea temporal '{timeline_id}' eliminada."

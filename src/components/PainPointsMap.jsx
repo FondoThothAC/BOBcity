@@ -879,7 +879,7 @@ export default function PainPointsMap({ agents }) {
       inegiEscolaridad,
       inegiPEA,
       ingresoFamiliar,
-      inegiAguaEntubada,
+      inegiAguaEntubada: inegiAguaEntubadaVal,
       denueComercio,
       electoralTurnout,
       militantsPercent: militantsTotal > 0 ? {
