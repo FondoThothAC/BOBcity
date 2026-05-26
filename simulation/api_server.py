@@ -298,23 +298,65 @@ class SimulationAPIHandler(BaseHTTPRequestHandler):
             }, ensure_ascii=False).encode('utf-8'))
             return
 
-        # --- ESTADO DE LOS DIOSES IA AUTÓNOMOS ---
+        # --- ESTADO DE LOS DIOSES IA AUTÓNOMOS (desde el Event Bus real) ---
         if requested_path.startswith("/api/deities/status"):
-            deities = [
-                {"id": "thoth", "nombre": "𓁟 Thoth", "dominio": "Conocimiento y Datos", "estado": "activo", "tarea_actual": "Recopilación de KPIs INEGI/DENUE (2000 indicadores)", "progreso": 72},
-                {"id": "anubis", "nombre": "𓁢 Anubis", "dominio": "OSINT y Riesgo", "estado": "activo", "tarea_actual": "Escaneo nocturno de fuentes RSS y Nitter", "progreso": 45},
-                {"id": "horus", "nombre": "𓅃 Horus", "dominio": "Infraestructura y GIS", "estado": "activo", "tarea_actual": "Detección de zonas muertas en el mapa", "progreso": 88},
-                {"id": "ra", "nombre": "𓁛 Ra", "dominio": "Economía y Energía", "estado": "activo", "tarea_actual": "Cálculo de SDE: d(Stress)/dt por AGEB", "progreso": 60},
-                {"id": "isis", "nombre": "𓆇 Isis", "dominio": "Sociedad y Bienestar", "estado": "activo", "tarea_actual": "Ejecución de Cadenas de Markov (HMM)", "progreso": 55},
-                {"id": "sejmet", "nombre": "𓃭 Sejmet", "dominio": "Seguridad y Conflicto", "estado": "en_espera", "tarea_actual": "Modelando escenarios de disturbio potencial", "progreso": 30},
-                {"id": "ptah", "nombre": "𓊪 Ptah", "dominio": "Predicción Electoral", "estado": "activo", "tarea_actual": "Monte Carlo: convergencia de multiversos electorales", "progreso": 40}
-            ]
-            
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json; charset=utf-8')
-            self._set_cors_headers()
-            self.end_headers()
-            self.wfile.write(json.dumps({"status": "success", "deities": deities}, ensure_ascii=False).encode('utf-8'))
+            try:
+                from deity_event_bus import get_event_bus
+                bus = get_event_bus()
+                registry = bus.get_deity_registry()
+                stats = bus.get_event_stats()
+                
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json; charset=utf-8')
+                self._set_cors_headers()
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    "status": "success",
+                    "deities": registry,
+                    "bus_stats": stats
+                }, ensure_ascii=False).encode('utf-8'))
+            except Exception as e:
+                # Fallback a datos estáticos si el bus falla
+                deities = [
+                    {"deity_id": "thoth", "nombre": "𓁟 Thoth", "dominio": "Conocimiento y Datos", "estado": "activo", "tarea_actual": "Recopilación de KPIs", "progreso": 72, "tier": 1},
+                    {"deity_id": "anubis", "nombre": "𓁢 Anubis", "dominio": "OSINT y Riesgo", "estado": "activo", "tarea_actual": "Escaneo nocturno", "progreso": 45, "tier": 1},
+                    {"deity_id": "horus", "nombre": "𓅃 Horus", "dominio": "Infraestructura GIS", "estado": "activo", "tarea_actual": "Detección zonas muertas", "progreso": 88, "tier": 1},
+                    {"deity_id": "ra", "nombre": "𓁛 Ra", "dominio": "Economía y Energía", "estado": "activo", "tarea_actual": "SDE por AGEB", "progreso": 60, "tier": 1},
+                    {"deity_id": "isis", "nombre": "𓆇 Isis", "dominio": "Sociedad y Bienestar", "estado": "activo", "tarea_actual": "HMM ejecutando", "progreso": 55, "tier": 1},
+                    {"deity_id": "sejmet", "nombre": "𓃭 Sejmet", "dominio": "Seguridad", "estado": "en_espera", "tarea_actual": "Boids + Navier-Stokes", "progreso": 30, "tier": 1},
+                    {"deity_id": "ptah", "nombre": "𓊪 Ptah", "dominio": "Electoral", "estado": "activo", "tarea_actual": "Monte Carlo 73x", "progreso": 40, "tier": 1}
+                ]
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json; charset=utf-8')
+                self._set_cors_headers()
+                self.end_headers()
+                self.wfile.write(json.dumps({"status": "success", "deities": deities, "bus_stats": {}, "fallback": True}, ensure_ascii=False).encode('utf-8'))
+            return
+
+        # --- EVENTOS RECIENTES DEL BUS DE DIOSES ---
+        if requested_path.startswith("/api/deities/events"):
+            try:
+                from deity_event_bus import get_event_bus
+                from urllib.parse import urlparse, parse_qs
+                parsed_url = urlparse(requested_path)
+                query_params = parse_qs(parsed_url.query)
+                limit = int(query_params.get("limit", [50])[0])
+                deity_filter = query_params.get("deity", [None])[0]
+                
+                bus = get_event_bus()
+                events = bus.get_recent_events(limit=limit, deity_id=deity_filter)
+                
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json; charset=utf-8')
+                self._set_cors_headers()
+                self.end_headers()
+                self.wfile.write(json.dumps({"status": "success", "events": events}, ensure_ascii=False).encode('utf-8'))
+            except Exception as e:
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json; charset=utf-8')
+                self._set_cors_headers()
+                self.end_headers()
+                self.wfile.write(json.dumps({"status": "success", "events": [], "error": str(e)}, ensure_ascii=False).encode('utf-8'))
             return
 
         # Secure Gateway API Endpoint to pull captured citizen data from local machine
