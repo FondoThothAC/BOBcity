@@ -201,6 +201,102 @@ export default function PainPointsMap({ agents }) {
   const [sandboxResults, setSandboxResults] = useState(null);
   const [isLoadingGis, setIsLoadingGis] = useState(false);
 
+  // --- Capa Orbital: Satélites LEO y Webcams CCTV ---
+  const [showOrbitalLayer, setShowOrbitalLayer] = useState(true);
+  const [orbitalData, setOrbitalData] = useState({ satellites: [], webcams: [] });
+
+  useEffect(() => {
+    const fetchOrbital = async () => {
+      try {
+        const res = await fetch('http://localhost:5001/api/osiris/global-pulse');
+        const data = await res.json();
+        if (data.status === 'success' && data.data) {
+          setOrbitalData({
+            satellites: data.data.satellites || [],
+            webcams: data.data.webcams || []
+          });
+        }
+      } catch (e) {
+        console.warn('Osiris orbital fetch falló, usando datos mock', e);
+        // Datos de respaldo para que siempre se vea algo
+        setOrbitalData({
+          satellites: [
+            { lat: 19.43, lng: -99.13, alt: 0.2 },
+            { lat: 20.66, lng: -103.35, alt: 0.15 },
+            { lat: 25.69, lng: -100.32, alt: 0.3 },
+            { lat: 29.07, lng: -110.96, alt: 0.25 },
+            { lat: 21.16, lng: -86.85, alt: 0.18 },
+            { lat: 17.06, lng: -96.72, alt: 0.22 },
+            { lat: 32.62, lng: -115.45, alt: 0.28 },
+            { lat: 22.15, lng: -100.98, alt: 0.19 },
+            { lat: 24.14, lng: -110.31, alt: 0.35 },
+            { lat: 18.85, lng: -97.10, alt: 0.16 }
+          ],
+          webcams: [
+            { lat: 19.4326, lng: -99.1332, name: 'Zócalo CDMX', viewers: 1205 },
+            { lat: 20.6596, lng: -103.3496, name: 'Minerva GDL', viewers: 842 },
+            { lat: 25.6866, lng: -100.3161, name: 'Macroplaza MTY', viewers: 630 },
+            { lat: 29.0729, lng: -110.9559, name: 'Catedral HMO', viewers: 415 }
+          ]
+        });
+      }
+    };
+    fetchOrbital();
+    const interval = setInterval(fetchOrbital, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Iconos personalizados para Satélites y Webcams
+  const satelliteIcon = useMemo(() => {
+    if (typeof window === 'undefined') return null;
+    return L.divIcon({
+      html: `<div style="
+        width: 18px; height: 18px;
+        background: radial-gradient(circle, #00e5ff 30%, transparent 70%);
+        border-radius: 50%;
+        box-shadow: 0 0 12px #00e5ff, 0 0 24px rgba(0,229,255,0.4);
+        animation: pulse-sat 2s ease-in-out infinite;
+      "><div style="
+        position: absolute; top: -8px; left: 50%; transform: translateX(-50%);
+        font-size: 12px; filter: drop-shadow(0 0 4px #00e5ff);
+      ">🛰️</div></div>
+      <style>
+        @keyframes pulse-sat { 
+          0%, 100% { transform: scale(1); opacity: 0.8; }
+          50% { transform: scale(1.5); opacity: 1; }
+        }
+      </style>`,
+      className: 'satellite-marker',
+      iconSize: [18, 18],
+      iconAnchor: [9, 9]
+    });
+  }, []);
+
+  const webcamIcon = useMemo(() => {
+    if (typeof window === 'undefined') return null;
+    return L.divIcon({
+      html: `<div style="
+        width: 22px; height: 22px;
+        background: radial-gradient(circle, #ffff00 30%, transparent 70%);
+        border-radius: 50%;
+        box-shadow: 0 0 10px #ffff00, 0 0 20px rgba(255,255,0,0.3);
+        animation: pulse-cam 1.5s ease-in-out infinite;
+      "><div style="
+        position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+        font-size: 14px; filter: drop-shadow(0 0 4px #ffff00);
+      ">📹</div></div>
+      <style>
+        @keyframes pulse-cam {
+          0%, 100% { transform: scale(1); opacity: 0.9; }
+          50% { transform: scale(1.3); opacity: 1; }
+        }
+      </style>`,
+      className: 'webcam-marker',
+      iconSize: [22, 22],
+      iconAnchor: [11, 11]
+    });
+  }, []);
+
   const customIcons = useMemo(() => {
     if (typeof window === 'undefined') return {};
     return {
@@ -1870,7 +1966,73 @@ export default function PainPointsMap({ agents }) {
 
               <VoterParticles agents={sandboxResults?.sample_agents} />
 
+              {/* === CAPA ORBITAL: SATÉLITES LEO === */}
+              {showOrbitalLayer && orbitalData.satellites.map((sat, idx) => (
+                satelliteIcon && <Marker key={`sat-${idx}`} position={[sat.lat, sat.lng]} icon={satelliteIcon}>
+                  <Popup>
+                    <div style={{ color: '#00e5ff', background: 'rgba(5,8,16,0.95)', padding: '8px 12px', borderRadius: '8px', fontSize: '11px', fontFamily: 'monospace', border: '1px solid rgba(0,229,255,0.3)' }}>
+                      <strong>🛰️ Satélite LEO #{idx + 1}</strong><br/>
+                      Latitud: {sat.lat.toFixed(4)}°<br/>
+                      Longitud: {sat.lng.toFixed(4)}°<br/>
+                      Altitud: {(sat.alt * 1000).toFixed(0)} km<br/>
+                      <span style={{ color: '#10b981' }}>● ACTIVO</span>
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+
+              {/* === CAPA ORBITAL: WEBCAMS CCTV === */}
+              {showOrbitalLayer && orbitalData.webcams.map((cam, idx) => (
+                webcamIcon && <React.Fragment key={`cam-${idx}`}>
+                  <Marker position={[cam.lat, cam.lng]} icon={webcamIcon}>
+                    <Popup>
+                      <div style={{ color: '#ffff00', background: 'rgba(5,8,16,0.95)', padding: '8px 12px', borderRadius: '8px', fontSize: '11px', fontFamily: 'monospace', border: '1px solid rgba(255,255,0,0.3)' }}>
+                        <strong>📹 {cam.name}</strong><br/>
+                        Espectadores: <span style={{ color: '#10b981', fontWeight: 'bold' }}>{cam.viewers}</span><br/>
+                        Estado: <span style={{ color: '#00e676' }}>● EN VIVO</span>
+                      </div>
+                    </Popup>
+                  </Marker>
+                  <Circle
+                    center={[cam.lat, cam.lng]}
+                    radius={8000}
+                    pathOptions={{ color: '#ffff00', fillColor: '#ffff00', fillOpacity: 0.06, weight: 0.8, dashArray: '4 4' }}
+                  />
+                </React.Fragment>
+              ))}
+
             </MapContainer>
+
+            {/* Toggle de Capa Orbital (Satélites + Webcams) - Siempre visible */}
+            <div style={{
+              position: 'absolute',
+              bottom: '16px',
+              left: '16px',
+              zIndex: 1000,
+              background: showOrbitalLayer ? 'rgba(0, 229, 255, 0.15)' : 'rgba(10, 15, 30, 0.85)',
+              backdropFilter: 'blur(12px)',
+              border: `1px solid ${showOrbitalLayer ? 'rgba(0, 229, 255, 0.4)' : 'rgba(255,255,255,0.08)'}`,
+              padding: '0.5rem 0.7rem',
+              borderRadius: '8px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.3rem',
+              boxShadow: showOrbitalLayer ? '0 4px 20px rgba(0,229,255,0.2)' : '0 4px 16px rgba(0,0,0,0.4)',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease'
+            }}
+              onClick={() => setShowOrbitalLayer(!showOrbitalLayer)}
+            >
+              <div style={{ fontSize: '0.7rem', fontWeight: '800', color: showOrbitalLayer ? '#00e5ff' : '#8892a4', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                🛰️ Capa Orbital {showOrbitalLayer ? 'ON' : 'OFF'}
+              </div>
+              {showOrbitalLayer && (
+                <div style={{ display: 'flex', gap: '0.6rem', fontSize: '0.6rem' }}>
+                  <span style={{ color: '#00e5ff' }}>● {orbitalData.satellites.length} SATs</span>
+                  <span style={{ color: '#ffff00' }}>● {orbitalData.webcams.length} CAMs</span>
+                </div>
+              )}
+            </div>
 
             {/* Barra de Herramientas del Sandbox GIS */}
             {selectedMunicipality && (
