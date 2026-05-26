@@ -180,6 +180,39 @@ const ApiDataHubMonitor = () => {
             </div>
           </div>
 
+          {/* Cámara 3 Internacional */}
+          <div style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid var(--border-glass)', borderRadius: '8px', overflow: 'hidden' }}>
+            <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%' }}>
+              <iframe 
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
+                src="https://www.youtube.com/embed/1-iR1lYj7J0?autoplay=1&mute=1" 
+                title="Times Square EarthCam / Global" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowFullScreen
+              ></iframe>
+            </div>
+            <div style={{ padding: '0.8rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <span style={{ color: '#fff', fontSize: '0.85rem', fontWeight: 'bold', display: 'block' }}>New York (Global Feed)</span>
+                <span style={{ color: '#00e676', fontSize: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><div className="pulse-dot" style={{ background: '#00e676', width: '6px', height: '6px', borderRadius: '50%' }}></div> EN VIVO</span>
+              </div>
+              <button style={{ background: 'rgba(59, 130, 246, 0.2)', color: 'var(--neon-blue)', border: '1px solid var(--neon-blue)', padding: '0.3rem 0.6rem', borderRadius: '4px', fontSize: '0.7rem', cursor: 'pointer' }}>
+                Capturar & Analizar (CrewAI)
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Visor de Logs de CrewAI */}
+        <div style={{ marginTop: '2rem', padding: '1rem', background: 'rgba(5, 5, 10, 0.8)', border: '1px solid rgba(139, 92, 246, 0.3)', borderRadius: '8px', fontFamily: 'monospace' }}>
+          <h4 style={{ color: 'var(--neon-purple)', fontSize: '0.85rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Activity size={14} /> CrewAI Task Status Log
+          </h4>
+          <div style={{ height: '120px', overflowY: 'auto', fontSize: '0.75rem', color: '#a5b4fc', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+            <div><span style={{color: '#8b5cf6'}}>[SYS]</span> Esperando triggers de captura de los feeds de video...</div>
+            {/* Logs se irán agregando aquí vía socket o polling */}
+          </div>
         </div>
       </div>
 

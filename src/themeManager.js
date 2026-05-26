@@ -23,6 +23,27 @@ export const themes = {
       '--accent-glow': 'rgba(120, 100, 255, 0.4)'
     }
   },
+  'gotham-dark': {
+    name: 'Palantir Gotham Táctico',
+    description: 'Estilo táctico militar, inteligencia y analítica profunda.',
+    variables: {
+      '--bg-app': '#030712',
+      '--bg-sidebar': 'rgba(15, 23, 42, 0.95)',
+      '--bg-card': 'rgba(15, 23, 42, 0.85)',
+      '--border-glass': 'rgba(51, 65, 85, 0.8)',
+      '--accent-color': '#06b6d4',
+      '--neon-blue': '#06b6d4',
+      '--neon-purple': '#8B5CF6',
+      '--neon-emerald': '#10B981',
+      '--neon-amber': '#F59E0B',
+      '--neon-red': '#EF4444',
+      '--text-primary': '#F8FAFC',
+      '--text-secondary': '#94A3B8',
+      '--font-family': "'Inter', sans-serif",
+      '--card-glow': '0 4px 20px 0 rgba(0, 0, 0, 0.5)',
+      '--accent-glow': 'rgba(6, 182, 212, 0.5)'
+    }
+  },
   'cyber-neon': {
     name: 'Cyberpunk Brutalist',
     description: 'Contraste extremo, bordes afilados, fondos negro carbón y cian/magenta neón.',

@@ -10,6 +10,13 @@ except ImportError:
 # We would normally set OPENAI_API_KEY, but for now we simulate or use a dummy.
 os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY", "dummy-key-for-local-llm")
 
+# Intentar importar ChatOllama para ejecución local si es solicitado
+try:
+    from langchain_community.chat_models import ChatOllama
+    LOCAL_LLM = ChatOllama(model="llama3") # Reemplazar con el modelo descargado localmente (ej. mistral, qwen, llama3)
+except ImportError:
+    LOCAL_LLM = None
+
 def trigger_cctv_analysis(camera_name: str, event_description: str):
     """
     Trigger a multi-agent analysis using CrewAI on a CCTV feed event.
@@ -24,7 +31,8 @@ def trigger_cctv_analysis(camera_name: str, event_description: str):
             goal=f'Monitorear la cámara {camera_name} y extraer datos tácticos.',
             backstory='Un ex-agente de inteligencia especializado en análisis de video y reconocimiento de anomalías urbanas.',
             verbose=True,
-            allow_delegation=False
+            allow_delegation=False,
+            llm=LOCAL_LLM # Utiliza el modelo local si está disponible
         )
 
         ontology_agent = Agent(
@@ -32,7 +40,8 @@ def trigger_cctv_analysis(camera_name: str, event_description: str):
             goal='Tomar los datos extraídos por el observador y generar vínculos (nodos y aristas) para Palantir Gotham.',
             backstory='Experto en análisis de grafos y teoría de redes criminales y sociales.',
             verbose=True,
-            allow_delegation=False
+            allow_delegation=False,
+            llm=LOCAL_LLM # Utiliza el modelo local si está disponible
         )
 
         # Definición de Tareas
