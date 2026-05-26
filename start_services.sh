@@ -33,14 +33,17 @@ python3 api_server.py > ../simulation_server.log 2>&1 &
 SIM_PID=$!
 echo -e "${GREEN}✅ Servidor de Simulación iniciado (PID: $SIM_PID)${NC}"
 
-# 3. Levantar Celery Worker y Flower Monitor
+# 3. Levantar Celery Worker, Celery Beat y Flower Monitor
 echo -e "${YELLOW}[3/5] Iniciando Tareas Distribuidas (Celery) y Monitor (Flower en Port 5555)...${NC}"
 celery -A celery_app worker --loglevel=info > ../celery_worker.log 2>&1 &
 CELERY_PID=$!
+celery -A celery_app beat --loglevel=info > ../celery_beat.log 2>&1 &
+BEAT_PID=$!
 celery -A celery_app flower --port=5555 > ../flower_monitor.log 2>&1 &
 FLOWER_PID=$!
 cd ..
 echo -e "${GREEN}✅ Trabajador Celery iniciado (PID: $CELERY_PID)${NC}"
+echo -e "${GREEN}✅ Planificador Celery Beat iniciado (PID: $BEAT_PID)${NC}"
 echo -e "${GREEN}✅ Monitor Flower iniciado (PID: $FLOWER_PID)${NC}"
 
 # 4. Levantar el Servidor de Desarrollo React (Vite)
@@ -69,9 +72,10 @@ cleanup() {
     echo -e "\n${RED}🛑 Apagando servicios locales y liberando puertos...${NC}"
     kill $SIM_PID >/dev/null 2>&1 || true
     kill $CELERY_PID >/dev/null 2>&1 || true
+    kill $BEAT_PID >/dev/null 2>&1 || true
     kill $FLOWER_PID >/dev/null 2>&1 || true
     kill $VITE_PID >/dev/null 2>&1 || true
-    rm -f simulation_server.log vite_server.log celery_worker.log flower_monitor.log
+    rm -f simulation_server.log vite_server.log celery_worker.log celery_beat.log flower_monitor.log
     deactivate >/dev/null 2>&1 || true
     echo -e "${GREEN}✅ Puertos liberados. ¡Hasta luego!${NC}"
     exit 0

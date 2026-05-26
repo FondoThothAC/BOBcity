@@ -20,6 +20,13 @@ app.conf.update(
     result_serializer='json',
     timezone='America/Mexico_City',
     enable_utc=True,
+    # Celery Beat Schedule
+    beat_schedule={
+        'fetch-osint-every-60-seconds': {
+            'task': 'tasks.scrape_osint_earthquakes',
+            'schedule': 60.0,
+        },
+    }
 )
 
 if __name__ == '__main__':

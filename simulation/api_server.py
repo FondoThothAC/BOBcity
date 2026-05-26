@@ -210,73 +210,61 @@ class SimulationAPIHandler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps({"status": "success", "timelines": data}, ensure_ascii=False).encode('utf-8'))
             return
 
-        # --- OSIRIS GLOBAL PULSE ---
+        # --- OSINT GLOBAL PULSE ---
         if requested_path.startswith("/api/osiris/global-pulse"):
-            import random
-            import urllib.request
-            import urllib.error
-            import time
-            global OSINT_CACHE
+            import os
             
-            # Cache de 15 segundos para no saturar las APIs de IntelSky/ConflictRadar
-            if OSINT_CACHE["data"] and (time.time() - OSINT_CACHE["timestamp"] < 15):
-                pulse_data = OSINT_CACHE["data"]
-            else:
+            CACHE_FILE = os.path.join(os.path.dirname(__file__), 'osint_cache.json')
+            
+            # Intenta leer el caché alimentado por el Celery Worker
+            disasters = []
+            satellites = []
+            if os.path.exists(CACHE_FILE):
                 try:
-                    # Intento de Fetch a IntelSky y ConflictRadar360
-                    # Al no tener una Key oficial proporcionada, estructuramos el request con timeout.
-                    # Si falla, cae directo al fallback de simulación.
-                    
-                    # req_flights = urllib.request.Request("https://intelsky.org/api/live", headers={'User-Agent': 'CivicaOS/1.0'})
-                    # con_flights = urllib.request.urlopen(req_flights, timeout=2)
-                    # flights_data = json.loads(con_flights.read().decode())
-                    
-                    raise urllib.error.URLError("No API Endpoint Provided, usando Fallback")
-
-                except Exception as e:
-                    # FALLBACK: Generar datos simulados de telemetría global
-                    satellites = []
-                    for _ in range(15):
-                        satellites.append({
-                            "lat": random.uniform(-60, 60),
-                            "lng": random.uniform(-180, 180),
-                            "alt": random.uniform(0.1, 0.4)
-                        })
+                    with open(CACHE_FILE, 'r', encoding='utf-8') as f:
+                        cache_data = json.load(f)
+                        anomalies = cache_data.get('data', [])
                         
-                    webcams = [
-                        {"lat": 19.4326, "lng": -99.1332, "name": "Zócalo CDMX", "viewers": random.randint(500, 2000), "stream_url": "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1"},
-                        {"lat": 20.6596, "lng": -103.3496, "name": "Minerva GDL", "viewers": random.randint(300, 1000), "stream_url": "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1"},
-                        {"lat": 25.6866, "lng": -100.3161, "name": "Macroplaza MTY", "viewers": random.randint(400, 1500), "stream_url": "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1"},
-                        {"lat": 29.0729, "lng": -110.9559, "name": "Catedral HMO", "viewers": random.randint(100, 500), "stream_url": "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1"},
-                        {"lat": 32.5149, "lng": -117.0382, "name": "Garita San Ysidro TIJ", "viewers": random.randint(1500, 4000), "stream_url": "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1"}
-                    ]
+                        for anomaly in anomalies:
+                            if anomaly.get('type') == 'earthquake':
+                                disasters.append(anomaly)
+                            else:
+                                satellites.append(anomaly)
+                except Exception as e:
+                    print(f"Error leyendo cache OSINT: {e}")
                     
-                    conflicts = [
-                        {"lat": 48.8566, "lng": 2.3522, "label": "Protesta Laboral Paris"},
-                        {"lat": 34.0522, "lng": -118.2437, "label": "Huelga Transporte LA"},
-                        {"lat": 31.5204, "lng": 34.4668, "label": "Tensión Geopolítica Gaza"},
-                        {"lat": 50.4501, "lng": 30.5234, "label": "Tensión Geopolítica Kyiv"}
-                    ]
+            # Si el caché está vacío o no hay sismos, meter algunos de ejemplo para no romper el UI
+            if not disasters and not satellites:
+                import random
+                for _ in range(5):
+                    satellites.append({
+                        "lat": random.uniform(-60, 60),
+                        "lng": random.uniform(-180, 180),
+                        "alt": random.uniform(0.1, 0.4),
+                        "name": "Esperando worker de Celery...",
+                        "magnitude": 0,
+                        "type": "waiting"
+                    })
                     
-                    pulse_data = {
-                        "status": "success",
-                        "data": {
-                            "conflicts": conflicts,
-                            "disasters": [],
-                            "satellites": satellites,
-                            "webcams": webcams
-                        }
-                    }
-                
-                # Guardar en caché local-first
-                OSINT_CACHE["data"] = pulse_data
-                OSINT_CACHE["timestamp"] = time.time()
-            
+            # Mantener las webcams fijas por ahora
+            webcams = [
+                {"lat": 19.4326, "lng": -99.1332, "name": "Zócalo CDMX", "viewers": 1500, "stream_url": "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1"},
+                {"lat": 20.6596, "lng": -103.3496, "name": "Minerva GDL", "viewers": 800, "stream_url": "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1"}
+            ]
+
             self.send_response(200)
             self.send_header('Content-Type', 'application/json; charset=utf-8')
             self._set_cors_headers()
             self.end_headers()
-            self.wfile.write(json.dumps(pulse_data, ensure_ascii=False).encode('utf-8'))
+            self.wfile.write(json.dumps({
+                "status": "success", 
+                "data": {
+                   "satellites": satellites,
+                   "webcams": webcams,
+                   "conflicts": [],
+                   "disasters": disasters
+                }
+            }, ensure_ascii=False).encode('utf-8'))
             return
 
         if requested_path.startswith("/api/multiverse/agent-comparison"):
