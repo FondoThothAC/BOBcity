@@ -1,6 +1,8 @@
-/* =====================
-   Hero Section
-   ===================== */
+/* =============================================
+   Hero — Sección principal futurista deeptech
+   Pirámide holográfica + jeroglificos + código
+   ============================================= */
+
 .hero-section {
   min-height: 100vh;
   display: flex;
@@ -9,77 +11,233 @@
   justify-content: center;
   position: relative;
   overflow: hidden;
-  padding: 6rem 2rem 3rem;
+  padding: 7rem 2rem 4rem;
   text-align: center;
 }
 
-/* Orbes decorativos de fondo */
+/* -------- Pirámide holográfica de fondo -------- */
+.hero-pyramid {
+  position: absolute;
+  bottom: -5%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 42vw solid transparent;
+  border-right: 42vw solid transparent;
+  border-bottom: 75vh solid transparent;
+  pointer-events: none;
+  z-index: 0;
+  filter: drop-shadow(0 0 60px rgba(0, 245, 228, 0.12));
+}
+
+/* Capas de la pirámide como SVG inline via CSS */
+.hero-pyramid-svg {
+  position: absolute;
+  bottom: -2%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 900px;
+  height: auto;
+  pointer-events: none;
+  z-index: 0;
+  animation: pyramidGlow 5s ease-in-out infinite;
+  opacity: 0.45;
+}
+
+/* -------- Orbes de energía -------- */
 .hero-orb {
   position: absolute;
   border-radius: 50%;
-  filter: blur(80px);
+  filter: blur(90px);
   pointer-events: none;
+  z-index: 0;
 }
 
 .hero-orb--1 {
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, rgba(0, 212, 255, 0.12), transparent 70%);
-  top: -10%;
-  left: -10%;
-  animation: float 8s ease-in-out infinite;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(0, 245, 228, 0.09), transparent 70%);
+  top: -15%;
+  left: -15%;
+  animation: float 9s ease-in-out infinite;
 }
 
 .hero-orb--2 {
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle, rgba(139, 92, 246, 0.1), transparent 70%);
-  bottom: -5%;
-  right: -5%;
-  animation: float 10s ease-in-out infinite reverse;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(123, 47, 190, 0.1), transparent 70%);
+  bottom: -10%;
+  right: -10%;
+  animation: float 11s ease-in-out infinite reverse;
 }
 
 .hero-orb--3 {
-  width: 300px;
-  height: 300px;
-  background: radial-gradient(circle, rgba(212, 165, 116, 0.08), transparent 70%);
-  top: 40%;
-  right: 20%;
-  animation: float 12s ease-in-out infinite 2s;
+  width: 350px;
+  height: 350px;
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.07), transparent 70%);
+  top: 35%;
+  right: 10%;
+  animation: float 13s ease-in-out infinite 3s;
 }
 
-/* Contenido principal */
+/* -------- Scan line de datos -------- */
+.hero-scan {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(0, 245, 228, 0.6) 40%,
+    rgba(212, 175, 55, 0.6) 60%,
+    transparent 100%);
+  animation: scanLine 8s linear infinite;
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* -------- Tira de jeroglificos top -------- */
+.hero-hieroglyphs {
+  position: absolute;
+  top: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.9rem;
+  letter-spacing: 0.5em;
+  color: var(--gold);
+  opacity: 0.2;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: neonPulse 4s ease-in-out infinite;
+  z-index: 2;
+}
+
+/* -------- Contenido principal -------- */
 .hero-content {
   position: relative;
   z-index: 2;
-  max-width: 850px;
+  max-width: 920px;
+  animation: fadeInUp 1s var(--ease-smooth) both;
 }
 
+/* Badge superior */
 .hero-badge {
-  margin-bottom: 1.5rem;
-  animation: float 4s ease-in-out infinite;
+  margin-bottom: 2rem;
 }
 
+/* Logo / Eye of Horus central */
+.hero-eye-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.hero-eye-ring {
+  position: relative;
+  width: 90px;
+  height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Anillo exterior rotante */
+.hero-eye-ring::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: conic-gradient(
+    var(--neon-cyan) 0deg,
+    transparent 60deg,
+    var(--gold) 120deg,
+    transparent 180deg,
+    var(--purple-light) 240deg,
+    transparent 300deg,
+    var(--neon-cyan) 360deg
+  );
+  animation: spinSlow 4s linear infinite;
+}
+
+/* Fondo interno del ojo */
+.hero-eye-ring::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 50%;
+  background: var(--bg-void);
+}
+
+.hero-eye-icon {
+  font-size: 2.5rem;
+  position: relative;
+  z-index: 1;
+  animation: logoPulse 3s ease-in-out infinite;
+  filter: drop-shadow(0 0 8px var(--neon-cyan));
+}
+
+/* Título principal */
 .hero-title {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.75rem;
   font-weight: 900;
-  letter-spacing: -0.02em;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.1;
 }
 
-.hero-gradient-text {
-  background: linear-gradient(135deg, var(--color-cyan), var(--color-purple), var(--color-gold));
+.hero-title-line1 {
+  font-size: clamp(1.1rem, 2.5vw, 1.6rem);
+  color: var(--text-secondary);
+  font-weight: 400;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  font-family: var(--font-display);
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.hero-title-main {
+  font-size: clamp(3rem, 8vw, 6.5rem);
+  display: block;
+  background: linear-gradient(135deg,
+    var(--neon-cyan) 0%,
+    var(--text-primary) 40%,
+    var(--gold) 70%,
+    var(--neon-cyan) 100%);
   background-size: 200% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: shimmer 4s linear infinite;
+  animation: shimmer 5s linear infinite;
+  line-height: 1;
+  margin-bottom: 0.25rem;
 }
 
-.hero-subtitle {
-  font-size: 1.2rem;
-  max-width: 680px;
+.hero-title-sub {
+  font-size: clamp(0.75rem, 1.5vw, 1rem);
+  letter-spacing: 0.6em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 500;
+  display: block;
+}
+
+/* Subtítulo descriptivo */
+.hero-tagline {
+  font-size: clamp(1rem, 1.8vw, 1.2rem);
+  color: var(--text-secondary);
+  max-width: 650px;
   margin: 0 auto 2.5rem;
   line-height: 1.8;
+  font-weight: 300;
+}
+
+.hero-tagline strong {
+  color: var(--neon-cyan);
+  font-weight: 600;
 }
 
 /* CTAs */
@@ -88,100 +246,103 @@
   gap: 1rem;
   justify-content: center;
   flex-wrap: wrap;
-  margin-bottom: 3rem;
+  margin-bottom: 3.5rem;
 }
 
-.btn-lg {
-  padding: 1rem 2.5rem;
-  font-size: 1.05rem;
-}
-
-.btn-arrow {
-  transition: transform 0.3s ease;
-}
-
-.btn:hover .btn-arrow {
-  transform: translateX(4px);
-}
-
-/* Estadísticas rápidas */
+/* Estadísticas en cristal */
 .hero-stats {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 2rem;
-  padding: 1.5rem 2.5rem;
-  background: var(--color-bg-glass);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: var(--border-glass);
-  border-radius: 1rem;
+  gap: 0;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 245, 228, 0.1);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
 }
 
 .hero-stat {
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 1.25rem 2rem;
+  position: relative;
+  flex: 1;
+}
+
+/* Separador vertical entre stats */
+.hero-stat + .hero-stat::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 25%;
+  height: 50%;
+  width: 1px;
+  background: rgba(0, 245, 228, 0.12);
 }
 
 .hero-stat-number {
-  font-family: var(--font-heading);
-  font-size: 1.6rem;
-  font-weight: 800;
-  background: linear-gradient(135deg, var(--color-cyan), var(--color-purple));
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  background: linear-gradient(135deg, var(--neon-cyan), var(--gold));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  line-height: 1;
+  margin-bottom: 0.25rem;
 }
 
 .hero-stat-label {
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
+  font-size: 0.65rem;
+  color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-top: 0.15rem;
-}
-
-.hero-stat-divider {
-  width: 1px;
-  height: 35px;
-  background: rgba(255, 255, 255, 0.1);
+  letter-spacing: 0.1em;
+  font-family: var(--font-display);
 }
 
 /* Indicador de scroll */
 .hero-scroll-indicator {
   position: absolute;
-  bottom: 2rem;
+  bottom: 2.5rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
-  color: var(--color-text-muted);
-  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  z-index: 5;
 }
 
 .scroll-line {
   width: 1px;
-  height: 40px;
-  background: linear-gradient(to bottom, var(--color-cyan), transparent);
+  height: 50px;
+  background: linear-gradient(to bottom, var(--neon-cyan), transparent);
   animation: float 2s ease-in-out infinite;
 }
 
-@media (max-width: 600px) {
+/* -------- Responsive -------- */
+@media (max-width: 768px) {
   .hero-stats {
     flex-direction: column;
-    gap: 1rem;
-    padding: 1.25rem 1.5rem;
+    gap: 0;
   }
 
-  .hero-stat-divider {
-    width: 40px;
+  .hero-stat + .hero-stat::before {
+    top: 0;
+    left: 15%;
+    width: 70%;
     height: 1px;
   }
 
-  .hero-subtitle {
-    font-size: 1rem;
-  }
+  .hero-title-main { font-size: 3rem; }
+
+  .hero-eye-ring { width: 70px; height: 70px; }
+  .hero-eye-icon { font-size: 2rem; }
 }

@@ -1,85 +1,85 @@
 /* ==========================================================
-   FONDO THOTH A.C. — Sistema de Diseño Premium
-   Paleta ciber-institucional: Oscuro + Cian + Púrpura + Oro
+   FONDO THOTH A.C. — Sistema de Diseño DeepTech·Egipcio·Mexicano
+   Paleta: Negro profundo · Cian neón · Oro ritual · Púrpura cuántico
    ========================================================== */
 
-/* --- Google Fonts --- */
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap');
+/* --- Google Fonts: tipografía futurista de alto impacto --- */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap');
 
-/* --- Variables CSS --- */
+/* ===================== VARIABLES GLOBALES ===================== */
 :root {
-  /* Colores principales (Extraídos del Logo de Fondo Thoth y CivicaOS) */
-  --color-bg-primary: #0d0921;       /* Fondo del logo de Fondo Thoth */
-  --color-bg-secondary: #000814;     /* Fondo de CivicaOS original */
-  --color-bg-card: rgba(13, 9, 33, 0.7);
-  --color-bg-glass: rgba(13, 9, 33, 0.45);
+  /* Fondo del espacio-tiempo */
+  --bg-void:      #04030d;   /* negro absoluto con tinte índigo */
+  --bg-deep:      #08061a;
+  --bg-surface:   rgba(12, 8, 30, 0.75);
+  --bg-glass:     rgba(255, 255, 255, 0.04);
+  --bg-glass-hover: rgba(255, 255, 255, 0.08);
 
-  /* Acentos */
-  --color-cyan: #00f5d4;             /* Cian de CivicaOS original */
-  --color-cyan-glow: rgba(0, 245, 212, 0.3);
-  --color-purple: #502d81;           /* Púrpura oficial del nuevo logo de Fondo Thoth */
-  --color-purple-glow: rgba(80, 45, 129, 0.3);
-  --color-gold: #efdb3e;             /* Dorado oficial del nuevo logo de Fondo Thoth */
-  --color-gold-glow: rgba(239, 219, 62, 0.25);
-  --color-gold-light: #fde9b8;       /* Oro suave de soporte */
-  --color-emerald: #10b981;
-  --color-rose: #f43f5e;
+  /* Cian neón — tecnología cuántica */
+  --neon-cyan:    #00f5e4;
+  --neon-cyan-2:  #00d4ff;
+  --cyan-glow:    rgba(0, 245, 228, 0.25);
+  --cyan-glow-sm: rgba(0, 245, 228, 0.12);
+
+  /* Oro ritual — esencia egipcia-mexicana */
+  --gold:         #d4af37;
+  --gold-light:   #f0d060;
+  --gold-dark:    #9a7c1a;
+  --gold-glow:    rgba(212, 175, 55, 0.3);
+  --gold-glow-sm: rgba(212, 175, 55, 0.12);
+
+  /* Púrpura cuántico */
+  --purple:       #7b2fbe;
+  --purple-light: #a855f7;
+  --purple-glow:  rgba(123, 47, 190, 0.3);
+  --purple-glow-sm: rgba(123, 47, 190, 0.12);
+
+  /* Rosa plasma */
+  --plasma:       #ff2d78;
+  --plasma-glow:  rgba(255, 45, 120, 0.2);
 
   /* Texto */
-  --color-text-primary: #f1f5f9;
-  --color-text-secondary: #94a3b8;
-  --color-text-muted: #64748b;
+  --text-primary:   #f0ece8;
+  --text-secondary: #9ba3af;
+  --text-muted:     #4b5563;
+  --text-gold:      var(--gold);
 
   /* Bordes */
-  --border-glass: 1px solid rgba(255, 255, 255, 0.08);
-  --border-glow-cyan: 1px solid rgba(0, 212, 255, 0.25);
-  --border-glow-purple: 1px solid rgba(139, 92, 246, 0.25);
+  --border-subtle:  1px solid rgba(255, 255, 255, 0.06);
+  --border-cyan:    1px solid rgba(0, 245, 228, 0.2);
+  --border-gold:    1px solid rgba(212, 175, 55, 0.25);
+  --border-glow:    1px solid rgba(0, 245, 228, 0.4);
 
   /* Sombras */
-  --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-  --shadow-glow-cyan: 0 0 30px rgba(0, 212, 255, 0.15);
-  --shadow-glow-purple: 0 0 30px rgba(139, 92, 246, 0.15);
+  --shadow-depth:   0 32px 64px rgba(0, 0, 0, 0.6);
+  --shadow-cyan:    0 0 40px rgba(0, 245, 228, 0.15), 0 0 80px rgba(0, 212, 255, 0.08);
+  --shadow-gold:    0 0 40px rgba(212, 175, 55, 0.2), 0 0 80px rgba(212, 175, 55, 0.08);
+  --shadow-purple:  0 0 40px rgba(123, 47, 190, 0.2);
 
   /* Tipografía */
-  --font-heading: 'Outfit', sans-serif;
-  --font-body: 'Inter', sans-serif;
+  --font-display: 'Orbitron', monospace;    /* titulares monumentales */
+  --font-body:    'Space Grotesk', sans-serif; /* cuerpo legible y moderno */
+  --font-mono:    'Inter', monospace;
 
   /* Espaciado */
-  --section-padding: clamp(4rem, 8vw, 8rem) clamp(1rem, 5vw, 6rem);
+  --section-y: clamp(5rem, 10vw, 9rem);
+  --section-x: clamp(1.25rem, 5vw, 5rem);
 
   /* Transiciones */
-  --transition-smooth: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --ease-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --t-fast:   0.2s var(--ease-smooth);
+  --t-normal: 0.4s var(--ease-smooth);
+  --t-slow:   0.7s var(--ease-smooth);
+
+  /* Radios */
+  --radius-sm:  0.5rem;
+  --radius-md:  1rem;
+  --radius-lg:  1.5rem;
+  --radius-xl:  2rem;
 }
 
-/* --- Variables de Tema Claro --- */
-.light-theme {
-  --color-bg-primary: #f8fafc;       /* Gris muy claro */
-  --color-bg-secondary: #f1f5f9;     /* Gris claro */
-  --color-bg-card: rgba(255, 255, 255, 0.85);
-  --color-bg-glass: rgba(255, 255, 255, 0.6);
-
-  /* Texto */
-  --color-text-primary: #0d0921;     /* Azul muy oscuro del logo */
-  --color-text-secondary: #334155;   /* Slate oscuro */
-  --color-text-muted: #64748b;
-
-  /* Bordes */
-  --border-glass: 1px solid rgba(13, 9, 33, 0.08);
-  --border-glow-cyan: 1px solid rgba(0, 245, 212, 0.4);
-  --border-glow-purple: 1px solid rgba(80, 45, 129, 0.3);
-
-  /* Sombras */
-  --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
-  --shadow-glow-cyan: 0 0 30px rgba(0, 245, 212, 0.15);
-  --shadow-glow-purple: 0 0 30px rgba(80, 45, 129, 0.15);
-
-  /* Acentos de mejor contraste para fondo claro */
-  --color-purple: #6b21a8;           /* Púrpura contrastado */
-  --color-gold: #b45309;             /* Dorado tipo bronce */
-}
-
-/* --- Reset y Base --- */
+/* ===================== RESET BASE ===================== */
 *,
 *::before,
 *::after {
@@ -95,81 +95,72 @@ html {
 
 body {
   font-family: var(--font-body);
-  background-color: var(--color-bg-primary);
-  color: var(--color-text-primary);
+  background-color: var(--bg-void);
+  color: var(--text-primary);
   line-height: 1.7;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Fondo con partículas/grid sutil */
+/* --- Fondo cósmico global con jeroglíficos/azteca subliminal --- */
 body::before {
   content: '';
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   background:
-    radial-gradient(ellipse at 20% 50%, rgba(0, 212, 255, 0.04) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 20%, rgba(139, 92, 246, 0.04) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 80%, rgba(212, 165, 116, 0.03) 0%, transparent 50%);
+    radial-gradient(ellipse 80% 60% at 15% 40%, rgba(0, 245, 228, 0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 80% at 85% 20%, rgba(123, 47, 190, 0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 50% at 50% 90%, rgba(212, 175, 55, 0.05) 0%, transparent 60%);
   pointer-events: none;
-  z-index: -1;
+  z-index: 0;
 }
 
-/* --- Tipografía --- */
+/* Patrón de pirámide/jerarquía como grid de fondo */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0, 245, 228, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 245, 228, 0.025) 1px, transparent 1px);
+  background-size: 80px 80px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ===================== TIPOGRAFÍA ===================== */
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-heading);
+  font-family: var(--font-display);
   font-weight: 700;
-  line-height: 1.2;
-  color: var(--color-text-primary);
+  line-height: 1.15;
+  color: var(--text-primary);
+  letter-spacing: 0.02em;
 }
 
-h1 { font-size: clamp(2.5rem, 6vw, 4.5rem); }
-h2 { font-size: clamp(2rem, 4vw, 3rem); }
-h3 { font-size: clamp(1.25rem, 2.5vw, 1.75rem); }
+h1 { font-size: clamp(2.2rem, 5.5vw, 4.5rem); font-weight: 900; }
+h2 { font-size: clamp(1.8rem, 3.5vw, 3rem); }
+h3 { font-size: clamp(1.15rem, 2.2vw, 1.6rem); }
 
 p {
-  color: var(--color-text-secondary);
-  font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+  color: var(--text-secondary);
+  font-size: clamp(0.95rem, 1.4vw, 1.05rem);
+  line-height: 1.8;
 }
 
 a {
-  color: var(--color-cyan);
+  color: var(--neon-cyan);
   text-decoration: none;
-  transition: var(--transition-smooth);
+  transition: var(--t-fast);
 }
 
-a:hover {
-  color: var(--color-purple);
-}
+a:hover { color: var(--gold); }
 
-/* --- Utilidades --- */
+/* ===================== UTILIDADES ===================== */
 .section {
-  padding: var(--section-padding);
+  padding: var(--section-y) var(--section-x);
   position: relative;
-}
-
-.section-title {
-  text-align: center;
-  margin-bottom: 1rem;
-}
-
-.section-title span {
-  background: linear-gradient(135deg, var(--color-cyan), var(--color-purple));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.section-subtitle {
-  text-align: center;
-  max-width: 650px;
-  margin: 0 auto 3.5rem;
-  color: var(--color-text-secondary);
-  font-size: 1.1rem;
+  z-index: 1;
 }
 
 .container {
@@ -178,128 +169,238 @@ a:hover {
   width: 100%;
 }
 
-/* --- Glass Card --- */
+/* Título de sección */
+.section-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 1rem;
+  padding: 0.4rem 1rem;
+  border: var(--border-gold);
+  border-radius: 9999px;
+  background: rgba(212, 175, 55, 0.06);
+}
+
+.section-title {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.section-title .accent-cyan {
+  background: linear-gradient(90deg, var(--neon-cyan), var(--neon-cyan-2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.section-title .accent-gold {
+  background: linear-gradient(90deg, var(--gold-light), var(--gold));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.section-title .accent-purple {
+  background: linear-gradient(90deg, var(--purple-light), var(--purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.section-subtitle {
+  text-align: center;
+  max-width: 680px;
+  margin: 0 auto 3.5rem;
+  color: var(--text-secondary);
+  font-size: 1.05rem;
+}
+
+/* ===================== GLASS CARDS ===================== */
 .glass-card {
-  background: var(--color-bg-glass);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: var(--border-glass);
-  border-radius: 1.25rem;
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border: var(--border-subtle);
+  border-radius: var(--radius-lg);
   padding: 2rem;
-  transition: var(--transition-smooth);
+  transition: var(--t-normal);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Brillo de esquina estilo jeroglifico */
+.glass-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--neon-cyan), var(--gold), transparent);
+  opacity: 0;
+  transition: opacity var(--t-normal);
 }
 
 .glass-card:hover {
-  border-color: rgba(0, 212, 255, 0.2);
-  box-shadow: var(--shadow-glow-cyan);
-  transform: translateY(-4px);
+  background: var(--bg-glass-hover);
+  border-color: rgba(0, 245, 228, 0.18);
+  box-shadow: var(--shadow-cyan), var(--shadow-depth);
+  transform: translateY(-6px);
 }
 
-/* --- Botones --- */
+.glass-card:hover::before { opacity: 1; }
+
+/* Variante oro */
+.glass-card--gold:hover {
+  border-color: rgba(212, 175, 55, 0.3);
+  box-shadow: var(--shadow-gold), var(--shadow-depth);
+}
+
+.glass-card--gold::before {
+  background: linear-gradient(90deg, transparent, var(--gold), var(--gold-light), transparent);
+}
+
+/* ===================== BOTONES ===================== */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
   padding: 0.85rem 2rem;
-  border-radius: 0.75rem;
-  font-family: var(--font-heading);
+  border-radius: var(--radius-md);
+  font-family: var(--font-display);
   font-weight: 600;
-  font-size: 1rem;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   cursor: pointer;
   border: none;
-  transition: var(--transition-smooth);
-  text-transform: none;
-  letter-spacing: 0.01em;
+  transition: var(--t-normal);
+  position: relative;
+  overflow: hidden;
+  text-decoration: none;
 }
 
+/* Efecto de barrido de luz */
+.btn::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -60%;
+  width: 40%;
+  height: 200%;
+  background: rgba(255, 255, 255, 0.12);
+  transform: skewX(-20deg);
+  transition: left 0.5s ease;
+  pointer-events: none;
+}
+
+.btn:hover::after { left: 120%; }
+
+/* Primario: cian neón */
 .btn-primary {
-  background: linear-gradient(135deg, var(--color-cyan), #0099cc);
-  color: #0a0e17;
-  box-shadow: 0 4px 20px rgba(0, 212, 255, 0.3);
+  background: linear-gradient(135deg, var(--neon-cyan) 0%, var(--neon-cyan-2) 100%);
+  color: var(--bg-void);
+  box-shadow: 0 4px 24px var(--cyan-glow), inset 0 1px 0 rgba(255,255,255,0.2);
 }
 
 .btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(0, 212, 255, 0.5);
-  color: #0a0e17;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 40px rgba(0, 245, 228, 0.5);
+  color: var(--bg-void);
 }
 
-.btn-secondary {
-  background: transparent;
-  color: var(--color-text-primary);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(8px);
-}
-
-.btn-secondary:hover {
-  border-color: var(--color-purple);
-  background: rgba(139, 92, 246, 0.1);
-  color: var(--color-purple);
-  transform: translateY(-2px);
-}
-
+/* Oro ritual */
 .btn-gold {
-  background: linear-gradient(135deg, var(--color-gold), #c4956a);
-  color: #0a0e17;
-  box-shadow: 0 4px 20px var(--color-gold-glow);
+  background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 100%);
+  color: var(--bg-void);
+  box-shadow: 0 4px 24px var(--gold-glow);
 }
 
 .btn-gold:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(212, 165, 116, 0.5);
-  color: #0a0e17;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 40px rgba(212, 175, 55, 0.55);
+  color: var(--bg-void);
 }
 
-/* --- Badge / Etiqueta --- */
+/* Fantasma con borde */
+.btn-ghost {
+  background: transparent;
+  color: var(--text-primary);
+  border: var(--border-cyan);
+  backdrop-filter: blur(8px);
+}
+
+.btn-ghost:hover {
+  background: rgba(0, 245, 228, 0.08);
+  border-color: var(--neon-cyan);
+  color: var(--neon-cyan);
+  transform: translateY(-3px);
+}
+
+/* Tamaños */
+.btn-lg { padding: 1rem 2.5rem; font-size: 0.9rem; }
+.btn-sm { padding: 0.55rem 1.25rem; font-size: 0.75rem; }
+
+/* Flecha animada */
+.btn-arrow { display: inline-block; transition: transform var(--t-fast); }
+.btn:hover .btn-arrow { transform: translateX(5px); }
+
+/* ===================== BADGES ===================== */
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.35rem 0.85rem;
+  gap: 0.4rem;
+  padding: 0.35rem 1rem;
   border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  font-family: var(--font-heading);
-  letter-spacing: 0.05em;
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
 .badge-cyan {
-  background: rgba(0, 212, 255, 0.1);
-  color: var(--color-cyan);
-  border: 1px solid rgba(0, 212, 255, 0.2);
-}
-
-.badge-purple {
-  background: rgba(139, 92, 246, 0.1);
-  color: var(--color-purple);
-  border: 1px solid rgba(139, 92, 246, 0.2);
+  background: rgba(0, 245, 228, 0.08);
+  color: var(--neon-cyan);
+  border: var(--border-cyan);
 }
 
 .badge-gold {
-  background: rgba(212, 165, 116, 0.1);
-  color: var(--color-gold);
-  border: 1px solid rgba(212, 165, 116, 0.2);
+  background: rgba(212, 175, 55, 0.08);
+  color: var(--gold);
+  border: var(--border-gold);
 }
 
-/* --- Navegación --- */
+.badge-purple {
+  background: rgba(123, 47, 190, 0.1);
+  color: var(--purple-light);
+  border: 1px solid rgba(123, 47, 190, 0.25);
+}
+
+/* ===================== NAVEGACIÓN ===================== */
 .navbar {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   z-index: 1000;
-  padding: 1rem 2rem;
-  transition: var(--transition-smooth);
+  padding: 1.25rem var(--section-x);
+  transition: var(--t-normal);
 }
 
 .navbar.scrolled {
-  background: rgba(10, 14, 23, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  padding: 0.75rem 2rem;
+  background: rgba(4, 3, 13, 0.88);
+  backdrop-filter: blur(24px) saturate(1.6);
+  -webkit-backdrop-filter: blur(24px) saturate(1.6);
+  border-bottom: 1px solid rgba(0, 245, 228, 0.08);
+  padding: 0.85rem var(--section-x);
 }
 
 .navbar-inner {
@@ -314,60 +415,63 @@ a:hover {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  font-family: var(--font-heading);
-  font-weight: 800;
-  font-size: 1.35rem;
-  color: var(--color-text-primary);
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+  color: var(--text-primary);
+  text-decoration: none;
 }
 
-.navbar-logo .logo-icon {
-  width: 40px;
-  height: 40px;
+.navbar-logo .logo-eye {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, var(--neon-cyan), var(--purple));
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
+  font-size: 1.1rem;
+  animation: logoPulse 3s ease-in-out infinite;
+  box-shadow: 0 0 20px var(--cyan-glow);
 }
 
 .navbar-links {
   display: flex;
   align-items: center;
-  gap: 2rem;
+  gap: 2.25rem;
   list-style: none;
 }
 
 .navbar-links a {
-  color: var(--color-text-secondary);
-  font-size: 0.9rem;
-  font-weight: 500;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   position: relative;
+  font-family: var(--font-display);
+  text-decoration: none;
+  transition: var(--t-fast);
 }
 
 .navbar-links a::after {
   content: '';
   position: absolute;
-  bottom: -4px;
+  bottom: -5px;
   left: 0;
   width: 0;
-  height: 2px;
-  background: linear-gradient(90deg, var(--color-cyan), var(--color-purple));
+  height: 1px;
+  background: linear-gradient(90deg, var(--neon-cyan), var(--gold));
   transition: width 0.3s ease;
 }
 
 .navbar-links a:hover {
-  color: var(--color-text-primary);
+  color: var(--text-primary);
 }
 
-.navbar-links a:hover::after {
-  width: 100%;
-}
+.navbar-links a:hover::after { width: 100%; }
 
-.navbar-cta {
-  padding: 0.6rem 1.4rem !important;
-  font-size: 0.85rem !important;
-}
-
-/* Menú hamburguesa para móvil */
 .menu-toggle {
   display: none;
   flex-direction: column;
@@ -380,118 +484,208 @@ a:hover {
 
 .menu-toggle span {
   display: block;
-  width: 24px;
-  height: 2px;
-  background: var(--color-text-primary);
+  width: 22px;
+  height: 1.5px;
+  background: var(--neon-cyan);
   border-radius: 2px;
-  transition: var(--transition-smooth);
+  transition: var(--t-normal);
 }
 
-/* --- Animaciones de Entrada (Scroll) --- */
+/* ===================== DIVISORES ===================== */
+.section-divider {
+  border: none;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(0, 245, 228, 0.15) 25%,
+    rgba(212, 175, 55, 0.15) 50%,
+    rgba(123, 47, 190, 0.15) 75%,
+    transparent 100%);
+  position: relative;
+  z-index: 1;
+  margin: 0;
+}
+
+/* ===================== ANIMACIONES ===================== */
+
+/* Pulso del logo: ojo de Horus */
+@keyframes logoPulse {
+  0%, 100% {
+    box-shadow: 0 0 15px var(--cyan-glow), 0 0 30px rgba(0,245,228,0.08);
+  }
+  50% {
+    box-shadow: 0 0 30px var(--gold-glow), 0 0 60px rgba(212,175,55,0.12);
+  }
+}
+
+/* Flotación suave */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-10px); }
+}
+
+/* Shimmer — texto con brillo corrido */
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+/* Rotación lenta */
+@keyframes spinSlow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Parpadeo de neón */
+@keyframes neonPulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; }
+}
+
+/* Scan line egipcia */
+@keyframes scanLine {
+  0%   { transform: translateY(-100%); opacity: 0; }
+  20%  { opacity: 1; }
+  80%  { opacity: 1; }
+  100% { transform: translateY(2000%); opacity: 0; }
+}
+
+/* Entrada por fade+slide */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Entrada desde izquierda */
+@keyframes fadeInLeft {
+  from { opacity: 0; transform: translateX(-40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Entrada desde derecha */
+@keyframes fadeInRight {
+  from { opacity: 0; transform: translateX(40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Escala */
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.85); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* Glow de borde de pirámide */
+@keyframes pyramidGlow {
+  0%, 100% { filter: drop-shadow(0 0 8px var(--neon-cyan)) drop-shadow(0 0 20px rgba(0,245,228,0.3)); }
+  50%       { filter: drop-shadow(0 0 16px var(--gold)) drop-shadow(0 0 40px rgba(212,175,55,0.4)); }
+}
+
+/* ===================== SCROLL REVEAL ===================== */
 .fade-in {
   opacity: 0;
   transform: translateY(30px);
-  transition: opacity 0.7s ease, transform 0.7s ease;
+  transition: opacity 0.8s var(--ease-smooth), transform 0.8s var(--ease-smooth);
 }
 
-.fade-in.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
+.fade-in.visible { opacity: 1; transform: translateY(0); }
 
 .fade-in-left {
   opacity: 0;
   transform: translateX(-40px);
-  transition: opacity 0.7s ease, transform 0.7s ease;
+  transition: opacity 0.8s var(--ease-smooth), transform 0.8s var(--ease-smooth);
 }
 
-.fade-in-left.visible {
-  opacity: 1;
-  transform: translateX(0);
-}
+.fade-in-left.visible { opacity: 1; transform: translateX(0); }
 
 .fade-in-right {
   opacity: 0;
   transform: translateX(40px);
-  transition: opacity 0.7s ease, transform 0.7s ease;
+  transition: opacity 0.8s var(--ease-smooth), transform 0.8s var(--ease-smooth);
 }
 
-.fade-in-right.visible {
-  opacity: 1;
-  transform: translateX(0);
-}
+.fade-in-right.visible { opacity: 1; transform: translateX(0); }
 
 .scale-in {
   opacity: 0;
-  transform: scale(0.9);
-  transition: opacity 0.6s ease, transform 0.6s ease;
+  transform: scale(0.88);
+  transition: opacity 0.7s var(--ease-smooth), transform 0.7s var(--ease-smooth);
 }
 
-.scale-in.visible {
-  opacity: 1;
-  transform: scale(1);
-}
+.scale-in.visible { opacity: 1; transform: scale(1); }
 
-/* --- Divider Gradiente --- */
-.section-divider {
-  width: 100%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.2), rgba(139, 92, 246, 0.2), transparent);
-  border: none;
-}
+/* ===================== DECORATIVOS ===================== */
 
-/* --- Contadores animados --- */
-@keyframes countUp {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* --- Brillo orbital --- */
-@keyframes orbitalGlow {
-  0%, 100% {
-    box-shadow: 0 0 20px var(--color-cyan-glow), inset 0 0 20px rgba(0, 212, 255, 0.05);
-  }
-  50% {
-    box-shadow: 0 0 40px var(--color-purple-glow), inset 0 0 30px rgba(139, 92, 246, 0.08);
-  }
-}
-
-/* --- Pulso del Logo --- */
-@keyframes logoPulse {
-  0%, 100% { filter: drop-shadow(0 0 8px rgba(0, 212, 255, 0.4)); }
-  50% { filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.6)); }
-}
-
-/* --- Floating --- */
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-12px); }
-}
-
-/* --- Shimmer --- */
-@keyframes shimmer {
-  0% { background-position: -200% center; }
-  100% { background-position: 200% center; }
-}
-
-/* --- Spin lento --- */
-@keyframes spinSlow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-/* --- Grid background sutil --- */
+/* Grid background reutilizable */
 .grid-bg {
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    linear-gradient(rgba(0, 245, 228, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 245, 228, 0.03) 1px, transparent 1px);
   background-size: 60px 60px;
   pointer-events: none;
 }
 
-/* --- Responsive --- */
+/* Borde decorativo egipcio – línea dorada */
+.egyptian-border-top {
+  position: relative;
+}
+
+.egyptian-border-top::before {
+  content: '𓂀 ◆ 𓂀';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.65rem;
+  letter-spacing: 0.5em;
+  color: var(--gold);
+  opacity: 0.4;
+  white-space: nowrap;
+}
+
+/* Ojo de Horus — ícono decorativo SVG inline */
+.horus-eye {
+  font-size: 1.4rem;
+  color: var(--neon-cyan);
+  animation: neonPulse 2.5s ease-in-out infinite;
+  display: inline-block;
+}
+
+/* Separador de pirámide */
+.pyramid-divider {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin: 0.5rem 0;
+  color: var(--gold);
+  font-size: 0.75rem;
+  letter-spacing: 0.3em;
+  opacity: 0.5;
+}
+
+/* ===================== SCROLLBAR ===================== */
+::-webkit-scrollbar { width: 5px; }
+
+::-webkit-scrollbar-track { background: var(--bg-void); }
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--neon-cyan), var(--purple));
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, var(--gold), var(--neon-cyan));
+}
+
+/* ===================== SELECCIÓN ===================== */
+::selection {
+  background: rgba(0, 245, 228, 0.2);
+  color: var(--text-primary);
+}
+
+/* ===================== RESPONSIVE ===================== */
 @media (max-width: 900px) {
   .navbar-links {
     display: none;
@@ -500,51 +694,19 @@ a:hover {
     left: 0;
     width: 100%;
     flex-direction: column;
-    background: rgba(10, 14, 23, 0.95);
-    backdrop-filter: blur(20px);
-    padding: 1.5rem 2rem;
-    gap: 1.25rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(4, 3, 13, 0.96);
+    backdrop-filter: blur(24px);
+    padding: 1.5rem var(--section-x);
+    gap: 1.5rem;
+    border-bottom: var(--border-cyan);
   }
 
-  .navbar-links.open {
-    display: flex;
-  }
+  .navbar-links.open { display: flex; }
 
-  .menu-toggle {
-    display: flex;
-  }
-
-  .section {
-    padding: clamp(3rem, 6vw, 6rem) clamp(1rem, 4vw, 2rem);
-  }
+  .menu-toggle { display: flex; }
 }
 
 @media (max-width: 600px) {
-  h1 { font-size: 2rem; }
-  h2 { font-size: 1.6rem; }
-}
-
-/* --- Scrollbar personalizado --- */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--color-bg-primary);
-}
-
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, var(--color-cyan), var(--color-purple));
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, var(--color-purple), var(--color-cyan));
-}
-
-/* --- Selección --- */
-::selection {
-  background: rgba(0, 212, 255, 0.25);
-  color: var(--color-text-primary);
+  h1 { font-size: 1.9rem; }
+  h2 { font-size: 1.55rem; }
 }

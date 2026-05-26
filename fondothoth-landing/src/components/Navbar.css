@@ -1,32 +1,53 @@
-.navbar-logo .logo-img {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 1px solid rgba(0, 212, 255, 0.3);
-  animation: logoPulse 3s ease-in-out infinite;
+/* =============================================
+   Navbar — Overrides locales de la barra de nav
+   El grueso del estilo viene de index.css
+   ============================================= */
+
+/* Logo imagen */
+.logo-img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 6px rgba(0, 245, 228, 0.4));
 }
 
-.theme-toggle-li {
-  display: flex;
-  align-items: center;
+/* Texto del logo */
+.logo-text {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 1rem;
+  letter-spacing: 0.15em;
+  color: var(--text-primary);
 }
 
-.theme-toggle-btn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 0.5rem;
-  padding: 0.4rem 0.8rem;
-  color: var(--color-text-primary);
-  font-family: var(--font-heading);
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--transition-smooth);
+.logo-accent {
+  color: var(--neon-cyan);
 }
 
-.theme-toggle-btn:hover {
-  background: rgba(0, 245, 212, 0.1);
-  border-color: var(--color-cyan);
-  color: var(--color-cyan);
+/* CTA de la barra de nav — tamaño reducido */
+.navbar-cta {
+  padding: 0.55rem 1.3rem !important;
+  font-size: 0.72rem !important;
+}
+
+/* Hamburguesa: transformación en X cuando está activo */
+.menu-toggle.active span:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 5px);
+}
+
+.menu-toggle.active span:nth-child(2) {
+  opacity: 0;
+}
+
+.menu-toggle.active span:nth-child(3) {
+  transform: rotate(-45deg) translate(5px, -5px);
+}
+
+/* Indicador de sección activa */
+.navbar-links a.active-section {
+  color: var(--neon-cyan);
+}
+
+.navbar-links a.active-section::after {
+  width: 100%;
 }
