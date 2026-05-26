@@ -892,6 +892,32 @@ class SimulationAPIHandler(BaseHTTPRequestHandler):
                 error_response = {"status": "error", "message": str(e)}
                 self.wfile.write(json.dumps(error_response).encode('utf-8'))
 
+        elif self.path == "/api/ingest/telemetry":
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            try:
+                data = json.loads(post_data.decode('utf-8'))
+                # Lógica básica para simular inyección al Data Lake (Thoth) y afectación del modelo ABM
+                app_source = data.get('source', 'unknown')
+                score_economico = data.get('score_economico', 50)
+                location = data.get('location', {})
+                
+                print(f"📥 [Data Hub] Telemetría recibida de {app_source}. Score: {score_economico}. Loc: {location}")
+                
+                # Aquí se actualizaría el estado interno de TIMELINES o la DB PostGIS
+                # Por ahora devolvemos éxito para confirmar la recepción
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self._set_cors_headers()
+                self.end_headers()
+                self.wfile.write(json.dumps({"status": "success", "message": "Telemetría inyectada al Motor ABM"}).encode('utf-8'))
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self._set_cors_headers()
+                self.end_headers()
+                self.wfile.write(json.dumps({"status": "error", "message": str(e)}).encode('utf-8'))
+
         elif self.path == "/run-swarm":
             # Lazy import to avoid loading Ollama/Blackboard if not requested
             from agent_swarm import AgentSwarmOrchestrator

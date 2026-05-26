@@ -471,32 +471,78 @@ const MultiverseAdmin = ({ pythonApiUrl = 'http://localhost:5001' }) => {
       {/* ====== PANEL CENTRAL: CANVAS WORLDBOX / FUENTES DE DATOS ====== */}
       <div style={styles.centerPanel}>
         {activeSubTab === 'Multiverso' ? (
-          <div style={styles.worldCanvas}>
-            {/* Cuadrícula isométrica de la ciudad */}
-            <div style={{ position: 'absolute', inset: 0, display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gridTemplateRows: 'repeat(4, 1fr)', gap: '2px', padding: '12px' }}>
+          <div style={{
+            ...styles.worldCanvas,
+            background: 'radial-gradient(circle at center, rgba(13,21,38,0.95) 0%, rgba(5,8,15,1) 100%)',
+            boxShadow: 'inset 0 0 40px rgba(0, 229, 255, 0.05), 0 8px 32px rgba(0,0,0,0.5)'
+          }}>
+            <style>
+              {`
+                @keyframes pulseGlow {
+                  0% { box-shadow: 0 0 10px rgba(0,229,255,0.2), inset 0 0 10px rgba(0,229,255,0.1); }
+                  50% { box-shadow: 0 0 20px rgba(0,229,255,0.5), inset 0 0 20px rgba(0,229,255,0.3); }
+                  100% { box-shadow: 0 0 10px rgba(0,229,255,0.2), inset 0 0 10px rgba(0,229,255,0.1); }
+                }
+                @keyframes floatOrb {
+                  0% { transform: translateY(0px) scale(1); }
+                  50% { transform: translateY(-3px) scale(1.02); }
+                  100% { transform: translateY(0px) scale(1); }
+                }
+                .world-node {
+                  background: rgba(15, 23, 42, 0.6);
+                  backdrop-filter: blur(10px);
+                  border: 1px solid rgba(255,255,255,0.05);
+                  border-radius: 16px;
+                  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                }
+                .world-node:hover {
+                  transform: scale(1.05) translateY(-5px);
+                  border-color: rgba(0, 229, 255, 0.4);
+                  background: rgba(20, 30, 50, 0.8);
+                  z-index: 10;
+                }
+              `}
+            </style>
+            
+            {/* Overlay Decorativo Tecnológico */}
+            <div style={{ position: 'absolute', inset: 0, opacity: 0.03, backgroundSize: '30px 30px', backgroundImage: 'linear-gradient(rgba(0, 229, 255, 0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 229, 255, 0.2) 1px, transparent 1px)', pointerEvents: 'none' }} />
+
+            <div style={{ position: 'absolute', inset: 0, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '16px', padding: '24px', overflowY: 'auto' }}>
               {Array.from({ length: 24 }, (_, i) => {
                 const agentCount = 8 + (i * 7) % 20;
                 const avgHappiness = 30 + ((i * 13) % 50);
+                const isCritical = avgHappiness < 35;
                 const hue = avgHappiness > 60 ? 150 : avgHappiness > 40 ? 50 : 0;
+                
                 return (
                   <div
                     key={i}
+                    className="world-node"
                     style={{
-                      background: `hsla(${hue}, 70%, 30%, 0.25)`,
-                      border: `1px solid hsla(${hue}, 60%, 40%, 0.2)`,
-                      borderRadius: '6px',
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
-                      justifyContent: 'center',
+                      justifyContent: 'space-between',
                       cursor: 'pointer',
-                      transition: 'all 0.3s ease',
-                      position: 'relative'
+                      position: 'relative',
+                      padding: '12px 8px',
+                      animation: isCritical ? 'pulseGlow 2s infinite' : 'floatOrb 4s infinite ease-in-out',
+                      animationDelay: `${i * 0.1}s`
                     }}
                     onClick={() => handleSelectAgent(i)}
                   >
-                    <span style={{ fontSize: '0.6rem', color: '#8892a4' }}>AGEB {(i + 1).toString().padStart(4, '0')}</span>
-                    <div style={{ display: 'flex', gap: '2px', marginTop: '4px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                    {/* Glowing indicator line */}
+                    <div style={{ position: 'absolute', top: 0, left: '20%', right: '20%', height: '2px', background: `hsla(${hue}, 80%, 50%, 0.8)`, borderRadius: '0 0 4px 4px', boxShadow: `0 2px 8px hsla(${hue}, 80%, 50%, 0.5)` }} />
+                    
+                    <span style={{ fontSize: '0.65rem', fontWeight: 700, color: '#e2e8f0', letterSpacing: '1px' }}>SECTOR {(i + 1).toString().padStart(3, '0')}</span>
+                    
+                    <div style={{
+                      width: '60px', height: '60px', borderRadius: '50%',
+                      background: `radial-gradient(circle at 30% 30%, hsla(${hue}, 70%, 50%, 0.4), hsla(${hue}, 70%, 20%, 0.1))`,
+                      border: `1px solid hsla(${hue}, 60%, 40%, 0.4)`,
+                      display: 'flex', flexWrap: 'wrap', alignContent: 'center', justifyContent: 'center', gap: '2px', padding: '6px',
+                      boxShadow: `inset 0 0 10px hsla(${hue}, 60%, 40%, 0.2)`
+                    }}>
                       {Array.from({ length: Math.min(agentCount, 12) }, (_, j) => {
                         const agentHappiness = 20 + ((i * 7 + j * 13) % 60);
                         const color = agentHappiness > 60 ? '#00e676' : agentHappiness > 40 ? '#ffc107' : agentHappiness > 25 ? '#ff5722' : '#d50000';
@@ -504,29 +550,36 @@ const MultiverseAdmin = ({ pythonApiUrl = 'http://localhost:5001' }) => {
                           <div
                             key={j}
                             style={{
-                              width: '5px', height: '5px', borderRadius: '50%',
-                              background: color, boxShadow: `0 0 4px ${color}`,
-                              cursor: 'pointer', transition: 'transform 0.2s'
+                              width: '4px', height: '4px', borderRadius: '50%',
+                              background: color, boxShadow: `0 0 6px ${color}`,
+                              transition: 'transform 0.2s'
                             }}
-                            onClick={(e) => { e.stopPropagation(); handleSelectAgent(i * 4 + j); }}
                             title={`Agente #${i * 4 + j}`}
                           />
                         );
                       })}
                     </div>
-                    <span style={{ fontSize: '0.55rem', color: `hsl(${hue}, 60%, 60%)`, marginTop: '2px' }}>
-                      😊 {avgHappiness}%
-                    </span>
+                    
+                    <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', padding: '0 4px', marginTop: '8px' }}>
+                      <span style={{ fontSize: '0.6rem', color: `hsl(${hue}, 60%, 60%)`, fontWeight: 600 }}>
+                        {avgHappiness}% 😊
+                      </span>
+                      <span style={{ fontSize: '0.6rem', color: '#8892a4' }}>
+                        {agentCount} 👥
+                      </span>
+                    </div>
                   </div>
                 );
               })}
             </div>
+            
             {/* Overlay con nombre del universo activo */}
             <div style={{
-              position: 'absolute', top: '8px', left: '12px',
-              background: 'rgba(0,229,255,0.1)', backdropFilter: 'blur(8px)',
-              border: '1px solid rgba(0,229,255,0.2)', borderRadius: '8px',
-              padding: '4px 12px', fontSize: '0.75rem', fontWeight: 600, color: '#00e5ff'
+              position: 'absolute', top: '16px', left: '16px',
+              background: 'rgba(10, 15, 25, 0.7)', backdropFilter: 'blur(12px)',
+              border: '1px solid rgba(0,229,255,0.3)', borderRadius: '20px',
+              padding: '6px 16px', fontSize: '0.8rem', fontWeight: 700, color: '#00e5ff',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
             }}>
               🌀 {timelines.find(t => t.id === activeTimeline)?.name || activeTimeline}
             </div>
