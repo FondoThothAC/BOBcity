@@ -5,6 +5,7 @@ import { Activity, ShieldAlert, Zap, Globe as GlobeIcon, Map as MapIcon, Crossha
 import PainPointsMap from './PainPointsMap';
 import municipiosCatalogo from '../data/municipios_catalogo.json';
 import { themes } from '../themeManager';
+import { normalizeWebcams } from "../utils/webcamNormalizer";
 
 // UXDD / IDD: Unified OSINT Command Center
 // Comentarios y textos en español neutro premium.
@@ -44,18 +45,23 @@ export default function UnifiedCommandCenter({ agents, clients }) {
       const res = await fetch(`${pythonApiUrl}/api/osiris/global-pulse`);
       const data = await res.json();
       if (data.status === 'success') {
-        if (!data.data.webcams) {
-          data.data.webcams = [
-            { lat: 19.4326, lng: -99.1332, name: "Zócalo CDMX", viewers: 1205, stream_url: "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1" },
-            { lat: 20.6596, lng: -103.3496, name: "Minerva GDL", viewers: 842, stream_url: "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1" },
-            { lat: 25.6866, lng: -100.3161, name: "Macroplaza MTY", viewers: 630, stream_url: "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1" },
-            { lat: 29.0729, lng: -110.9559, name: "Catedral HMO", viewers: 415, stream_url: "https://www.youtube.com/embed/A1YxNYiyALg?autoplay=1&mute=1" }
-          ];
-        }
+        const rawWebs = data.data.webcams || [
+          { lat: 19.4326, lng: -99.1332, name: "Zócalo CDMX", viewers: 1205, stream_url: "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1" },
+          { lat: 20.6596, lng: -103.3496, name: "Minerva GDL", viewers: 842, stream_url: "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1" },
+          { lat: 25.6866, lng: -100.3161, name: "Macroplaza MTY", viewers: 630, stream_url: "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1" },
+          { lat: 29.0729, lng: -110.9559, name: "Catedral HMO", viewers: 415, stream_url: "https://www.youtube.com/embed/A1YxNYiyALg?autoplay=1&mute=1" }
+        ];
+        data.data.webcams = normalizeWebcams(rawWebs);
         setPulseData(data.data);
       }
     } catch (e) {
       console.warn("Fallo al conectar con Osiris Backend. Usando simulador offline.");
+      const rawWebcams = [
+        { lat: 19.4326, lng: -99.1332, name: "Zócalo CDMX", viewers: 1205, stream_url: "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1" },
+        { lat: 20.6596, lng: -103.3496, name: "Minerva GDL", viewers: 842, stream_url: "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1" },
+        { lat: 25.6866, lng: -100.3161, name: "Macroplaza MTY", viewers: 630, stream_url: "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1" },
+        { lat: 29.0729, lng: -110.9559, name: "Catedral HMO", viewers: 415, stream_url: "https://www.youtube.com/embed/A1YxNYiyALg?autoplay=1&mute=1" }
+      ];
       setPulseData({
         conflicts: [
           { lat: 19.4326, lng: -99.1332, label: "CDMX: Tensión Social" },
@@ -64,12 +70,7 @@ export default function UnifiedCommandCenter({ agents, clients }) {
         ],
         disasters: [],
         satellites: Array(15).fill().map(() => ({ lat: (Math.random() - 0.5) * 120, lng: (Math.random() - 0.5) * 360, alt: 0.15 + Math.random() * 0.2 })),
-        webcams: [
-          { lat: 19.4326, lng: -99.1332, name: "Zócalo CDMX", viewers: 1205, stream_url: "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1" },
-          { lat: 20.6596, lng: -103.3496, name: "Minerva GDL", viewers: 842, stream_url: "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1" },
-          { lat: 25.6866, lng: -100.3161, name: "Macroplaza MTY", viewers: 630, stream_url: "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1" },
-          { lat: 29.0729, lng: -110.9559, name: "Catedral HMO", viewers: 415, stream_url: "https://www.youtube.com/embed/A1YxNYiyALg?autoplay=1&mute=1" }
-        ]
+        webcams: normalizeWebcams(rawWebcams)
       });
     }
   }, [pythonApiUrl]);
@@ -387,7 +388,12 @@ export default function UnifiedCommandCenter({ agents, clients }) {
                 <button onClick={() => setActiveWebcam(null)} style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', fontSize: '1.2rem', padding: '0 4px' }}>&times;</button>
               </div>
               
-              {activeWebcam.stream_url ? (
+              {activeWebcam.status === "no_feed" || !activeWebcam.stream_url ? (
+                <div style={{ width: '100%', height: '180px', background: 'rgba(5, 8, 15, 0.9)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#ff1744', padding: '12px', border: '1px dashed rgba(255, 23, 68, 0.4)', borderRadius: '4px', marginBottom: '8px', textAlign: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>⚠️ FEED NO DISPONIBLE</span>
+                  <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>La señal está fuera de línea o no admite incrustación segura.</span>
+                </div>
+              ) : (
                 <div style={{ width: '100%', height: '180px', borderRadius: '4px', overflow: 'hidden', marginBottom: '8px' }}>
                   <iframe 
                     src={activeWebcam.stream_url} 
@@ -397,10 +403,6 @@ export default function UnifiedCommandCenter({ agents, clients }) {
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                     allowFullScreen
                   ></iframe>
-                </div>
-              ) : (
-                <div style={{ width: '100%', height: '180px', background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', marginBottom: '8px' }}>
-                  SIN SEÑAL
                 </div>
               )}
 

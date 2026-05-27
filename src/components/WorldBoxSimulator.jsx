@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from "react"
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from "react-leaflet";
 import { searchMunicipalities } from "../utils/catalogUtils";
 import { eventBus } from "../events/EventBus";
+import catalogMunicipios from "../data/municipios_catalogo.json";
 
 // Hook personalizado para mover a los agentes de forma fluida y actualizar React de manera controlada (throttled)
 function useAgentLoop(agentsRef, speed = 1) {
@@ -62,8 +63,16 @@ export function WorldBoxSimulator({ catalog, initialCenter = [29.073, -110.956] 
   const [infrastructure, setInfrastructure] = useState([]);
   const [mode, setMode] = useState("pan"); // pan | well | bridge | closure
 
-  // Catálogo local offline
-  const municipalities = useMemo(() => catalog || [], [catalog]);
+  // Catálogo local offline (con fallback al catálogo completo de municipios)
+  const municipalities = useMemo(() => {
+    if (catalog && catalog.length > 0) return catalog;
+    return catalogMunicipios.map(m => ({
+      id: m.id,
+      name: m.name,
+      state: m.state,
+      coords: [m.lat, m.lng]
+    }));
+  }, [catalog]);
   
   // Referencia mutable de agentes locales inicializada alrededor del centroide
   const agentsRef = useRef(Array.from({ length: 150 }, (_, i) => ({
