@@ -44,6 +44,7 @@ const GlobalOsirisMap = lazy(() => import('./components/GlobalOsirisMap'));
 const GothamTargetWorkbench = lazy(() => import('./components/GothamTargetWorkbench'));
 const MacroSimulator = lazy(() => import('./components/MacroSimulator'));
 const RatingsDashboard = lazy(() => import('./components/RatingsDashboard'));
+const TerritorialLimitsMap = lazy(() => import('./components/TerritorialLimitsMap'));
 
 import { applyTheme } from './themeManager';
 
@@ -823,6 +824,7 @@ export default function App() {
     tabs.push(
       { id: 'overview', label: 'Resumen Ejecutivo', icon: <LayoutDashboard size={20} /> },
       { id: 'map', label: 'Mapas de Dolor (GIS)', icon: <Map size={20} /> },
+      { id: 'territorial-limits', label: 'Límites Territoriales (CP)', icon: <Map size={20} color="var(--neon-cyan)" /> },
       { id: 'simulator', label: 'Sandbox ABM', icon: <Play size={20} /> },
       { id: 'worldbox', label: 'Simulador WorldBox', icon: <Play size={20} color="var(--neon-emerald)" /> },
       { id: 'multiverso', label: 'Multiverso Admin', icon: <Sparkles size={20} color="var(--neon-cyan)" /> },
@@ -961,6 +963,7 @@ export default function App() {
               {activeTab === 'master-panel' && "Consola de Aprovisionamiento e IA"}
               {activeTab === 'overview' && "Tablero de Inteligencia Social"}
               {activeTab === 'map' && "Mapa Georeferenciado de Dolores"}
+              {activeTab === 'territorial-limits' && "Límites Territoriales y Capas GIS"}
               {activeTab === 'simulator' && "Simulador Basado en Agentes (ABM)"}
               {activeTab === 'worldbox' && "Simulador Sandbox (WorldBox)"}
               {activeTab === 'gds-mega' && "Visualizador GDS-MEGA (1,024 KPIs)"}
@@ -982,6 +985,7 @@ export default function App() {
               {activeTab === 'master-panel' && "Administrar marcas blancas, facturación simulada e inferencias."}
               {activeTab === 'overview' && `Indicadores de bienestar, seguridad y abasto en ${activeClient?.region || 'Hermosillo'}.`}
               {activeTab === 'map' && "Visualizando capas de calor de insatisfacción ciudadana."}
+              {activeTab === 'territorial-limits' && "Visor cartográfico nacional para superposición de secciones, códigos postales y distritos electorales."}
               {activeTab === 'simulator' && "Prueba políticas y simula dinámicas de opinión."}
               {activeTab === 'worldbox' && "Aplica leyes de gobernación local y observa el enjambre de agentes en tiempo real."}
               {activeTab === 'osiris-global' && "Centro de Comando Unificado OSINT, radar LEO y visor geográfico."}
@@ -1034,6 +1038,9 @@ export default function App() {
             <PainPointsMap 
               agents={agents} 
             />
+          )}
+          {activeTab === 'territorial-limits' && (
+            <TerritorialLimitsMap />
           )}
           {activeTab === 'simulator' && (
             <ABMSimulator 

@@ -13,24 +13,7 @@ export default function GothamTargetWorkbench() {
   const [selectedNode, setSelectedNode] = useState(null);
   const [viewMode, setViewMode] = useState('graph'); // 'graph' | 'map'
   const [showCpLayer, setShowCpLayer] = useState(true);
-  const [showElectoralLayer, setShowElectoralLayer] = useState(false);
-  const [electoralGeoJson, setElectoralGeoJson] = useState(null);
-  const [loadingElectoral, setLoadingElectoral] = useState(false);
-  
   const [showSatLayer, setShowSatLayer] = useState(false);
-  const [showInegiEntidades, setShowInegiEntidades] = useState(false);
-  const [showInegiMunicipios, setShowInegiMunicipios] = useState(false);
-  const [showIneSecciones, setShowIneSecciones] = useState(false);
-  const [showIneDistLocal, setShowIneDistLocal] = useState(false);
-  const [showIneDistFed, setShowIneDistFed] = useState(false);
-  
-  const [geoData, setGeoData] = useState({
-    entidades: null,
-    municipios: null,
-    secciones: null,
-    distritoLocal: null,
-    distritoFed: null
-  });
   
   const fgRef = useRef();
 
@@ -51,46 +34,7 @@ export default function GothamTargetWorkbench() {
       });
   }, []);
 
-  // Cargar Secciones Electorales del API (Fallback)
-  useEffect(() => {
-    if (showElectoralLayer && !electoralGeoJson) {
-      setLoadingElectoral(true);
-      const pythonApiUrl = window.location.port ? `http://${window.location.hostname}:5001` : `${window.location.protocol}//${window.location.hostname}`;
-      fetch(`${pythonApiUrl}/api/secciones?estado=26&ciudad=hermosillo`)
-        .then(r => r.json())
-        .then(data => {
-          if (data && data.features) {
-            setElectoralGeoJson(data);
-          }
-          setLoadingElectoral(false);
-        })
-        .catch(err => {
-          console.warn("Error cargando secciones electorales del INE:", err);
-          setLoadingElectoral(false);
-        });
-    }
-  }, [showElectoralLayer, electoralGeoJson]);
-
-  // Cargar GeoJSON de carpetas locales
-  useEffect(() => {
-    const loadLayer = async (key, file) => {
-      if (!geoData[key]) {
-         try {
-           const res = await fetch(`/data/geojson/${file}`);
-           if (!res.ok) return;
-           const data = await res.json();
-           setGeoData(prev => ({ ...prev, [key]: data }));
-         } catch(e) {
-           console.warn(`Error loading ${file}:`, e);
-         }
-      }
-    };
-    if (showInegiEntidades) loadLayer('entidades', 'ENTIDAD.geojson');
-    if (showInegiMunicipios) loadLayer('municipios', 'MUNICIPIO.geojson');
-    if (showIneSecciones) loadLayer('secciones', 'SECCION.geojson');
-    if (showIneDistLocal) loadLayer('distritoLocal', 'DISTRITO_LOCAL.geojson');
-    if (showIneDistFed) loadLayer('distritoFed', 'DISTRITO_FEDERAL.geojson');
-  }, [showInegiEntidades, showInegiMunicipios, showIneSecciones, showIneDistLocal, showIneDistFed, geoData]);
+  // Grafo Ontológico Cargado
 
   // Colores para los nodos del grafo
   const getNodeColor = (node) => {
@@ -301,44 +245,7 @@ export default function GothamTargetWorkbench() {
                   </Polygon>
                 ))}
 
-                {/* Capa de Secciones Electorales (INE) */}
-                {showElectoralLayer && electoralGeoJson && (
-                  <GeoJSON
-                    data={electoralGeoJson}
-                    style={() => ({
-                      color: '#eab308',
-                      weight: 1.2,
-                      fillColor: '#eab308',
-                      fillOpacity: 0.04
-                    })}
-                    onEachFeature={(feature, layer) => {
-                      const props = feature.properties || {};
-                      const seccionNum = props.seccion || props.SECCION || 'N/A';
-                      layer.bindPopup(
-                        `<div style="color: #fff; font-size: 11px; font-family: monospace;">
-                           <strong>Sección Electoral (INE):</strong> ${seccionNum}
-                         </div>`
-                      );
-                    }}
-                  />
-                )}
-
-                {/* GeoJSON Layers (INEGI, INE) */}
-                {showInegiEntidades && geoData.entidades && (
-                  <GeoJSON data={geoData.entidades} style={{ color: '#00e5ff', weight: 1.5, fillOpacity: 0.05 }} />
-                )}
-                {showInegiMunicipios && geoData.municipios && (
-                  <GeoJSON data={geoData.municipios} style={{ color: '#b388ff', weight: 1.2, fillOpacity: 0.05 }} />
-                )}
-                {showIneSecciones && geoData.secciones && (
-                  <GeoJSON data={geoData.secciones} style={{ color: '#ffea00', weight: 1, fillOpacity: 0.05 }} />
-                )}
-                {showIneDistLocal && geoData.distritoLocal && (
-                  <GeoJSON data={geoData.distritoLocal} style={{ color: '#00e676', weight: 1.5, fillOpacity: 0.05 }} />
-                )}
-                {showIneDistFed && geoData.distritoFed && (
-                  <GeoJSON data={geoData.distritoFed} style={{ color: '#ff1744', weight: 1.5, fillOpacity: 0.05 }} />
-                )}
+                {/* Capas Territoriales Removidas al Visor GIS Independiente */}
 
                 {/* Marcadores de Entidades Anubis */}
                 {graphData?.nodes?.map((node) => {
@@ -417,73 +324,6 @@ export default function GothamTargetWorkbench() {
                   }}
                 >
                   🛰️ Mapa Satélite
-                </button>
-                <button
-                  onClick={() => setShowInegiEntidades(!showInegiEntidades)}
-                  style={{
-                    fontSize: '0.65rem', padding: '0.35rem 0.5rem', border: '1px solid',
-                    borderColor: showInegiEntidades ? '#00e5ff' : 'rgba(255,255,255,0.05)', borderRadius: '4px',
-                    background: showInegiEntidades ? 'rgba(0, 229, 255, 0.1)' : 'rgba(0,0,0,0.2)',
-                    color: showInegiEntidades ? 'white' : 'var(--text-secondary)', cursor: 'pointer', fontWeight: '700', textAlign: 'left'
-                  }}
-                >
-                  📍 INEGI - Entidades {showInegiEntidades && !geoData.entidades ? '...' : ''}
-                </button>
-                <button
-                  onClick={() => setShowInegiMunicipios(!showInegiMunicipios)}
-                  style={{
-                    fontSize: '0.65rem', padding: '0.35rem 0.5rem', border: '1px solid',
-                    borderColor: showInegiMunicipios ? '#b388ff' : 'rgba(255,255,255,0.05)', borderRadius: '4px',
-                    background: showInegiMunicipios ? 'rgba(179, 136, 255, 0.1)' : 'rgba(0,0,0,0.2)',
-                    color: showInegiMunicipios ? 'white' : 'var(--text-secondary)', cursor: 'pointer', fontWeight: '700', textAlign: 'left'
-                  }}
-                >
-                  📍 INEGI - Municipios {showInegiMunicipios && !geoData.municipios ? '...' : ''}
-                </button>
-                <button
-                  onClick={() => setShowIneSecciones(!showIneSecciones)}
-                  style={{
-                    fontSize: '0.65rem', padding: '0.35rem 0.5rem', border: '1px solid',
-                    borderColor: showIneSecciones ? '#ffea00' : 'rgba(255,255,255,0.05)', borderRadius: '4px',
-                    background: showIneSecciones ? 'rgba(255, 234, 0, 0.1)' : 'rgba(0,0,0,0.2)',
-                    color: showIneSecciones ? 'white' : 'var(--text-secondary)', cursor: 'pointer', fontWeight: '700', textAlign: 'left'
-                  }}
-                >
-                  🗺️ INE - Secciones {showIneSecciones && !geoData.secciones ? '...' : ''}
-                </button>
-                <button
-                  onClick={() => setShowIneDistLocal(!showIneDistLocal)}
-                  style={{
-                    fontSize: '0.65rem', padding: '0.35rem 0.5rem', border: '1px solid',
-                    borderColor: showIneDistLocal ? '#00e676' : 'rgba(255,255,255,0.05)', borderRadius: '4px',
-                    background: showIneDistLocal ? 'rgba(0, 230, 118, 0.1)' : 'rgba(0,0,0,0.2)',
-                    color: showIneDistLocal ? 'white' : 'var(--text-secondary)', cursor: 'pointer', fontWeight: '700', textAlign: 'left'
-                  }}
-                >
-                  🗺️ INE - Distrito Local {showIneDistLocal && !geoData.distritoLocal ? '...' : ''}
-                </button>
-                <button
-                  onClick={() => setShowIneDistFed(!showIneDistFed)}
-                  style={{
-                    fontSize: '0.65rem', padding: '0.35rem 0.5rem', border: '1px solid',
-                    borderColor: showIneDistFed ? '#ff1744' : 'rgba(255,255,255,0.05)', borderRadius: '4px',
-                    background: showIneDistFed ? 'rgba(255, 23, 68, 0.1)' : 'rgba(0,0,0,0.2)',
-                    color: showIneDistFed ? 'white' : 'var(--text-secondary)', cursor: 'pointer', fontWeight: '700', textAlign: 'left'
-                  }}
-                >
-                  🗺️ INE - Distrito Federal {showIneDistFed && !geoData.distritoFed ? '...' : ''}
-                </button>
-                
-                <button
-                  onClick={() => setShowElectoralLayer(!showElectoralLayer)}
-                  style={{
-                    fontSize: '0.65rem', padding: '0.35rem 0.5rem', border: '1px solid',
-                    borderColor: showElectoralLayer ? '#eab308' : 'rgba(255,255,255,0.05)', borderRadius: '4px',
-                    background: showElectoralLayer ? 'rgba(234, 179, 8, 0.1)' : 'rgba(0,0,0,0.2)',
-                    color: showElectoralLayer ? 'white' : 'var(--text-secondary)', cursor: 'pointer', fontWeight: '700', textAlign: 'left'
-                  }}
-                >
-                  🗺️ INE - Hermosillo API {loadingElectoral && '...'}
                 </button>
               </div>
             </div>
