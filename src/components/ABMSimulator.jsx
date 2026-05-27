@@ -71,6 +71,7 @@ export default function ABMSimulator({ agents, setAgents, policies, setPolicies 
 
   // Al cambiar los deslizadores básicos, actualizar inmediatamente el estado de los agentes sintéticos
   useEffect(() => {
+    if (!agents || !Array.isArray(agents)) return;
     const updated = agents.map(agent => updateAgentState(agent, policies));
     setAgents(updated);
   }, [policies]);
@@ -91,9 +92,9 @@ export default function ABMSimulator({ agents, setAgents, policies, setPolicies 
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          N: agents.length || 150,
+          N: agents?.length || 150,
           epsilon: 0.3,
-          mu: (policies.subsidioTransporte + policies.inversionAgua) / 200 || 0.4,
+          mu: (policies?.subsidioTransporte + policies?.inversionAgua) / 200 || 0.4,
           steps: 5,
           model_type: 'HK',
           policies: policies,

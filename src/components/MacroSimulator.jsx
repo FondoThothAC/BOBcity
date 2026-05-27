@@ -62,7 +62,7 @@ export default function MacroSimulator({ seed = "CIVICA_OS_2026" }) {
           </tr>
         </thead>
         <tbody>
-          {data.map(d => (
+          {data?.map(d => (
             <tr key={d.id}>
               <td>{d.name} <span style={{ color: "#64748b", fontSize: 12 }}>({MOCK_CANDIDATES.find(c=>c.id===d.id)?.party})</span></td>
               <td style={{ color: "var(--accent-cyan)" }}>{d.estimatedVote}%</td>
