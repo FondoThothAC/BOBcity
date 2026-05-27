@@ -1,10 +1,15 @@
+import { useState, useEffect } from 'react';
+import { fetchPublicData } from '../services/api';
 import './Events.css';
 
 /**
  * Events — Timeline vertical de próximos eventos y hackathones.
+ * Consume la API si está disponible, o hace fallback a los datos locales.
  */
 export default function Events() {
-  const eventos = [
+  const [eventos, setEventos] = useState([]);
+
+  const fallbackEvents = [
     {
       fecha: 'Junio 2026',
       titulo: 'Hackathon Cívico Hermosillo',
@@ -34,6 +39,35 @@ export default function Events() {
       acento: 'cyan',
     },
   ];
+
+  useEffect(() => {
+    const loadEvents = async () => {
+      const data = await fetchPublicData();
+      if (data && data.posts && data.posts.length > 0) {
+        // Filtrar posts de tipo 'event'
+        const eventPosts = data.posts.filter(p => p.type === 'event');
+        
+        if (eventPosts.length > 0) {
+          const mapped = eventPosts.map((p, i) => {
+            const acentos = ['cyan', 'purple', 'gold'];
+            return {
+              fecha: p.date,
+              titulo: p.title,
+              descripcion: p.content,
+              tipo: p.eventType || 'Evento',
+              acento: p.acento || acentos[i % acentos.length],
+            };
+          });
+          setEventos(mapped);
+        } else {
+          setEventos(fallbackEvents);
+        }
+      } else {
+        setEventos(fallbackEvents);
+      }
+    };
+    loadEvents();
+  }, []);
 
   return (
     <section className="section events-section">

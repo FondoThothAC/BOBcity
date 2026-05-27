@@ -46,10 +46,10 @@ const GlobalOsirisMap = ({ pythonApiUrl = 'http://localhost:5001', height = '85v
         // Simulamos algunas webcams si el backend no las envía aún
         if (!data.data.webcams) {
           data.data.webcams = [
-            { lat: 19.4326, lng: -99.1332, name: "Zócalo CDMX", viewers: 1205, stream_url: "https://www.youtube.com/embed/1-iR1lYj7J0?autoplay=1&mute=1" },
-            { lat: 20.6596, lng: -103.3496, name: "Minerva GDL", viewers: 842, stream_url: "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1" },
-            { lat: 25.6866, lng: -100.3161, name: "Macroplaza MTY", viewers: 630, stream_url: "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1" },
-            { lat: 29.0729, lng: -110.9559, name: "Catedral HMO", viewers: 415, stream_url: "https://www.youtube.com/embed/A1YxNYiyALg?autoplay=1&mute=1" }
+            { lat: 19.4326, lng: -99.1332, name: "Zócalo CDMX", viewers: 1205, stream_url: "https://upload.wikimedia.org/wikipedia/commons/e/e6/Traffic_in_Mexico_City.webm" },
+            { lat: 20.6596, lng: -103.3496, name: "Minerva GDL", viewers: 842, stream_url: "https://upload.wikimedia.org/wikipedia/commons/4/4d/Guadalajara_Jalisco_M%C3%A9xico_2021.webm" },
+            { lat: 25.6866, lng: -100.3161, name: "Macroplaza MTY", viewers: 630, stream_url: "https://upload.wikimedia.org/wikipedia/commons/9/9d/Monterrey_Traffic_Timelapse.webm" },
+            { lat: 29.0729, lng: -110.9559, name: "Catedral HMO", viewers: 415, stream_url: "https://upload.wikimedia.org/wikipedia/commons/e/e6/Traffic_in_Mexico_City.webm" } // Fallback
           ];
         }
         setPulseData(data.data);
@@ -79,10 +79,10 @@ const GlobalOsirisMap = ({ pythonApiUrl = 'http://localhost:5001', height = '85v
           { lat: 8.50, lng: -80.50, alt: 0.24 }
         ],
         webcams: [
-          { lat: 19.4326, lng: -99.1332, name: "Zócalo CDMX", viewers: 1205, stream_url: "https://www.youtube.com/embed/1-iR1lYj7J0?autoplay=1&mute=1" },
-          { lat: 20.6596, lng: -103.3496, name: "Minerva GDL", viewers: 842, stream_url: "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1" },
-          { lat: 25.6866, lng: -100.3161, name: "Macroplaza MTY", viewers: 630, stream_url: "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1" },
-          { lat: 29.0729, lng: -110.9559, name: "Catedral HMO", viewers: 415, stream_url: "https://www.youtube.com/embed/A1YxNYiyALg?autoplay=1&mute=1" }
+          { lat: 19.4326, lng: -99.1332, name: "Zócalo CDMX", viewers: 1205, stream_url: "https://upload.wikimedia.org/wikipedia/commons/e/e6/Traffic_in_Mexico_City.webm" },
+          { lat: 20.6596, lng: -103.3496, name: "Minerva GDL", viewers: 842, stream_url: "https://upload.wikimedia.org/wikipedia/commons/4/4d/Guadalajara_Jalisco_M%C3%A9xico_2021.webm" },
+          { lat: 25.6866, lng: -100.3161, name: "Macroplaza MTY", viewers: 630, stream_url: "https://upload.wikimedia.org/wikipedia/commons/9/9d/Monterrey_Traffic_Timelapse.webm" },
+          { lat: 29.0729, lng: -110.9559, name: "Catedral HMO", viewers: 415, stream_url: "https://upload.wikimedia.org/wikipedia/commons/e/e6/Traffic_in_Mexico_City.webm" }
         ]
       });
     }
@@ -308,15 +308,37 @@ const GlobalOsirisMap = ({ pythonApiUrl = 'http://localhost:5001', height = '85v
           </div>
           
           {activeWebcam.stream_url ? (
-            <div style={{ width: '100%', height: '180px', borderRadius: '6px', overflow: 'hidden', marginBottom: '8px' }}>
-              <iframe 
-                src={activeWebcam.stream_url} 
-                width="100%" 
-                height="100%" 
-                frameBorder="0" 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                allowFullScreen
-              ></iframe>
+            <div style={{ position: 'relative', width: '100%', height: '180px', borderRadius: '6px', overflow: 'hidden', marginBottom: '8px', background: '#000' }}>
+              {activeWebcam.stream_url.includes('youtube') ? (
+                <iframe 
+                  src={activeWebcam.stream_url} 
+                  width="100%" 
+                  height="100%" 
+                  frameBorder="0" 
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                  allowFullScreen
+                  style={{ filter: 'grayscale(80%) sepia(40%) hue-rotate(80deg) contrast(120%)' }}
+                ></iframe>
+              ) : (
+                <>
+                  <video 
+                    src={activeWebcam.stream_url} 
+                    autoPlay 
+                    loop 
+                    muted 
+                    playsInline 
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'grayscale(100%) sepia(100%) hue-rotate(80deg) brightness(1.2) contrast(150%)' }}
+                  />
+                  {/* Overlay estilo OSINT CCTV */}
+                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'repeating-linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.1) 1px, transparent 1px, transparent 3px)', pointerEvents: 'none' }}></div>
+                  <div style={{ position: 'absolute', top: '5px', left: '5px', color: '#00e676', fontSize: '0.6rem', fontFamily: 'monospace', fontWeight: 'bold' }}>
+                    REC • {new Date().toISOString().split('T')[1].substring(0, 8)}
+                  </div>
+                  <div style={{ position: 'absolute', bottom: '5px', right: '5px', color: '#00e676', fontSize: '0.6rem', fontFamily: 'monospace' }}>
+                    CAM_ID: {Math.floor(Math.random() * 9000) + 1000}
+                  </div>
+                </>
+              )}
             </div>
           ) : (
             <div style={{ width: '100%', height: '180px', background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8892a4', marginBottom: '8px', fontSize: '0.8rem' }}>

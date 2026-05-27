@@ -1,11 +1,15 @@
+import { useState, useEffect } from 'react';
+import { fetchPublicData } from '../services/api';
 import './SocialFeed.css';
 
 /**
- * SocialFeed — Componente que muestra las publicaciones simuladas de Instagram y Facebook.
- * Esto representa la integración visual para el prototipo local.
+ * SocialFeed — Componente que muestra las publicaciones de Instagram, Facebook y Anuncios.
+ * Consume la API si está disponible, o hace fallback a los datos locales.
  */
 export default function SocialFeed() {
-  const posts = [
+  const [posts, setPosts] = useState([]);
+
+  const fallbackPosts = [
     {
       red: 'instagram',
       imagenBg: 'linear-gradient(135deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)',
@@ -52,14 +56,72 @@ export default function SocialFeed() {
     }
   ];
 
+  useEffect(() => {
+    const loadPosts = async () => {
+      const data = await fetchPublicData();
+      if (data && data.posts && data.posts.length > 0) {
+        // Mapear posts del backend al formato que espera la UI
+        const mapped = data.posts
+          .filter(p => p.type !== 'event') // Los eventos van en la timeline de eventos
+          .map(p => {
+            const isInstagram = p.type === 'instagram';
+            const isFacebook = p.type === 'facebook';
+            
+            let red = 'instagram';
+            let imagenBg = 'linear-gradient(135deg, #00f5e4 0%, #7b2cbf 100%)'; // Deeptech default gradient
+            let emoji = '𓁹'; // Eye of Horus default
+
+            if (isFacebook) {
+              red = 'facebook';
+              imagenBg = 'linear-gradient(135deg, #1877f2 0%, #0056b3 100%)';
+              emoji = '📘';
+            } else if (isInstagram) {
+              red = 'instagram';
+              imagenBg = 'linear-gradient(135deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)';
+              emoji = '📷';
+            } else if (p.type === 'news') {
+              red = 'news';
+              imagenBg = 'linear-gradient(135deg, #d4af37 0%, #7b2cbf 100%)';
+              emoji = '📰';
+            } else if (p.type === 'announcement') {
+              red = 'announcement';
+              imagenBg = 'linear-gradient(135deg, #00f5e4 0%, #04030d 100%)';
+              emoji = '📢';
+            }
+
+            return {
+              red,
+              imagenBg,
+              emoji: p.emoji || emoji,
+              titulo: p.title,
+              texto: p.content,
+              likes: p.likes || 0,
+              comentarios: p.comentarios || 0,
+              fecha: p.date,
+              enlace: p.link || '#'
+            };
+          });
+        
+        if (mapped.length > 0) {
+          setPosts(mapped);
+        } else {
+          setPosts(fallbackPosts);
+        }
+      } else {
+        setPosts(fallbackPosts);
+      }
+    };
+    loadPosts();
+  }, []);
+
   return (
     <section id="social" className="section social-feed-section">
       <div className="container">
         <h2 className="section-title fade-in">
-          Actividad en <span>Redes Sociales</span>
+          Actividad en <span>Redes Sociales & Novedades</span>
         </h2>
         <p className="section-subtitle fade-in">
-          Sigue el pulso diario de nuestra comunidad. Integramos nuestras publicaciones de Facebook e Instagram en tiempo real.
+          Sigue el pulso diario de nuestra comunidad. Publicaciones, anuncios y eventos de Fondo Thoth en tiempo real.
         </p>
 
         <div className="social-grid">
@@ -71,7 +133,9 @@ export default function SocialFeed() {
             >
               <div className="social-card-header">
                 <span className="social-badge">
-                  {post.red === 'instagram' ? '📷 Instagram' : '📘 Facebook'}
+                  {post.red === 'instagram' ? '📷 Instagram' : 
+                   post.red === 'facebook' ? '📘 Facebook' : 
+                   post.red === 'news' ? '📰 Noticia' : '📢 Anuncio'}
                 </span>
                 <span className="social-date">{post.fecha}</span>
               </div>
@@ -90,14 +154,16 @@ export default function SocialFeed() {
                   <span>❤️ {post.likes}</span>
                   <span>💬 {post.comentarios}</span>
                 </div>
-                <a 
-                  href={post.enlace} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="social-link"
-                >
-                  Ver publicación →
-                </a>
+                {post.enlace && post.enlace !== '#' && (
+                  <a 
+                    href={post.enlace} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="social-link"
+                  >
+                    Ver publicación →
+                  </a>
+                )}
               </div>
             </div>
           ))}

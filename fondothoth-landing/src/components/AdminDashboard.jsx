@@ -56,7 +56,7 @@ export default function AdminDashboard() {
   };
 
   const addProject = () => {
-    const newProject = { id: Date.now().toString(), title: '', description: '', image: '', tags: [], link: '' };
+    const newProject = { id: Date.now().toString(), title: '', description: '', image: '', tags: [], link: '', estado: 'Activo', icono: '⬡', acento: 'cyan' };
     setData(prev => ({ ...prev, projects: [...prev.projects, newProject] }));
   };
 
@@ -72,7 +72,7 @@ export default function AdminDashboard() {
   };
 
   const addPost = () => {
-    const newPost = { id: Date.now().toString(), title: '', content: '', date: new Date().toISOString().split('T')[0], type: 'announcement' };
+    const newPost = { id: Date.now().toString(), title: '', content: '', date: new Date().toISOString().split('T')[0], type: 'announcement', emoji: '📢', link: '', eventType: 'Evento', acento: 'cyan' };
     setData(prev => ({ ...prev, posts: [...prev.posts, newPost] }));
   };
 
@@ -146,14 +146,30 @@ export default function AdminDashboard() {
         {data.projects?.map(p => (
           <div key={p.id} style={{ border: '1px solid rgba(123, 47, 190, 0.3)', padding: '1rem', borderRadius: '8px', marginBottom: '1rem', background: 'rgba(0,0,0,0.3)' }}>
             <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
-              <input type="text" placeholder="Título" value={p.title} onChange={e => updateProject(p.id, 'title', e.target.value)} style={{...inputStyle, flex: 1}} />
-              <input type="text" placeholder="Link / URL" value={p.link} onChange={e => updateProject(p.id, 'link', e.target.value)} style={{...inputStyle, flex: 1}} />
+              <input type="text" placeholder="Título" value={p.title} onChange={e => updateProject(p.id, 'title', e.target.value)} style={{...inputStyle, flex: 2}} />
+              <input type="text" placeholder="Link / URL" value={p.link} onChange={e => updateProject(p.id, 'link', e.target.value)} style={{...inputStyle, flex: 2}} />
+              <input type="text" placeholder="Estado (ej: En Desarrollo)" value={p.estado || ''} onChange={e => updateProject(p.id, 'estado', e.target.value)} style={{...inputStyle, flex: 1}} />
             </div>
+            
             <textarea placeholder="Descripción" value={p.description} onChange={e => updateProject(p.id, 'description', e.target.value)} style={{...inputStyle, width: '100%', marginBottom: '1rem', minHeight: '80px'}} />
+            
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1rem' }}>
+              <input type="text" placeholder="Emoji / Icono (ej: 🏛️)" value={p.icono || ''} onChange={e => updateProject(p.id, 'icono', e.target.value)} style={{...inputStyle, flex: 1}} />
+              
+              <div style={{ flex: 1 }}>
+                <select value={p.acento || 'cyan'} onChange={e => updateProject(p.id, 'acento', e.target.value)} style={inputStyle}>
+                  <option value="cyan">Acento Cyan (Celeste)</option>
+                  <option value="purple">Acento Purple (Morado)</option>
+                  <option value="gold">Acento Gold (Dorado)</option>
+                </select>
+              </div>
+
+              <input type="text" placeholder="Tags (separados por coma)" value={p.tags ? p.tags.join(', ') : ''} onChange={e => updateProject(p.id, 'tags', e.target.value.split(',').map(t=>t.trim()))} style={{...inputStyle, flex: 2}} />
+            </div>
+
             <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-              <input type="text" placeholder="Tags (separados por coma)" value={p.tags.join(', ')} onChange={e => updateProject(p.id, 'tags', e.target.value.split(',').map(t=>t.trim()))} style={{...inputStyle, flex: 2}} />
-              <input type="text" placeholder="URL Imagen" value={p.image} onChange={e => updateProject(p.id, 'image', e.target.value)} style={{...inputStyle, flex: 2}} />
-              <button className="btn btn-sm" style={{ background: 'var(--plasma)', color: 'white' }} onClick={() => removeProject(p.id)}>Eliminar</button>
+              <input type="text" placeholder="URL Imagen" value={p.image} onChange={e => updateProject(p.id, 'image', e.target.value)} style={{...inputStyle, flex: 3}} />
+              <button className="btn btn-sm" style={{ background: 'var(--plasma)', color: 'white' }} onClick={() => removeProject(p.id)}>Eliminar Proyecto</button>
             </div>
           </div>
         ))}
@@ -162,23 +178,42 @@ export default function AdminDashboard() {
       {/* --- PUBLICACIONES --- */}
       <section className="glass-card" style={{ marginBottom: '3rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <h3 className="accent-gold">Publicaciones / Anuncios</h3>
+          <h3 className="accent-gold">Publicaciones / Anuncios / Redes</h3>
           <button className="btn btn-sm btn-ghost" onClick={addPost}>+ Añadir Publicación</button>
         </div>
 
         {data.posts?.map(p => (
           <div key={p.id} style={{ border: '1px solid rgba(212, 175, 55, 0.3)', padding: '1rem', borderRadius: '8px', marginBottom: '1rem', background: 'rgba(0,0,0,0.3)' }}>
             <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
-              <input type="text" placeholder="Título" value={p.title} onChange={e => updatePost(p.id, 'title', e.target.value)} style={{...inputStyle, flex: 2}} />
-              <input type="date" value={p.date} onChange={e => updatePost(p.id, 'date', e.target.value)} style={{...inputStyle, flex: 1}} />
+              <input type="text" placeholder="Título / Encabezado" value={p.title} onChange={e => updatePost(p.id, 'title', e.target.value)} style={{...inputStyle, flex: 2}} />
+              <input type="text" placeholder="Fecha / Tiempo (ej: Hace 2 días o 2026-05-15)" value={p.date} onChange={e => updatePost(p.id, 'date', e.target.value)} style={{...inputStyle, flex: 1}} />
               <select value={p.type} onChange={e => updatePost(p.id, 'type', e.target.value)} style={{...inputStyle, flex: 1}}>
-                <option value="announcement">Anuncio</option>
-                <option value="news">Noticia</option>
-                <option value="event">Evento</option>
+                <option value="announcement">Anuncio (General)</option>
+                <option value="news">Noticia (General)</option>
+                <option value="event">Evento (Línea de Tiempo)</option>
+                <option value="instagram">Instagram</option>
+                <option value="facebook">Facebook</option>
               </select>
             </div>
+            
             <textarea placeholder="Contenido de la publicación..." value={p.content} onChange={e => updatePost(p.id, 'content', e.target.value)} style={{...inputStyle, width: '100%', minHeight: '80px', marginBottom: '1rem'}} />
-            <div style={{ textAlign: 'right' }}>
+            
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', gap: '1rem', flex: 3 }}>
+                <input type="text" placeholder="Emoji / Icono (ej: 🚀 o 𓁹)" value={p.emoji || ''} onChange={e => updatePost(p.id, 'emoji', e.target.value)} style={{...inputStyle, maxWidth: '180px'}} />
+                <input type="text" placeholder="Enlace / URL externa (ej: link de instagram)" value={p.link || ''} onChange={e => updatePost(p.id, 'link', e.target.value)} style={inputStyle} />
+                
+                {p.type === 'event' && (
+                  <>
+                    <input type="text" placeholder="Tipo Evento (ej: Hackathon)" value={p.eventType || ''} onChange={e => updatePost(p.id, 'eventType', e.target.value)} style={{...inputStyle, maxWidth: '180px'}} />
+                    <select value={p.acento || 'cyan'} onChange={e => updatePost(p.id, 'acento', e.target.value)} style={{...inputStyle, maxWidth: '180px'}}>
+                      <option value="cyan">Cyan</option>
+                      <option value="purple">Morado</option>
+                      <option value="gold">Dorado</option>
+                    </select>
+                  </>
+                )}
+              </div>
               <button className="btn btn-sm" style={{ background: 'var(--plasma)', color: 'white' }} onClick={() => removePost(p.id)}>Eliminar</button>
             </div>
           </div>
