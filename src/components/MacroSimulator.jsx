@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { generateMacroSimData } from "../utils/macroSimulatorData";
+import { MEXICO_STATES, STATE_MUNICIPALITIES } from "../models/dataModel";
 
 const MOCK_CANDIDATES = [
   { id: "C1", name: "Alianza Progresista", party: "MORENA" },
@@ -10,8 +11,11 @@ const MOCK_CANDIDATES = [
 ];
 
 export default function MacroSimulator({ seed = "CIVICA_OS_2026" }) {
-  const [filters, setFilters] = useState({ state: "Sonora", type: "Municipal", risk: "all" });
+  const [filters, setFilters] = useState({ state: "SONORA", type: "Municipal", risk: "all", municipality: "Todos" });
   const [expanded, setExpanded] = useState(false);
+
+  const statesList = Object.values(MEXICO_STATES).sort((a, b) => a.name.localeCompare(b.name));
+  const municipalitiesList = Object.values(STATE_MUNICIPALITIES).filter(m => m.stateId === filters.state).sort((a, b) => a.name.localeCompare(b.name));
 
   const data = useMemo(() => {
     const base = generateMacroSimData(MOCK_CANDIDATES, seed);
@@ -24,14 +28,17 @@ export default function MacroSimulator({ seed = "CIVICA_OS_2026" }) {
       <h2 style={{ fontFamily: "var(--font-heading)", margin: "0 0 15px" }}>🗳️ Comparativa N-Way (Softmax)</h2>
       
       <div style={{ display: "flex", gap: 10, marginBottom: 15, flexWrap: "wrap" }}>
-        {["state", "type", "risk"].map(key => (
+        <select value={filters.state} onChange={e => setFilters(f => ({...f, state: e.target.value, municipality: "Todos"}))} style={{ background: "#1e293b", color: "#fff", border: "1px solid var(--border-subtle)", padding: 6, borderRadius: 4 }}>
+          {statesList.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+        </select>
+        
+        <select value={filters.municipality} onChange={e => setFilters(f => ({...f, municipality: e.target.value}))} style={{ background: "#1e293b", color: "#fff", border: "1px solid var(--border-subtle)", padding: 6, borderRadius: 4 }}>
+          <option value="Todos">Todos los Municipios</option>
+          {municipalitiesList.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+        </select>
+
+        {["type", "risk"].map(key => (
           <select key={key} value={filters[key]} onChange={e => setFilters(f => ({...f, [key]: e.target.value}))} style={{ background: "#1e293b", color: "#fff", border: "1px solid var(--border-subtle)", padding: 6, borderRadius: 4 }}>
-            {key === "state" && (
-              <>
-                <option value="Sonora">Sonora</option>
-                <option value="CDMX">CDMX</option>
-              </>
-            )}
             {key === "type" && (
               <>
                 <option value="Municipal">Municipal</option>
