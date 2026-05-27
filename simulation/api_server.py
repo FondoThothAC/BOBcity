@@ -248,8 +248,10 @@ class SimulationAPIHandler(BaseHTTPRequestHandler):
                     
             # Mantener las webcams fijas por ahora
             webcams = [
-                {"lat": 19.4326, "lng": -99.1332, "name": "Zócalo CDMX", "viewers": 1500, "stream_url": "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1"},
-                {"lat": 20.6596, "lng": -103.3496, "name": "Minerva GDL", "viewers": 800, "stream_url": "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1"}
+                {"lat": 19.4326, "lng": -99.1332, "name": "Zócalo CDMX (Live)", "viewers": 2405, "stream_url": "https://www.youtube.com/embed/WzWkB-WADB4?autoplay=1&mute=1"},
+                {"lat": 20.6596, "lng": -103.3496, "name": "CCTV Guadalajara", "viewers": 921, "stream_url": "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1"},
+                {"lat": 25.6866, "lng": -100.3161, "name": "CCTV Monterrey", "viewers": 704, "stream_url": "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1"},
+                {"lat": 19.0413, "lng": -98.2062, "name": "Volcán Popocatépetl", "viewers": 1640, "stream_url": "https://www.youtube.com/embed/A1YxNYiyALg?autoplay=1&mute=1"}
             ]
 
             self.send_response(200)

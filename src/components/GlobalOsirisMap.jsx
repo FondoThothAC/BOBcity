@@ -13,6 +13,7 @@ const GlobalOsirisMap = ({ pythonApiUrl = 'http://localhost:5001', height = '85v
   const [globeHeight, setGlobeHeight] = useState(400);
   const [pulseData, setPulseData] = useState({ conflicts: [], disasters: [], satellites: [], webcams: [] });
   const [isLive, setIsLive] = useState(true);
+  const [activeWebcam, setActiveWebcam] = useState(null);
   
   // Efectos visuales de rotación al inicializar
   useEffect(() => {
@@ -45,10 +46,10 @@ const GlobalOsirisMap = ({ pythonApiUrl = 'http://localhost:5001', height = '85v
         // Simulamos algunas webcams si el backend no las envía aún
         if (!data.data.webcams) {
           data.data.webcams = [
-            { lat: 19.4326, lng: -99.1332, name: "Zócalo CDMX", viewers: 1205 },
-            { lat: 20.6596, lng: -103.3496, name: "Minerva GDL", viewers: 842 },
-            { lat: 25.6866, lng: -100.3161, name: "Macroplaza MTY", viewers: 630 },
-            { lat: 29.0729, lng: -110.9559, name: "Catedral HMO", viewers: 415 }
+            { lat: 19.4326, lng: -99.1332, name: "Zócalo CDMX", viewers: 1205, stream_url: "https://www.youtube.com/embed/1-iR1lYj7J0?autoplay=1&mute=1" },
+            { lat: 20.6596, lng: -103.3496, name: "Minerva GDL", viewers: 842, stream_url: "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1" },
+            { lat: 25.6866, lng: -100.3161, name: "Macroplaza MTY", viewers: 630, stream_url: "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1" },
+            { lat: 29.0729, lng: -110.9559, name: "Catedral HMO", viewers: 415, stream_url: "https://www.youtube.com/embed/A1YxNYiyALg?autoplay=1&mute=1" }
           ];
         }
         setPulseData(data.data);
@@ -78,10 +79,10 @@ const GlobalOsirisMap = ({ pythonApiUrl = 'http://localhost:5001', height = '85v
           { lat: 8.50, lng: -80.50, alt: 0.24 }
         ],
         webcams: [
-          { lat: 19.4326, lng: -99.1332, name: "Zócalo CDMX", viewers: 1205 },
-          { lat: 20.6596, lng: -103.3496, name: "Minerva GDL", viewers: 842 },
-          { lat: 25.6866, lng: -100.3161, name: "Macroplaza MTY", viewers: 630 },
-          { lat: 29.0729, lng: -110.9559, name: "Catedral HMO", viewers: 415 }
+          { lat: 19.4326, lng: -99.1332, name: "Zócalo CDMX", viewers: 1205, stream_url: "https://www.youtube.com/embed/1-iR1lYj7J0?autoplay=1&mute=1" },
+          { lat: 20.6596, lng: -103.3496, name: "Minerva GDL", viewers: 842, stream_url: "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1" },
+          { lat: 25.6866, lng: -100.3161, name: "Macroplaza MTY", viewers: 630, stream_url: "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1" },
+          { lat: 29.0729, lng: -110.9559, name: "Catedral HMO", viewers: 415, stream_url: "https://www.youtube.com/embed/A1YxNYiyALg?autoplay=1&mute=1" }
         ]
       });
     }
@@ -135,6 +136,7 @@ const GlobalOsirisMap = ({ pythonApiUrl = 'http://localhost:5001', height = '85v
 
   // Webcams (Agregadas a custom layer también)
   const webcamsData = (pulseData.webcams || []).map(w => ({
+    ...w,
     lat: w.lat,
     lng: w.lng,
     alt: 0.01,
@@ -211,6 +213,11 @@ const GlobalOsirisMap = ({ pythonApiUrl = 'http://localhost:5001', height = '85v
             }
           }
         }}
+        onCustomLayerClick={(d) => {
+          if (d.type === 'webcam') {
+            setActiveWebcam(d);
+          }
+        }}
       />
 
       {/* Glassmorphism UI - Overlay Izquierdo */}
@@ -284,6 +291,48 @@ const GlobalOsirisMap = ({ pythonApiUrl = 'http://localhost:5001', height = '85v
       <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', pointerEvents: 'none', opacity: 0.3 }}>
         <Crosshair size={48} color="#00e5ff" strokeWidth={1} />
       </div>
+
+      {/* Visor de Webcam Activa en OSIRIS 3D */}
+      {activeWebcam && (
+        <div className="glass-card scale-in" style={{ 
+          position: 'absolute', top: '20px', right: '20px', zIndex: 1000,
+          width: '320px', background: 'rgba(5, 8, 15, 0.95)', border: '1px solid rgba(255, 255, 0, 0.4)',
+          borderRadius: '12px', padding: '15px', color: '#fff', boxShadow: '0 8px 32px rgba(0,0,0,0.8)',
+          backdropFilter: 'blur(10px)'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', borderBottom: '1px solid rgba(255,255,0,0.2)', paddingBottom: '6px' }}>
+            <h4 style={{ color: '#ffff00', margin: 0, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Video size={14} /> {activeWebcam.name}
+            </h4>
+            <button onClick={() => setActiveWebcam(null)} style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', fontSize: '1.2rem', padding: '0 4px', outline: 'none' }}>&times;</button>
+          </div>
+          
+          {activeWebcam.stream_url ? (
+            <div style={{ width: '100%', height: '180px', borderRadius: '6px', overflow: 'hidden', marginBottom: '8px' }}>
+              <iframe 
+                src={activeWebcam.stream_url} 
+                width="100%" 
+                height="100%" 
+                frameBorder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowFullScreen
+              ></iframe>
+            </div>
+          ) : (
+            <div style={{ width: '100%', height: '180px', background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8892a4', marginBottom: '8px', fontSize: '0.8rem' }}>
+              CONECTANDO CON EL FEED OSINT...
+            </div>
+          )}
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.7rem', color: '#8892a4' }}>
+            <span>Espectadores: <strong style={{ color: '#00e676' }}>{activeWebcam.viewers}</strong></span>
+            <span style={{ color: '#00e676', display: 'flex', alignItems: 'center', gap: '3px' }}>
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#00e676', display: 'inline-block', boxShadow: '0 0 6px #00e676' }}></span>
+              TRANSMISIÓN EN VIVO
+            </span>
+          </div>
+        </div>
+      )}
 
     </div>
   );
