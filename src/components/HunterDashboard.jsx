@@ -153,6 +153,37 @@ export default function HunterDashboard() {
           </div>
         </div>
 
+        <div style={{ marginTop: '1rem' }}>
+          <h4 style={{ fontSize: '0.85rem', color: '#10B981', marginBottom: '0.5rem' }}>ESTADO DE HERRAMIENTAS:</h4>
+          <div style={{ background: 'rgba(0,0,0,0.4)', padding: '0.75rem', borderRadius: '8px', fontSize: '0.75rem', color: '#94A3B8' }}>
+            <div style={{ marginBottom: '0.5rem', color: '#E2E8F0' }}><strong>EN MODO SIMULACIÓN (3/7)</strong></div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', paddingLeft: '0.5rem', borderLeft: '1px solid rgba(255,255,255,0.1)' }}>
+              <div>🟡 Sherlock (búsqueda de usuarios)</div>
+              <div>🟡 theHarvester (extracción de correos/dominios)</div>
+              <div>🟡 GHunt (investigación Google)</div>
+            </div>
+            
+            <div style={{ marginTop: '0.75rem', marginBottom: '0.5rem', color: '#E2E8F0' }}><strong>SIN CONEXIÓN (2/7)</strong></div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', paddingLeft: '0.5rem', borderLeft: '1px solid rgba(255,255,255,0.1)' }}>
+              <div>🔴 Maltego</div>
+              <div>🔴 SpiderFoot</div>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ marginTop: '1rem' }}>
+          <h4 style={{ fontSize: '0.85rem', color: '#10B981', marginBottom: '0.5rem' }}>RECURSOS EXTERNOS OSINT & WEBCAMS:</h4>
+          <div style={{ background: 'rgba(0,0,0,0.4)', padding: '0.75rem', borderRadius: '8px', fontSize: '0.75rem', color: '#94A3B8', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+            <a href="https://osintframework.com" target="_blank" rel="noreferrer" style={{ color: '#3B82F6', textDecoration: 'none' }}>osintframework.com</a>
+            <a href="https://skyosint.io/embed-builder" target="_blank" rel="noreferrer" style={{ color: '#3B82F6', textDecoration: 'none' }}>skyosint.io</a>
+            <a href="https://intelsky.org/api/" target="_blank" rel="noreferrer" style={{ color: '#3B82F6', textDecoration: 'none' }}>intelsky.org</a>
+            <a href="https://www.earthcam.com/myearthcam/help/faq.php" target="_blank" rel="noreferrer" style={{ color: '#3B82F6', textDecoration: 'none' }}>earthcam.com</a>
+            <a href="https://www.youtube.com/live/WzWkB-WADB4?si=JbLtPXgQmGadQ6Zs" target="_blank" rel="noreferrer" style={{ color: '#3B82F6', textDecoration: 'none' }}>youtube.com (Live Webcams)</a>
+            <a href="https://webcamsdemexico.com/" target="_blank" rel="noreferrer" style={{ color: '#3B82F6', textDecoration: 'none' }}>webcamsdemexico.com</a>
+            <a href="https://osirisai.live/" target="_blank" rel="noreferrer" style={{ color: '#3B82F6', textDecoration: 'none' }}>osirisai.live</a>
+          </div>
+        </div>
+
         <div style={{ marginTop: 'auto' }}>
           <h4 style={{ fontSize: '0.85rem', color: '#10B981', marginBottom: '0.5rem' }}>Raw Data Extract:</h4>
           <div style={{ background: 'rgba(0,0,0,0.4)', padding: '0.75rem', borderRadius: '8px', fontSize: '0.75rem', fontFamily: 'monospace', color: '#94A3B8' }}>

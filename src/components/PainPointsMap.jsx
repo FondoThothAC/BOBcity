@@ -187,6 +187,37 @@ export default function PainPointsMap({ agents, externalCenter }) {
   const [geoJsonData, setGeoJsonData] = useState(null);
   const [loadingGeoJson, setLoadingGeoJson] = useState(false);
 
+  // Efecto para cargar GeoJSON del INE cuando se selecciona la capa
+  useEffect(() => {
+    if (activeLayer === "GEOJSON_INE_SECCIONES") {
+      setLoadingGeoJson(true);
+      fetch('/data/geojson/SECCION.geojson')
+        .then(r => r.json())
+        .then(data => {
+          setGeoJsonData(data);
+          setLoadingGeoJson(false);
+        })
+        .catch(e => {
+          console.error("Error loading SECCION.geojson", e);
+          setLoadingGeoJson(false);
+        });
+    } else if (activeLayer === "GEOJSON_INE_MUNICIPIOS") {
+      setLoadingGeoJson(true);
+      fetch('/data/geojson/MUNICIPIO.geojson')
+        .then(r => r.json())
+        .then(data => {
+          setGeoJsonData(data);
+          setLoadingGeoJson(false);
+        })
+        .catch(e => {
+          console.error("Error loading MUNICIPIO.geojson", e);
+          setLoadingGeoJson(false);
+        });
+    } else {
+      setGeoJsonData(null);
+    }
+  }, [activeLayer]);
+
   // --- Estados del Sandbox GIS ---
   const [activeTool, setActiveTool] = useState(null); // 'bridge' | 'closure' | 'well' | null
 
@@ -1162,8 +1193,8 @@ export default function PainPointsMap({ agents, externalCenter }) {
   // Estilo dinámico y coroplético premium de los polígonos GeoJSON
   const geoJsonStyle = (feature) => {
     const props = feature.properties || {};
-    const isStateLevel = props.seccion === 'Estado';
-    const elementId = isStateLevel ? props.state_id : (props.seccion || '0');
+    const isStateLevel = props.seccion === 'Estado' || (props.ENTIDAD !== undefined && props.SECCION === undefined && props.MUNICIPIO === undefined);
+    const elementId = isStateLevel ? (props.state_id || props.ENTIDAD) : (props.seccion || props.SECCION || props.MUNICIPIO || '0');
     
     // Obtener estadísticas dinámicas deterministas y pasar propiedades para secciones reales
     const stats = getPolygonStats(elementId, isStateLevel ? 'STATE' : 'CP', props);
@@ -1184,19 +1215,19 @@ export default function PainPointsMap({ agents, externalCenter }) {
   // Interactividad premium sobre los límites geográficos reales
   const onEachFeature = (feature, layer) => {
     const props = feature.properties || {};
-    const isStateLevel = props.seccion === 'Estado';
-    const elementId = isStateLevel ? props.state_id : (props.seccion || '0');
+    const isStateLevel = props.seccion === 'Estado' || (props.ENTIDAD !== undefined && props.SECCION === undefined && props.MUNICIPIO === undefined);
+    const elementId = isStateLevel ? (props.state_id || props.ENTIDAD) : (props.seccion || props.SECCION || props.MUNICIPIO || '0');
     
     // Cruzamiento electoral y de militancia pasando propiedades reales de la sección
     const stats = getPolygonStats(elementId, isStateLevel ? 'STATE' : 'CP', props);
     
     // Nombres legibles y títulos
     const titleText = isStateLevel 
-      ? `🇲🇽 Estado: ${props.name || props.ESTADO || 'Entidad'}` 
-      : `📍 Sección INE ${props.seccion || 'N/D'}`;
+      ? `🇲🇽 Estado: ${props.name || props.NOMGEO || props.ESTADO || 'Entidad ' + elementId}` 
+      : `📍 Nivel Local ${props.seccion || props.SECCION ? 'Sección ' + (props.seccion || props.SECCION) : 'Mpio ' + (props.MUNICIPIO || elementId)}`;
     const subtitleBadge = isStateLevel 
       ? 'Entidad Federativa' 
-      : `D-${props.distrito || '—'}`;
+      : (props.distrito || props.DISTRITO_L ? `D-${props.distrito || props.DISTRITO_L}` : 'INEGI / INE');
 
     let popupContent = `
       <div style="min-width: 270px; font-family: 'Outfit', sans-serif; color: #fff; background: rgba(10,15,30,0.95); border-radius: 8px; padding: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
@@ -1575,6 +1606,7 @@ export default function PainPointsMap({ agents, externalCenter }) {
                     <option value="MILITANTES_PRI">🟢 Militantes del PRI</option>
                     <option value="MILITANTES_MC">🟠 Militantes de Movimiento Ciudadano</option>
                     <option value="ELECTORAL_TURNOUT">🗳️ Participación Electoral Estimada</option>
+                    <option value="GEOJSON_INE_SECCIONES">🗺️ INE: Secciones Electorales (Sonora)</option>
                   </>
                 )}
                 {activeCategory === "SOCIOECONOMIC" && (
@@ -1584,6 +1616,7 @@ export default function PainPointsMap({ agents, externalCenter }) {
                     <option value="INCOME_AVERAGE">💵 Ingreso Familiar Promedio</option>
                     <option value="COMMERCIAL_DENSITY">🏬 Densidad Comercial (DENUE)</option>
                     <option value="SCHOOL_DENSITY">🏫 Densidad Escolar (DENUE)</option>
+                    <option value="GEOJSON_INE_MUNICIPIOS">🗺️ INEGI: Municipios (Sonora)</option>
                     {selectedMunicipality && (
                       <>
                         <option value="HIST_POBREZA_EXTREMA">📉 Pobreza Extrema Histórica (%)</option>
