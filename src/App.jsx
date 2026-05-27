@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { 
   LayoutDashboard, 
   Map, 
@@ -20,28 +20,28 @@ import {
   Users
 } from 'lucide-react';
 
-import DashboardOverview from './components/DashboardOverview';
-import PainPointsMap from './components/PainPointsMap';
-import ABMSimulator from './components/ABMSimulator';
-import PredictorEngine from './components/PredictorEngine';
-import DataHub from './components/DataHub';
-import OrchestratorConsole from './components/OrchestratorConsole';
-import ThothAgoraPortal from './components/ThothAgoraPortal';
-import MasterConsole from './components/MasterConsole';
-import ClientOnboarding from './components/ClientOnboarding';
-import SocialGraph3D from './components/SocialGraph3D';
-import SyntoWiki from './components/SyntoWiki';
-import UnifiedCommandCenter from './components/UnifiedCommandCenter';
-import GDSMegaVisualizer from './components/GDSMegaVisualizer';
-import GDSMicroSimulator from './components/GDSMicroSimulator';
-import ImplementationPlan from './components/ImplementationPlan';
-import AgentRawView from './components/AgentRawView';
-import WorldBoxSimulator from './components/WorldBoxSimulator';
-import HunterDashboard from './components/HunterDashboard';
-import MultiverseAdmin from './components/MultiverseAdmin';
-import GlobalOsirisMap from './components/GlobalOsirisMap';
-import GothamTargetWorkbench from './components/GothamTargetWorkbench';
-import MacroSimulator from './components/MacroSimulator';
+const DashboardOverview = lazy(() => import('./components/DashboardOverview'));
+const PainPointsMap = lazy(() => import('./components/PainPointsMap'));
+const ABMSimulator = lazy(() => import('./components/ABMSimulator'));
+const PredictorEngine = lazy(() => import('./components/PredictorEngine'));
+const DataHub = lazy(() => import('./components/DataHub'));
+const OrchestratorConsole = lazy(() => import('./components/OrchestratorConsole'));
+const ThothAgoraPortal = lazy(() => import('./components/ThothAgoraPortal'));
+const MasterConsole = lazy(() => import('./components/MasterConsole'));
+const ClientOnboarding = lazy(() => import('./components/ClientOnboarding'));
+const SocialGraph3D = lazy(() => import('./components/SocialGraph3D'));
+const SyntoWiki = lazy(() => import('./components/SyntoWiki'));
+const UnifiedCommandCenter = lazy(() => import('./components/UnifiedCommandCenter'));
+const GDSMegaVisualizer = lazy(() => import('./components/GDSMegaVisualizer'));
+const GDSMicroSimulator = lazy(() => import('./components/GDSMicroSimulator'));
+const ImplementationPlan = lazy(() => import('./components/ImplementationPlan'));
+const AgentRawView = lazy(() => import('./components/AgentRawView'));
+const WorldBoxSimulator = lazy(() => import('./components/WorldBoxSimulator'));
+const HunterDashboard = lazy(() => import('./components/HunterDashboard'));
+const MultiverseAdmin = lazy(() => import('./components/MultiverseAdmin'));
+const GlobalOsirisMap = lazy(() => import('./components/GlobalOsirisMap'));
+const GothamTargetWorkbench = lazy(() => import('./components/GothamTargetWorkbench'));
+const MacroSimulator = lazy(() => import('./components/MacroSimulator'));
 
 import { applyTheme } from './themeManager';
 
@@ -1008,6 +1008,7 @@ export default function App() {
 
         {/* Load component based on active tab */}
         <section style={{ flex: 1 }}>
+          <Suspense fallback={<div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: 'var(--neon-blue)', fontSize: '1.2rem' }}>Inicializando CívicaOS...</div>}>
           {activeTab === 'master-panel' && (
             <MasterConsole 
               clients={clients}
@@ -1089,6 +1090,7 @@ export default function App() {
           {activeTab === 'agent-raw' && (
             <AgentRawView clients={clients} />
           )}
+          </Suspense>
         </section>
 
       </main>
