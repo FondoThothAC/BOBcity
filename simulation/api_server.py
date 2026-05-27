@@ -723,6 +723,8 @@ class SimulationAPIHandler(BaseHTTPRequestHandler):
                 
                 self.send_response(200)
                 self.send_header("Content-Type", content_type)
+                if content_type == "text/html":
+                    self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
                 self._set_cors_headers()
                 self.end_headers()
                 self.wfile.write(content)
@@ -910,12 +912,15 @@ class SimulationAPIHandler(BaseHTTPRequestHandler):
 
         # SPA Routing Fallback: If it's a browser route (like /master or /citizen), serve index.html
         index_path = os.path.join(BASE_DIST_DIR, "index.html")
-        if not requested_path.startswith("/api/") and os.path.exists(index_path):
+        is_asset = requested_path.startswith("/assets/") or "." in requested_path.split("/")[-1]
+        
+        if not requested_path.startswith("/api/") and not is_asset and os.path.exists(index_path):
             try:
                 with open(index_path, "rb") as f:
                     content = f.read()
                 self.send_response(200)
                 self.send_header("Content-Type", "text/html")
+                self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
                 self._set_cors_headers()
                 self.end_headers()
                 self.wfile.write(content)
