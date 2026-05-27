@@ -261,10 +261,10 @@ export default function PainPointsMap({ agents, externalCenter }) {
 
     // Generar webcams locales distribuidas tácticamente en la ciudad seleccionada
     const localWebcams = [
-      { lat: baseCoords[0] + 0.005, lng: baseCoords[1] - 0.008, name: `CCTV Plaza Cívica - ${baseName}`, viewers: Math.floor(Math.random() * 450) + 120 },
-      { lat: baseCoords[0] - 0.012, lng: baseCoords[1] + 0.015, name: `CCTV Zona Centro - ${baseName}`, viewers: Math.floor(Math.random() * 850) + 200 },
-      { lat: baseCoords[0] + 0.022, lng: baseCoords[1] + 0.028, name: `CCTV Zona Norte / Acceso - ${baseName}`, viewers: Math.floor(Math.random() * 310) + 90 },
-      { lat: baseCoords[0] - 0.018, lng: baseCoords[1] - 0.025, name: `CCTV Corredor Industrial - ${baseName}`, viewers: Math.floor(Math.random() * 540) + 110 }
+      { lat: baseCoords[0] + 0.005, lng: baseCoords[1] - 0.008, name: `CCTV Plaza Cívica - ${baseName}`, viewers: Math.floor(Math.random() * 450) + 120, stream_url: "https://www.youtube.com/embed/WzWkB-WADB4?autoplay=1&mute=1" },
+      { lat: baseCoords[0] - 0.012, lng: baseCoords[1] + 0.015, name: `CCTV Zona Centro - ${baseName}`, viewers: Math.floor(Math.random() * 850) + 200, stream_url: "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1" },
+      { lat: baseCoords[0] + 0.022, lng: baseCoords[1] + 0.028, name: `CCTV Zona Norte / Acceso - ${baseName}`, viewers: Math.floor(Math.random() * 310) + 90, stream_url: "https://www.youtube.com/embed/A1YxNYiyALg?autoplay=1&mute=1" },
+      { lat: baseCoords[0] - 0.018, lng: baseCoords[1] - 0.025, name: `CCTV Corredor Industrial - ${baseName}`, viewers: Math.floor(Math.random() * 540) + 110, stream_url: "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1" }
     ];
 
     // Combinar con los datos del backend para no perder la vista global
