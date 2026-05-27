@@ -422,3 +422,61 @@ export function calculateElectionProbability(agents, candidateProfiles) {
     winProbabilityB: parseFloat(winProbabilityB.toFixed(1))
   };
 }
+
+// 8. Inferencia Electoral Multi-Candidato (Macro-Simulación en Lote)
+export function simulateMultiCandidateElection(candidatesArray, baselineNoise = 10) {
+  // candidatesArray: array de objetos { id, name, baseSupport, experienceYears, proposalMatch }
+  // baseSupport es una estimación cruda pre-elección (ej. encuestas históricas).
+  
+  if (!candidatesArray || candidatesArray.length === 0) return [];
+
+  // Paso 1: Calcular la Puntuación de Utilidad Neta (Score) para cada candidato
+  const scoredCandidates = candidatesArray.map(cand => {
+    // Ruido aleatorio para simular volatilidad local
+    const volatility = (Math.random() * baselineNoise) - (baselineNoise / 2);
+    
+    // Bonificaciones del perfil (XAI)
+    const bonusExp = (cand.experienceYears || 0) * 0.6;
+    const bonusProp = (cand.proposalMatch || 50) * 0.25;
+    
+    const rawScore = (cand.baseSupport || 0) + bonusExp + bonusProp + volatility;
+    
+    return { ...cand, _rawScore: rawScore };
+  });
+
+  // Paso 2: Aplicación del Algoritmo Softmax (N-Way)
+  const temperatura = 20.0; // Controla la "dureza" de la probabilidad
+  
+  // Exponenciales
+  const exps = scoredCandidates.map(c => Math.exp(c._rawScore / temperatura));
+  const sumExp = exps.reduce((acc, val) => acc + val, 0);
+
+  // Paso 3: Asignar Probabilidades Finales
+  const results = scoredCandidates.map((c, index) => {
+    const prob = (exps[index] / sumExp) * 100;
+    return {
+      id: c.id,
+      name: c.name,
+      winProbability: parseFloat(prob.toFixed(1)),
+      color: c.color || '#888' // Fallback color
+    };
+  });
+
+  // Paso 4: Ordenar de mayor a menor probabilidad y calcular diferencias (Spread)
+  results.sort((a, b) => b.winProbability - a.winProbability);
+  
+  // Agregar cálculo de la diferencia respecto al inmediato perseguidor
+  const resultsWithSpread = results.map((c, index, arr) => {
+    let spread = 0;
+    if (index === 0 && arr.length > 1) {
+      // Si es el líder, su spread es la diferencia sobre el 2do lugar
+      spread = parseFloat((c.winProbability - arr[1].winProbability).toFixed(1));
+    } else if (index > 0) {
+      // Si no es el líder, su spread es la diferencia respecto al líder
+      spread = parseFloat((c.winProbability - arr[0].winProbability).toFixed(1));
+    }
+    return { ...c, spread };
+  });
+
+  return resultsWithSpread;
+}

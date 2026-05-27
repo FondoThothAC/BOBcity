@@ -40,6 +40,7 @@ import HunterDashboard from './components/HunterDashboard';
 import MultiverseAdmin from './components/MultiverseAdmin';
 import GlobalOsirisMap from './components/GlobalOsirisMap';
 import GothamTargetWorkbench from './components/GothamTargetWorkbench';
+import MacroSimulator from './components/MacroSimulator';
 
 import { applyTheme } from './themeManager';
 
@@ -840,6 +841,7 @@ export default function App() {
         } 
       },
       { id: 'predictor', label: 'Predictor Electoral', icon: <Vote size={20} /> },
+      { id: 'macro-simulator', label: 'Macro-Simulador N-Way', icon: <Users size={20} color="var(--neon-emerald)" /> },
       { id: 'data-hub', label: 'Data Hub & APIs', icon: <Database size={20} /> },
       { id: 'swarm', label: 'Swarm OpenClaw', icon: <Terminal size={20} /> },
       { id: 'social-graph', label: 'Grafo Social 3D & GNN', icon: <Network size={20} /> },
@@ -958,6 +960,7 @@ export default function App() {
               {activeTab === 'gds-mega' && "Visualizador GDS-MEGA (1,024 KPIs)"}
               {activeTab === 'gds-micro' && "Simulador GDS-Micro (LLM Local)"}
               {activeTab === 'predictor' && "Predictor Electoral Head-to-Head"}
+              {activeTab === 'macro-simulator' && "Macro-Simulador: Percepción Masiva"}
               {activeTab === 'data-hub' && "Data Hub & APIs de Inferencia"}
               {activeTab === 'swarm' && "Enjambre Cognitivo OpenClaw"}
               {activeTab === 'social-graph' && "Detección de Bots y Coordinación GNN"}
@@ -977,7 +980,8 @@ export default function App() {
               {activeTab === 'osiris-global' && "Centro de Comando Unificado OSINT, radar LEO y visor geográfico."}
               {activeTab === 'gds-mega' && "Visualización profunda del Gemelo Digital Social a micro y macro escala."}
               {activeTab === 'gds-micro' && "Inferencia cognitiva del gemelo digital usando modelos pequeños locales."}
-              {activeTab === 'predictor' && "Probabilidad de victoria basada en perfiles y propuestas."}
+              {activeTab === 'predictor' && "Probabilidad de victoria basada en perfiles y propuestas (Laboratorio)."}
+              {activeTab === 'macro-simulator' && "Análisis N-Way Softmax de 2 a 6 candidatos con cálculo de Spreads a escala nacional."}
               {activeTab === 'data-hub' && "Comercializar censos sintéticos, descargar datasets y gestionar claves API de desarrollador."}
               {activeTab === 'swarm' && "Logs del orquestador cognitivo, auditoría y exportación a OBP."}
               {activeTab === 'social-graph' && "Análisis de cuentas automatizadas, amplificación y topología social 3D."}
@@ -1053,6 +1057,9 @@ export default function App() {
             <PredictorEngine 
               agents={agents} 
             />
+          )}
+          {activeTab === 'macro-simulator' && (
+            <MacroSimulator />
           )}
           {activeTab === 'data-hub' && (
             <DataHub />
