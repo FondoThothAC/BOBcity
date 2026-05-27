@@ -17,7 +17,8 @@ import {
   Award,
   Target,
   Globe,
-  Users
+  Users,
+  Activity
 } from 'lucide-react';
 
 const DashboardOverview = lazy(() => import('./components/DashboardOverview'));
