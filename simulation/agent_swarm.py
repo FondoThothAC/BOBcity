@@ -329,6 +329,77 @@ class PtahSimulador(DeityAgent):
             )
 
 
+class AmmitCalificador(DeityAgent):
+    """
+    🐊 Ammit: Diosa Devoradora y Oráculo de Calificaciones (Moody's).
+    Asigna grados de inversión y riesgo crediticio basándose en salud financiera y ambiental.
+    """
+    def __init__(self, session_hash: str):
+        self.subscriptions = [EventType.INDICADOR_ECONOMICO.value, EventType.SHOCK_OSINT.value]
+        super().__init__("ammit", session_hash)
+
+    def handle_event(self, event: DeityEvent):
+        if event.event_type == EventType.INDICADOR_ECONOMICO.value:
+            self.bus.update_deity_status(
+                deity_id="ammit",
+                estado="activo",
+                tarea_actual="Calculando Rating Crediticio (Moody's)",
+                progreso=20
+            )
+            
+            # Factores PDD simulados (se conectarían a datos reales del ABM)
+            f_fin = 85.0  # Salud financiera
+            f_soc = 70.0  # Cohesión social
+            
+            # Presión física simulada (agua, solar)
+            water_pressure = 40.0
+            solar_impact = 20.0
+            f_env = max(0, 100 - (water_pressure * 0.6 + solar_impact * 0.4))  # ~68
+            
+            volatility = 5.0
+            
+            # S(t) = w1 * F_fin + w2 * F_soc + w3 * F_env - w4 * Vol
+            score = (0.5 * f_fin) + (0.2 * f_soc) + (0.3 * f_env) - volatility
+            score = max(0, min(100, score))
+            
+            # Mapeo a Rating
+            if score >= 90: grade = "AAA"
+            elif score >= 80: grade = "A"
+            elif score >= 70: grade = "BBB"
+            elif score >= 60: grade = "BB"
+            elif score >= 50: grade = "B"
+            else: grade = "D (Default)"
+            
+            rating_data = {
+                "entity_id": "hermosillo_distrito_8",
+                "score": round(score, 2),
+                "grade": grade,
+                "factors": {
+                    "financial": f_fin,
+                    "social": f_soc,
+                    "environmental": round(f_env, 2),
+                    "volatility": volatility
+                }
+            }
+            
+            self.store.write("current_rating", rating_data)
+            
+            self.bus.publish(DeityEvent(
+                event_type=EventType.RATING_ACTUALIZADO.value,
+                source_deity="ammit",
+                data=rating_data,
+                priority=EventPriority.ALTA,
+                timeline_id="realidad_base"
+            ))
+            
+            self.bus.update_deity_status(
+                deity_id="ammit",
+                estado="activo",
+                tarea_actual=f"Rating Asignado: {grade} ({score:.1f})",
+                progreso=100
+            )
+
+
 # =====================================================================
 # AGENTES DE TIER 2 ADICIONALES PARA COMPLETAR EL FLUJO
 # =====================================================================
@@ -492,6 +563,7 @@ class AgentSwarmOrchestrator:
         self.orchestrator = ThothOrchestrator(session_hash)
         self.ingestor = SeshatIngesta(session_hash)
         self.economy = RaEconomia(session_hash)
+        self.oracle = AmmitCalificador(session_hash)
         self.society = IsisBienestar(session_hash)
         self.simulator = PtahSimulador(session_hash)
         self.predictor = MaatPredecidor(session_hash)

@@ -312,6 +312,14 @@ export function generateSyntheticPopulation(size = 300) {
     else if (randParty < pMorena + pPan + pPri) partyAffiliation = "PRI";
     else if (randParty < pMorena + pPan + pPri + pMc) partyAffiliation = "MC";
 
+    const debt = Math.round(5000 + Math.random() * 30000);
+    const score = Math.round(50 + Math.random() * 45); // Inicial [50, 95]
+    let grade = "B";
+    if (score >= 90) grade = "AAA";
+    else if (score >= 80) grade = "A";
+    else if (score >= 70) grade = "BBB";
+    else if (score >= 60) grade = "BB";
+
     agents.push({
       id: i,
       stateId: mun.stateId,
@@ -319,6 +327,12 @@ export function generateSyntheticPopulation(size = 300) {
       districtId: cpId,
       sector,
       income: Math.round(15000 + Math.random() * 20000),
+      debt,
+      creditRating: {
+        score,
+        grade,
+        volatility: parseFloat((Math.random() * 5).toFixed(2))
+      },
       opinion: parseFloat(opinion.toFixed(2)),
       happiness: Math.round(happiness),
       baseHappiness: Math.round(happiness),
@@ -363,10 +377,26 @@ export function updateAgentState(agent, policies) {
     voteIntention = (biasA > biasB) ? "Candidato_A" : "Candidato_B";
   }
 
+  // Actualización del Rating Crediticio ("Moody's")
+  let newScore = agent.creditRating.score + (subsidioTransporte * 0.1) - (impuestoComercial * 0.2) + (inversionAgua * 0.15);
+  newScore = Math.max(0, Math.min(100, newScore));
+  
+  let newGrade = "D";
+  if (newScore >= 90) newGrade = "AAA";
+  else if (newScore >= 80) newGrade = "A";
+  else if (newScore >= 70) newGrade = "BBB";
+  else if (newScore >= 60) newGrade = "BB";
+  else if (newScore >= 50) newGrade = "B";
+
   return {
     ...agent,
     happiness: Math.round(newHappiness),
-    voteIntention
+    voteIntention,
+    creditRating: {
+      ...agent.creditRating,
+      score: parseFloat(newScore.toFixed(1)),
+      grade: newGrade
+    }
   };
 }
 

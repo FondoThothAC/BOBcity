@@ -42,6 +42,7 @@ const MultiverseAdmin = lazy(() => import('./components/MultiverseAdmin'));
 const GlobalOsirisMap = lazy(() => import('./components/GlobalOsirisMap'));
 const GothamTargetWorkbench = lazy(() => import('./components/GothamTargetWorkbench'));
 const MacroSimulator = lazy(() => import('./components/MacroSimulator'));
+const RatingsDashboard = lazy(() => import('./components/RatingsDashboard'));
 
 import { applyTheme } from './themeManager';
 
@@ -802,7 +803,8 @@ export default function App() {
         { id: 'map', label: 'Mapas de Dolor (GIS)', icon: <Map size={20} /> },
         { id: 'social-graph', label: 'Grafo Social 3D', icon: <Network size={20} /> },
         { id: 'synto-wiki', label: 'Obsidian LLM Wiki', icon: <BookOpen size={20} /> },
-        { id: 'implementation-plan', label: 'Plan de Acción (+1024)', icon: <Award size={20} /> }
+        { id: 'implementation-plan', label: 'Plan de Acción (+1024)', icon: <Award size={20} /> },
+        { id: 'ratings', label: 'Oráculo Moody\'s', icon: <Activity size={20} /> }
       ];
     }
 
@@ -848,6 +850,7 @@ export default function App() {
       { id: 'social-graph', label: 'Grafo Social 3D & GNN', icon: <Network size={20} /> },
       { id: 'synto-wiki', label: 'Obsidian LLM Wiki', icon: <BookOpen size={20} /> },
       { id: 'osint-hunter', label: 'Agente El Cazador (OSINT)', icon: <Terminal size={20} color="#10B981" /> },
+      { id: 'ratings', label: 'Oráculo Moody\'s', icon: <Activity size={20} /> },
       { id: 'anubis-target', label: 'Anubis Target Workbench', icon: <Target size={20} color="var(--neon-rose)" /> },
       { id: 'citizen-portal', label: 'Portal Ciudadano', icon: <Smile size={20} /> },
       { id: 'agent-raw', label: 'Datos Crudos & Bots', icon: <Terminal size={20} color="var(--neon-purple)" /> }
@@ -971,6 +974,7 @@ export default function App() {
               {activeTab === 'citizen-portal' && "ThothAgora • Portal de Participación Ciudadana"}
               {activeTab === 'implementation-plan' && "Plan de Acción Territorial Integrado"}
               {activeTab === 'agent-raw' && "Consola de Datos Crudos e Ingesta"}
+              {activeTab === 'ratings' && "Oráculo Moody's: Calificaciones y Riesgo"}
             </h1>
             <p>
               {activeTab === 'master-panel' && "Administrar marcas blancas, facturación simulada e inferencias."}
@@ -1088,7 +1092,15 @@ export default function App() {
             <ImplementationPlan activeClient={activeClient} />
           )}
           {activeTab === 'agent-raw' && (
-            <AgentRawView clients={clients} />
+            <Suspense fallback={<div className="loading-state">Desplegando Data Cruda...</div>}>
+              <AgentRawView />
+            </Suspense>
+          )}
+
+          {activeTab === 'ratings' && (
+            <Suspense fallback={<div className="loading-state">Invocando a Ammit (Oráculo Moody's)...</div>}>
+              <RatingsDashboard agents={agents} />
+            </Suspense>
           )}
           </Suspense>
         </section>

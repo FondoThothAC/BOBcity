@@ -45,6 +45,7 @@ class EventType(Enum):
     INDICADOR_ECONOMICO = "indicador_economico"     # Inflación, tipo de cambio, PIB
     SDE_RESULTADO = "sde_resultado"                 # Resultado de ecuación diferencial estocástica
     TABLA_MATLAB_MISS = "tabla_matlab_miss"         # No se encontró tabla pre-calculada → pedir al LLM
+    RATING_ACTUALIZADO = "rating_actualizado"       # Calificación de Moody's recalculada (Ammit)
 
     # --- Isis (Sociedad) ---
     HMM_TRANSICION = "hmm_transicion"               # Un agente cambió de estado mental
@@ -469,6 +470,12 @@ PANTHEON_REGISTRY = {
         "subscriptions": [EventType.PREDICCION_ELECTORAL.value, EventType.HMM_TRANSICION.value,
                           EventType.CONVERGENCIA_MONTECARLO.value, EventType.TICK_AVANZADO.value],
         "descripcion": "Monte Carlo 73x iterativo. Historial INE 1995-2026. Perfilado de candidatos."
+    },
+    "ammit": {
+        "nombre": "🐊 Ammit", "dominio": "Calificación de Riesgo", "tier": 1,
+        "modelo_ia": "qwen3.5:14b",
+        "subscriptions": [EventType.INDICADOR_ECONOMICO.value, EventType.SHOCK_OSINT.value],
+        "descripcion": "Oráculo de Calificaciones (Moody's). Asigna Rating Crediticio y de Confianza."
     },
 
     # === TIER 2: DIOSES MENORES — ELECTORAL ===
