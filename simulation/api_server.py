@@ -212,7 +212,6 @@ class SimulationAPIHandler(BaseHTTPRequestHandler):
 
         # --- OSINT GLOBAL PULSE ---
         if requested_path.startswith("/api/osiris/global-pulse"):
-            import os
             
             CACHE_FILE = os.path.join(os.path.dirname(__file__), 'osint_cache.json')
             
