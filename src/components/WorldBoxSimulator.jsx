@@ -3,24 +3,24 @@
 // Comentarios y textos en español neutro premium.
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Play, Pause, RefreshCw, Layers, Droplet, Construction, Search, MapPin, X } from 'lucide-react';
+import { Play, Pause, RefreshCw, Layers, Droplet, Construction, Search, MapPin, X, Activity } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, CircleMarker, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import electoralScenarios from '../data/electoral_scenarios.json';
 
-// Helper Component para el manejo dinámico de la cámara de Leaflet
+// Helper Component para el centrado de cámara
 function ChangeMapView({ center, zoom }) {
   const map = useMap();
   useEffect(() => {
     if (center && center[0] && center[1]) {
-      map.setView(center, zoom, { animate: true, duration: 1.5 });
+      map.setView(center, zoom, { animate: true, duration: 1.2 });
     }
   }, [center, zoom, map]);
   return null;
 }
 
-// Helper Component para registrar clics del usuario en el mapa y colocar infraestructura
+// Helper Component para registro de clics de infraestructura
 function MapClickEvents({ toolActive, onPlaceStructure }) {
   useMapEvents({
     click(e) {
@@ -32,25 +32,25 @@ function MapClickEvents({ toolActive, onPlaceStructure }) {
   return null;
 }
 
-// Íconos personalizados de infraestructura GIS
+// Íconos de infraestructura con brillos de color (Thoth style)
 const customIcons = {
   well: L.divIcon({
-    html: '<div style="font-size: 20px; filter: drop-shadow(0 0 6px var(--neon-blue));">💧</div>',
+    html: '<div style="font-size: 22px; filter: drop-shadow(0 0 8px var(--neon-blue)); cursor: pointer;">💧</div>',
     className: 'custom-div-icon',
-    iconSize: [20, 20],
-    iconAnchor: [10, 10]
+    iconSize: [24, 24],
+    iconAnchor: [12, 12]
   }),
   closure: L.divIcon({
-    html: '<div style="font-size: 20px; filter: drop-shadow(0 0 6px var(--neon-rose));">🚧</div>',
+    html: '<div style="font-size: 22px; filter: drop-shadow(0 0 8px var(--neon-rose)); cursor: pointer;">🚧</div>',
     className: 'custom-div-icon',
-    iconSize: [20, 20],
-    iconAnchor: [10, 10]
+    iconSize: [24, 24],
+    iconAnchor: [12, 12]
   }),
   bridge: L.divIcon({
-    html: '<div style="font-size: 20px; filter: drop-shadow(0 0 6px var(--neon-emerald));">🌉</div>',
+    html: '<div style="font-size: 22px; filter: drop-shadow(0 0 8px var(--neon-emerald)); cursor: pointer;">🌉</div>',
     className: 'custom-div-icon',
-    iconSize: [20, 20],
-    iconAnchor: [10, 10]
+    iconSize: [24, 24],
+    iconAnchor: [12, 12]
   })
 };
 
@@ -61,7 +61,7 @@ export default function WorldBoxSimulator({ pythonApiUrl = 'http://localhost:500
   const [activeTimeline, setActiveTimeline] = useState('realidad_base');
   
   // --- Estado de Localización GIS ---
-  const [mapCenter, setMapCenter] = useState([29.0729, -110.9559]); // Hermosillo Default
+  const [mapCenter, setMapCenter] = useState([29.0729, -110.9559]); // Hermosillo
   const [mapZoom, setMapZoom] = useState(13);
   const [searchTerm, setSearchTerm] = useState("");
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
@@ -72,9 +72,9 @@ export default function WorldBoxSimulator({ pythonApiUrl = 'http://localhost:500
   const [structures, setStructures] = useState([
     { id: 1, type: 'well', lat: 29.0729, lng: -110.9559, name: 'Pozo Central' }
   ]);
-  const [toolActive, setToolActive] = useState(null); // 'well' | 'closure' | 'bridge'
+  const [toolActive, setToolActive] = useState(null); // 'well' | 'closure'
   const [globalMetrics, setGlobalMetrics] = useState({
-    avg_happiness: 55.4, avg_water_pain: 42.1, avg_transit_pain: 35.8, vote_share: { Morena: 52.3, Oposición: 47.7 }
+    avg_happiness: 58.6, avg_water_pain: 39.2, avg_transit_pain: 34.1, vote_share: { Morena: 51.4, Oposición: 48.6 }
   });
   
   // --- Políticas (Sliders) ---
@@ -91,11 +91,12 @@ export default function WorldBoxSimulator({ pythonApiUrl = 'http://localhost:500
 
   const addLog = (msg) => {
     const timestamp = new Date().toLocaleTimeString();
-    setLogs(prev => [`[${timestamp}] ${msg}`, ...prev.slice(0, 49)]);
+    setLogs(prev => [`[${timestamp}] ${msg}`, ...prev.slice(0, 30)]);
   };
 
-  // 1. Extraer lista universal de Municipios desde electoral_scenarios.json
+  // 1. Cargar municipios de electoral_scenarios.json
   const allMunicipalities = useMemo(() => {
+    if (!electoralScenarios) return [];
     return electoralScenarios
       .filter(item => item.level === "Municipio")
       .map(item => ({
@@ -111,18 +112,17 @@ export default function WorldBoxSimulator({ pythonApiUrl = 'http://localhost:500
     const term = searchTerm.toLowerCase();
     return allMunicipalities
       .filter(m => m.searchKey.includes(term))
-      .slice(0, 10);
+      .slice(0, 8);
   }, [searchTerm, allMunicipalities]);
 
-  // 2. Búsqueda y Geocodificación Automática de la Ciudad
+  // 2. Geocodificación Automática Nominatim
   const handleSelectCity = async (cityObj) => {
     setSearchTerm("");
     setShowSearchDropdown(false);
     setSelectedCityLabel(`${cityObj.name}, ${cityObj.stateName}`);
-    addLog(`🔍 Geolocalizando: ${cityObj.name}, ${cityObj.stateName}...`);
+    addLog(`🔍 Buscando coordenadas para ${cityObj.name}, ${cityObj.stateName}...`);
 
     try {
-      // Usar Nominatim (OpenStreetMap) para obtener coordenadas reales
       const query = `${cityObj.name}, ${cityObj.stateName}, Mexico`;
       const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
       const data = await res.json();
@@ -132,19 +132,19 @@ export default function WorldBoxSimulator({ pythonApiUrl = 'http://localhost:500
         const lon = parseFloat(data[0].lon);
         setMapCenter([lat, lon]);
         setMapZoom(13);
-        addLog(`📍 Coordenadas encontradas: Lat ${lat.toFixed(4)}, Lng ${lon.toFixed(4)}`);
+        addLog(`📍 Geolocalizado en Lat ${lat.toFixed(4)}, Lng ${lon.toFixed(4)}`);
         
-        // Reiniciar estructuras al cambiar de ciudad
+        // Resetear estructuras al viajar de ciudad
         setStructures([]);
         
-        // Disparar simulación para la nueva área
+        // Disparar recálculo
         fetchSimulation([], taxes, securityBudget, waterSubsidy, activeTimeline, [lat, lon]);
       } else {
-        addLog(`⚠️ No se encontraron coordenadas precisas para ${cityObj.name}.`);
+        addLog(`⚠️ Coordenadas no encontradas para ${cityObj.name}.`);
       }
     } catch (err) {
-      console.error("Geocoding failed", err);
-      addLog(`❌ Fallo en geocodificación para ${cityObj.name}.`);
+      console.error(err);
+      addLog(`❌ Error en geocodificador Nominatim.`);
     }
   };
 
@@ -158,13 +158,11 @@ export default function WorldBoxSimulator({ pythonApiUrl = 'http://localhost:500
     centerCoords = mapCenter
   ) => {
     try {
-      // Como el backend espera "hermosillo", si no pasamos ciudad conocida usa un fallback,
-      // pero para fines de renderizado generaremos agentes radialmente alrededor del centro.
       const res = await fetch(`${pythonApiUrl}/api/gis-sandbox/calculate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ciudad: "dynamic_gis_city", // Pasamos modo generico
+          ciudad: "dynamic_gis_city",
           timeline_id: currentTimeline,
           structures: updatedStructures,
           policies: { taxes: updatedTaxes, security: updatedSecurity, subsidy: updatedSubsidy }
@@ -175,18 +173,16 @@ export default function WorldBoxSimulator({ pythonApiUrl = 'http://localhost:500
       if (data.status === 'success') {
         setGlobalMetrics(data.results.global_metrics);
         
-        // El backend devuelve agentes, PERO los vamos a reposicionar artificialmente
-        // alrededor del centro actual (centerCoords) para que encajen en el mapa elegido.
         const baseLat = centerCoords[0];
         const baseLng = centerCoords[1];
-        
         const rawAgents = data.results.sample_agents || [];
+        
+        // Asignar coordenadas dinámicas en base al centro geográfico de la búsqueda
         const localizedAgents = rawAgents.map((agent) => {
-          // Dispersión aleatoria en un radio de ~4km (0.04 grados)
-          const latJitterHome = (Math.random() - 0.5) * 0.08;
-          const lngJitterHome = (Math.random() - 0.5) * 0.08;
-          const latJitterWork = (Math.random() - 0.5) * 0.08;
-          const lngJitterWork = (Math.random() - 0.5) * 0.08;
+          const latJitterHome = (Math.random() - 0.5) * 0.04;
+          const lngJitterHome = (Math.random() - 0.5) * 0.04;
+          const latJitterWork = (Math.random() - 0.5) * 0.04;
+          const lngJitterWork = (Math.random() - 0.5) * 0.04;
           
           return {
             ...agent,
@@ -194,25 +190,48 @@ export default function WorldBoxSimulator({ pythonApiUrl = 'http://localhost:500
             work_coords: [baseLat + latJitterWork, baseLng + lngJitterWork],
             progress: Math.random(),
             direction: Math.random() > 0.5 ? 1 : -1,
-            speed: 0.002 + Math.random() * 0.004,
+            speed: 0.001 + Math.random() * 0.002,
           };
         });
         
         setAgents(localizedAgents);
-        addLog(`👥 Generados ${localizedAgents.length} agentes sintéticos en el área georreferenciada.`);
+        addLog(`👥 Generados ${localizedAgents.length} agentes en la nueva región GIS.`);
       }
     } catch (e) {
-      console.error("Error fetching simulation metrics", e);
+      console.warn("Fallo al conectar con el backend, usando generación local de respaldo", e);
+      // Fallback local robusto
+      const baseLat = centerCoords[0];
+      const baseLng = centerCoords[1];
+      const fallbackAgents = Array.from({ length: 80 }).map((_, idx) => {
+        const latJitterHome = (Math.random() - 0.5) * 0.03;
+        const lngJitterHome = (Math.random() - 0.5) * 0.03;
+        const latJitterWork = (Math.random() - 0.5) * 0.03;
+        const lngJitterWork = (Math.random() - 0.5) * 0.03;
+        return {
+          agent_id: idx,
+          weight: 5 + Math.random() * 15,
+          vote_intention: Math.random() > 0.52 ? "Morena" : "Oposición",
+          government_approval: 30 + Math.random() * 60,
+          economic_stress: 20 + Math.random() * 60,
+          home_coords: [baseLat + latJitterHome, baseLng + lngJitterHome],
+          work_coords: [baseLat + latJitterWork, baseLng + lngJitterWork],
+          progress: Math.random(),
+          direction: Math.random() > 0.5 ? 1 : -1,
+          speed: 0.001 + Math.random() * 0.002,
+        };
+      });
+      setAgents(fallbackAgents);
+      addLog(`👥 Generados ${fallbackAgents.length} agentes locales (Modo Desconectado).`);
     }
   };
 
-  // Inicialización de la simulación
+  // Inicializar simulación
   useEffect(() => {
     fetchSimulation();
     // eslint-disable-next-line
   }, []);
 
-  // Bucle de Animación de Agentes (Ticker)
+  // Bucle de Animación de Agentes
   useEffect(() => {
     let animationFrameId;
     let lastTime = performance.now();
@@ -235,7 +254,6 @@ export default function WorldBoxSimulator({ pythonApiUrl = 'http://localhost:500
               nextDirection = 1;
             }
 
-            // Interpolación lineal entre casa y trabajo
             const lat = agent.home_coords[0] + (agent.work_coords[0] - agent.home_coords[0]) * nextProgress;
             const lng = agent.home_coords[1] + (agent.work_coords[1] - agent.home_coords[1]) * nextProgress;
             
@@ -253,221 +271,276 @@ export default function WorldBoxSimulator({ pythonApiUrl = 'http://localhost:500
   const handlePlaceStructure = (type, lat, lng) => {
     const newStructure = {
       id: Date.now(), type, lat, lng, 
-      name: type === 'well' ? 'Pozo Nuevo' : (type === 'bridge' ? 'Puente' : 'Obra Vial')
+      name: type === 'well' ? 'Pozo Nuevo' : 'Obra Vial'
     };
     const newStructures = [...structures, newStructure];
     setStructures(newStructures);
     fetchSimulation(newStructures, taxes, securityBudget, waterSubsidy, activeTimeline, mapCenter);
     setToolActive(null);
-    addLog(`🏗️ Colocada estructura: ${newStructure.name} en lat: ${lat.toFixed(4)}, lng: ${lng.toFixed(4)}`);
+    addLog(`🏗️ Colocado ${newStructure.name} en Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`);
   };
 
-  // Determinación de color del marcador según ViewMode
+  // Colores de los agentes según el modo visual seleccionado
   const getAgentColor = (agent) => {
     if (viewMode === 'voto') {
-      return agent.vote_intention === "Morena" ? '#10b981' : '#f97316';
+      return agent.vote_intention === "Morena" ? 'var(--neon-emerald)' : 'var(--neon-blue)';
     }
     if (viewMode === 'aprobacion') {
       const ap = agent.government_approval || 50;
-      return ap > 70 ? '#10b981' : ap > 40 ? '#eab308' : '#ef4444';
+      return ap > 70 ? 'var(--neon-emerald)' : ap > 45 ? 'var(--neon-amber)' : 'var(--neon-rose)';
     }
     if (viewMode === 'estres') {
       const st = agent.economic_stress || 50;
-      return st > 65 ? '#ef4444' : st > 35 ? '#f97316' : '#10b981';
+      return st > 60 ? 'var(--neon-rose)' : st > 35 ? 'var(--neon-amber)' : 'var(--neon-emerald)';
     }
-    return '#38bdf8';
+    return 'var(--neon-blue)';
   };
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 p-6 bg-[#030712] min-height-screen text-slate-100 font-sans">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', fontFamily: "'Space Grotesk', sans-serif" }}>
       
-      {/* Columna Principal - MAPA GIS */}
-      <div className="flex-1 flex flex-col gap-4">
-        
-        {/* Cabecera del Mapa y Buscador */}
-        <div className="bg-[#090d16] border border-[#1e293b]/60 rounded-2xl shadow-xl flex flex-col p-4 relative z-50">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div>
-              <h2 className="text-lg font-semibold text-[#00e5ff] flex items-center gap-2">
-                🌍 Sandbox GIS: Gemelo Digital Táctico
-              </h2>
-              <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
-                <MapPin size={12} /> {selectedCityLabel}
-              </p>
-            </div>
-            
-            {/* Buscador Universal de Municipios */}
-            <div className="relative w-full md:w-80">
-              <div className="flex items-center bg-[#0f172a] border border-[#1e293b] rounded-lg px-3 py-2">
-                <Search size={16} className="text-slate-400" />
-                <input 
-                  type="text"
-                  placeholder="Buscar cualquier municipio de México..."
-                  value={searchTerm}
-                  onChange={(e) => {
-                    setSearchTerm(e.target.value);
-                    setShowSearchDropdown(true);
-                  }}
-                  onFocus={() => setShowSearchDropdown(true)}
-                  className="bg-transparent border-none outline-none text-sm text-slate-200 ml-2 w-full"
-                />
-                {searchTerm && <X size={16} className="text-slate-500 cursor-pointer hover:text-white" onClick={() => {setSearchTerm(""); setShowSearchDropdown(false);}} />}
-              </div>
-              
-              {/* Dropdown de Resultados */}
-              {showSearchDropdown && filteredMunicipalities.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-[#0f172a] border border-[#1e293b] rounded-lg shadow-2xl max-h-60 overflow-y-auto z-[60]">
-                  {filteredMunicipalities.map(city => (
-                    <div 
-                      key={city.id} 
-                      onClick={() => handleSelectCity(city)}
-                      className="px-4 py-3 hover:bg-[#1e293b] cursor-pointer border-b border-[#1e293b]/50 transition-colors"
-                    >
-                      <div className="text-sm font-bold text-[#00e5ff]">{city.name}</div>
-                      <div className="text-xs text-slate-400">{city.stateName}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            
-            {/* Controles de Capas y Play/Pause */}
-            <div className="flex items-center gap-3">
-              <button onClick={() => setIsRunning(!isRunning)} className={`p-2 rounded-lg transition ${isRunning ? 'bg-[#ef4444]/20 text-[#ef4444]' : 'bg-[#10b981]/20 text-[#10b981]'}`} title={isRunning ? 'Pausar Simulación' : 'Iniciar Simulación'}>
-                {isRunning ? <Pause size={16} /> : <Play size={16} />}
-              </button>
-              
-              <div className="flex items-center bg-[#0f172a] border border-[#1e293b] rounded-lg p-0.5">
-                <button onClick={() => setViewMode('voto')} className={`text-[10px] font-bold px-3 py-1.5 rounded transition ${viewMode === 'voto' ? 'bg-[#38bdf8]/20 text-[#38bdf8]' : 'text-slate-400 hover:text-slate-200'}`}>Voto</button>
-                <button onClick={() => setViewMode('aprobacion')} className={`text-[10px] font-bold px-3 py-1.5 rounded transition ${viewMode === 'aprobacion' ? 'bg-[#10b981]/20 text-[#10b981]' : 'text-slate-400 hover:text-slate-200'}`}>Aprobación</button>
-                <button onClick={() => setViewMode('estres')} className={`text-[10px] font-bold px-3 py-1.5 rounded transition ${viewMode === 'estres' ? 'bg-[#ef4444]/20 text-[#ef4444]' : 'text-slate-400 hover:text-slate-200'}`}>Estrés</button>
-              </div>
+      {/* Contenedor del Título y Panel Superior de Búsqueda */}
+      <div className="glass-card" style={{ padding: '1.25rem' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
+          
+          <div>
+            <h2 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'white', display: 'flex', alignItems: 'center', gap: '0.5rem', letterSpacing: '0.05em' }}>
+              <Layers size={20} color="var(--thoth-oro)" />
+              SANDBOX GIS: GEMELO DIGITAL TAC-MAP
+            </h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+              <MapPin size={12} color="var(--neon-blue)" />
+              <span>Municipio Activo:</span>
+              <strong style={{ color: 'white' }}>{selectedCityLabel}</strong>
             </div>
           </div>
-        </div>
 
-        {/* CONTENEDOR DEL MAPA LEAFLET */}
-        <div className="flex-1 min-h-[500px] bg-[#0a0d16] border border-[#1e293b]/60 rounded-2xl overflow-hidden shadow-2xl relative z-0">
+          {/* Autocompletado del Municipio */}
+          <div style={{ position: 'relative', width: '300px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(5, 6, 15, 0.95)', border: '1px solid var(--border-glass)', borderRadius: '4px', padding: '0.4rem 0.6rem' }}>
+              <Search size={14} color="var(--text-secondary)" />
+              <input 
+                type="text"
+                placeholder="Buscar municipio en México..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setShowSearchDropdown(true);
+                }}
+                onFocus={() => setShowSearchDropdown(true)}
+                style={{ background: 'transparent', border: 'none', outline: 'none', color: 'white', fontSize: '0.75rem', marginLeft: '0.5rem', width: '100%' }}
+              />
+              {searchTerm && (
+                <X size={14} color="var(--text-secondary)" style={{ cursor: 'pointer' }} onClick={() => {setSearchTerm(""); setShowSearchDropdown(false);}} />
+              )}
+            </div>
+
+            {/* Lista Desplegable de Resultados */}
+            {showSearchDropdown && filteredMunicipalities.length > 0 && (
+              <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'rgba(8, 10, 22, 0.98)', border: '1px solid var(--border-glass)', borderRadius: '4px', overflow: 'hidden', zIndex: 9999, boxShadow: '0 8px 32px rgba(0,0,0,0.8)' }}>
+                {filteredMunicipalities.map(city => (
+                  <div 
+                    key={city.id} 
+                    onClick={() => handleSelectCity(city)}
+                    style={{ padding: '0.6rem 0.8rem', borderBottom: '1px solid rgba(255,255,255,0.03)', cursor: 'pointer', transition: 'background 0.2s' }}
+                    onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.05)'}
+                    onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                  >
+                    <div style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--neon-blue)' }}>{city.name}</div>
+                    <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>{city.stateName}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Controles de Simulación */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <button 
+              onClick={() => setIsRunning(!isRunning)}
+              style={{ background: isRunning ? 'rgba(255, 71, 87, 0.15)' : 'rgba(0, 245, 160, 0.15)', border: `1px solid ${isRunning ? 'var(--thoth-rojo)' : 'var(--thoth-jade)'}`, color: isRunning ? 'var(--thoth-rojo)' : 'var(--thoth-jade)', padding: '0.4rem 0.8rem', borderRadius: '3px', fontSize: '0.7rem', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+            >
+              {isRunning ? <Pause size={12} /> : <Play size={12} />}
+              {isRunning ? 'PAUSAR' : 'REANUDAR'}
+            </button>
+
+            <div className="tab-buttons" style={{ display: 'inline-flex', background: 'rgba(255,255,255,0.04)', padding: '2px', borderRadius: '4px' }}>
+              <button 
+                onClick={() => setViewMode('voto')}
+                style={{ fontSize: '0.65rem', padding: '0.3rem 0.6rem', border: 'none', borderRadius: '3px', cursor: 'pointer', background: viewMode === 'voto' ? 'var(--neon-blue)' : 'transparent', color: viewMode === 'voto' ? 'black' : 'white', fontWeight: '800' }}
+              >
+                Voto
+              </button>
+              <button 
+                onClick={() => setViewMode('aprobacion')}
+                style={{ fontSize: '0.65rem', padding: '0.3rem 0.6rem', border: 'none', borderRadius: '3px', cursor: 'pointer', background: viewMode === 'aprobacion' ? 'var(--neon-emerald)' : 'transparent', color: viewMode === 'aprobacion' ? 'black' : 'white', fontWeight: '800' }}
+              >
+                Aprobación
+              </button>
+              <button 
+                onClick={() => setViewMode('estres')}
+                style={{ fontSize: '0.65rem', padding: '0.3rem 0.6rem', border: 'none', borderRadius: '3px', cursor: 'pointer', background: viewMode === 'estres' ? 'var(--neon-rose)' : 'transparent', color: viewMode === 'estres' ? 'black' : 'white', fontWeight: '800' }}
+              >
+                Estrés
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* Grid del Mapa y Panel de Métricas */}
+      <div className="workspace-grid-2" style={{ marginTop: '0.2rem' }}>
+        
+        {/* Contenedor del Mapa Leaflet */}
+        <div style={{ position: 'relative', border: '1px solid var(--border-glass)', borderRadius: '6px', overflow: 'hidden' }}>
           
-          {/* Herramientas Constructivas Flotantes */}
-          <div className="absolute bottom-6 left-6 z-[400] flex flex-col gap-2 bg-[#0b0f19]/90 border border-[#1e293b] p-2 rounded-xl backdrop-blur-md shadow-2xl">
-            <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider text-center mb-1 border-b border-[#1e293b] pb-1">Herramientas GIS</span>
+          {/* Flotante de Herramientas */}
+          <div style={{ position: 'absolute', bottom: '1.25rem', left: '1.25rem', zIndex: 1000, background: 'rgba(10, 12, 24, 0.9)', border: '1px solid var(--border-glass)', padding: '0.5rem', borderRadius: '4px', backdropFilter: 'blur(8px)', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+            <span style={{ fontSize: '0.55rem', fontWeight: '800', color: 'var(--text-secondary)', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.2rem' }}>GIS TACTICAL TOOLS</span>
             <button 
               onClick={() => setToolActive(toolActive === 'well' ? null : 'well')}
-              className={`flex items-center gap-2 text-xs px-4 py-2 rounded-lg transition ${toolActive === 'well' ? 'bg-[#0284c7] text-white' : 'hover:bg-[#1e293b] text-slate-300'}`}
+              style={{ background: toolActive === 'well' ? 'var(--neon-blue)' : 'rgba(255,255,255,0.02)', color: toolActive === 'well' ? 'black' : 'white', border: 'none', padding: '0.3rem 0.6rem', borderRadius: '3px', fontSize: '0.65rem', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
             >
-              <Droplet size={14} /> Pozo Agua
+              <Droplet size={11} /> Pozo Agua
             </button>
             <button 
               onClick={() => setToolActive(toolActive === 'closure' ? null : 'closure')}
-              className={`flex items-center gap-2 text-xs px-4 py-2 rounded-lg transition ${toolActive === 'closure' ? 'bg-[#ef4444] text-white' : 'hover:bg-[#1e293b] text-slate-300'}`}
+              style={{ background: toolActive === 'closure' ? 'var(--neon-rose)' : 'rgba(255,255,255,0.02)', color: toolActive === 'closure' ? 'black' : 'white', border: 'none', padding: '0.3rem 0.6rem', borderRadius: '3px', fontSize: '0.65rem', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
             >
-              <Construction size={14} /> Cierre Vial
+              <Construction size={11} /> Cierre Vial
             </button>
           </div>
 
-          <MapContainer 
-            center={mapCenter} 
-            zoom={mapZoom} 
-            style={{ width: '100%', height: '100%', background: '#090d16' }}
-            zoomControl={false}
-          >
-            {/* TileLayer Oscuro de CartoDB - Alta tecnología estética */}
-            <TileLayer
-              url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-            />
-            
-            <ChangeMapView center={mapCenter} zoom={mapZoom} />
-            <MapClickEvents toolActive={toolActive} onPlaceStructure={handlePlaceStructure} />
-
-            {/* Renderizado de Agentes Animados */}
-            {agents.map((agent) => {
-              if (!agent.current_lat || !agent.current_lng) return null;
-              const color = getAgentColor(agent);
-              // Tamaño de avatar basado en su peso poblacional
-              const radius = Math.max(3, Math.min(8, (agent.weight || 10) / 3)); 
-              
-              return (
-                <CircleMarker
-                  key={agent.agent_id}
-                  center={[agent.current_lat, agent.current_lng]}
-                  radius={radius}
-                  pathOptions={{
-                    fillColor: color,
-                    fillOpacity: 0.85,
-                    color: '#ffffff', // Borde blanco
-                    weight: 1.5
-                  }}
-                />
-              );
-            })}
-
-            {/* Renderizado de Infraestructura */}
-            {structures.map((s) => (
-              <Marker 
-                key={s.id} 
-                position={[s.lat, s.lng]}
-                icon={customIcons[s.type] || customIcons.well}
+          {/* Wrapper con altura explícita para Leaflet */}
+          <div className="map-container" style={{ height: '520px', width: '100%', position: 'relative' }}>
+            <MapContainer 
+              center={mapCenter} 
+              zoom={mapZoom} 
+              style={{ width: '100%', height: '100%', background: '#06070f' }}
+              zoomControl={true}
+            >
+              <TileLayer
+                url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
               />
-            ))}
-          </MapContainer>
+              
+              <ChangeMapView center={mapCenter} zoom={mapZoom} />
+              <MapClickEvents toolActive={toolActive} onPlaceStructure={handlePlaceStructure} />
 
-          {/* Toast / Indicador de Herramienta Activa */}
+              {/* Agentes */}
+              {agents.map((agent) => {
+                if (!agent.current_lat || !agent.current_lng) return null;
+                const color = getAgentColor(agent);
+                const radius = Math.max(3.5, Math.min(8, (agent.weight || 10) / 2.5)); 
+                
+                return (
+                  <CircleMarker
+                    key={agent.agent_id}
+                    center={[agent.current_lat, agent.current_lng]}
+                    radius={radius}
+                    pathOptions={{
+                      fillColor: color,
+                      fillOpacity: 0.85,
+                      color: '#ffffff',
+                      weight: 1.2
+                    }}
+                  />
+                );
+              })}
+
+              {/* Obras */}
+              {structures.map((s) => (
+                <Marker 
+                  key={s.id} 
+                  position={[s.lat, s.lng]}
+                  icon={customIcons[s.type] || customIcons.well}
+                />
+              ))}
+            </MapContainer>
+          </div>
+
+          {/* Toast / Alerta de Clic */}
           {toolActive && (
-            <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-[400] bg-[#00e5ff] text-black font-bold px-4 py-2 rounded-full shadow-[0_0_15px_rgba(0,229,255,0.6)] animate-pulse text-sm">
-              Selecciona un punto en el mapa para colocar {toolActive === 'well' ? 'Agua' : 'Obra'}
+            <div style={{ position: 'absolute', top: '1rem', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, background: 'var(--thoth-oro)', color: 'black', fontWeight: '800', px: '1rem', py: '0.4rem', borderRadius: '20px', fontSize: '0.7rem', boxShadow: '0 0 15px rgba(212, 175, 55, 0.6)', animation: 'pulse 1.5s infinite', padding: '0.4rem 1rem' }}>
+              ⚠️ HAZ CLIC EN EL MAPA PARA COLOCAR {toolActive === 'well' ? 'EL POZO' : 'EL CIERRE VIAL'}
             </div>
           )}
         </div>
-      </div>
 
-      {/* Panel Lateral: Consola y KPI's */}
-      <div className="w-full lg:w-[320px] flex flex-col gap-4">
-        {/* KPI Panel */}
-        <div className="bg-[#090d16] border border-[#1e293b]/60 p-5 rounded-2xl shadow-xl flex flex-col gap-4">
-          <h3 className="font-bold text-[#00e5ff] border-b border-[#1e293b]/50 pb-2 flex items-center gap-2">
-            <Layers size={16} /> Estado del Ecosistema
-          </h3>
+        {/* Panel Derecho - KPIs y Logs */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           
-          <div className="flex flex-col gap-3">
-            <div>
-              <div className="flex justify-between text-xs text-slate-400 mb-1">
-                <span>Intención Voto (Morena)</span>
-                <span className="font-bold text-white">{globalMetrics.vote_share.Morena}%</span>
+          {/* Métricas del Ecosistema */}
+          <div className="glass-card" style={{ padding: '1rem' }}>
+            <h3 style={{ fontSize: '0.8rem', fontWeight: '800', color: 'white', display: 'flex', alignItems: 'center', gap: '0.4rem', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '0.4rem', marginBottom: '0.8rem' }}>
+              <Activity size={14} color="var(--thoth-oro)" />
+              MÉTRICAS DEL ECOSISTEMA
+            </h3>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', color: 'var(--text-secondary)', marginBottom: '0.2rem' }}>
+                  <span>Voto Morena</span>
+                  <span style={{ color: 'var(--neon-emerald)', fontWeight: '800' }}>{globalMetrics.vote_share.Morena}%</span>
+                </div>
+                <div style={{ height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', overflow: 'hidden' }}>
+                  <div style={{ height: '100%', background: 'var(--neon-emerald)', width: `${globalMetrics.vote_share.Morena}%` }}></div>
+                </div>
               </div>
-              <div className="h-1.5 bg-[#1e293b] rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-[#059669] to-[#10b981]" style={{ width: `${globalMetrics.vote_share.Morena}%` }} />
+
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', color: 'var(--text-secondary)', marginBottom: '0.2rem' }}>
+                  <span>Voto Oposición</span>
+                  <span style={{ color: 'var(--neon-blue)', fontWeight: '800' }}>{globalMetrics.vote_share.Oposición}%</span>
+                </div>
+                <div style={{ height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', overflow: 'hidden' }}>
+                  <div style={{ height: '100%', background: 'var(--neon-blue)', width: `${globalMetrics.vote_share.Oposición}%` }}></div>
+                </div>
               </div>
+
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', color: 'var(--text-secondary)', marginBottom: '0.2rem' }}>
+                  <span>Estrés Hídrico</span>
+                  <span style={{ color: 'var(--neon-amber)', fontWeight: '800' }}>{globalMetrics.avg_water_pain.toFixed(1)}%</span>
+                </div>
+                <div style={{ height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', overflow: 'hidden' }}>
+                  <div style={{ height: '100%', background: 'var(--neon-amber)', width: `${globalMetrics.avg_water_pain}%` }}></div>
+                </div>
+              </div>
+
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', color: 'var(--text-secondary)', marginBottom: '0.2rem' }}>
+                  <span>Aprobación Promedio</span>
+                  <span style={{ color: 'white', fontWeight: '800' }}>{globalMetrics.avg_happiness.toFixed(1)}%</span>
+                </div>
+                <div style={{ height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', overflow: 'hidden' }}>
+                  <div style={{ height: '100%', background: 'white', width: `${globalMetrics.avg_happiness}%` }}></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Consola de Logs */}
+          <div className="glass-card" style={{ padding: 0, display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', minHeight: '260px' }}>
+            <div style={{ padding: '0.4rem 0.8rem', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.06)', fontFamily: 'monospace', fontSize: '0.62rem', fontWeight: '800', color: 'var(--thoth-oro)', letterSpacing: '0.05em' }}>
+              &gt; TELEMETRÍA_SISTEMA
             </div>
             
-            <div>
-              <div className="flex justify-between text-xs text-slate-400 mb-1">
-                <span>Estrés Hídrico Promedio</span>
-                <span className="font-bold text-white">{globalMetrics.avg_water_pain.toFixed(1)}%</span>
-              </div>
-              <div className="h-1.5 bg-[#1e293b] rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-[#d97706] to-[#fbbf24]" style={{ width: `${globalMetrics.avg_water_pain}%` }} />
-              </div>
+            <div style={{ padding: '0.8rem', overflowY: 'auto', flex: 1, fontFamily: "'JetBrains Mono', monospace", fontSize: '0.65rem', display: 'flex', flexDirection: 'column', gap: '0.4rem', background: '#05060f' }}>
+              {logs.map((log, idx) => (
+                <div key={idx} style={{ color: 'var(--text-secondary)', borderLeft: '2px solid rgba(212,175,55,0.15)', paddingLeft: '0.4rem' }}>
+                  <span style={{ color: 'var(--neon-blue)', marginRight: '0.35rem' }}>⚡</span>
+                  {log}
+                </div>
+              ))}
             </div>
           </div>
+
         </div>
 
-        {/* Consola de Registros */}
-        <div className="bg-[#090d16] border border-[#1e293b]/60 p-0 rounded-2xl shadow-xl flex-1 flex flex-col overflow-hidden min-h-[250px]">
-          <div className="p-3 bg-[#0f172a] border-b border-[#1e293b] font-mono text-xs text-[#00e5ff] tracking-widest font-bold">
-            &gt; SYSTEM_LOGS
-          </div>
-          <div className="p-4 overflow-y-auto flex-1 font-mono text-[11px] leading-relaxed flex flex-col gap-2">
-            {logs.map((l, idx) => (
-              <div key={idx} className="text-slate-300 opacity-90 border-l-2 border-[#1e293b] pl-2">
-                <span className="text-[#38bdf8] mr-2">➜</span>{l}
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
-      
+
     </div>
   );
 }
