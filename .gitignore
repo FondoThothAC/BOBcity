@@ -69,3 +69,10 @@ htmlcov/
 *.tar.xz
 *.tar.zst
 ```
+# Grandes archivos de datos / GIS
+Datos/Catalogodeinformaciongeoelectoral*.txt
+Datos/**/*.shp
+Datos/**/*.csv
+Datos/**/*.xlsx
+public/data/geojson/SECCION.geojson
+Claves SSH/

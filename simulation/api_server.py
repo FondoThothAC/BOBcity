@@ -1023,6 +1023,57 @@ class SimulationAPIHandler(BaseHTTPRequestHandler):
                 error_response = {"status": "error", "message": str(e)}
                 self.wfile.write(json.dumps(error_response).encode('utf-8'))
 
+        elif self.path == "/api/osint/execute":
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            try:
+                data = json.loads(post_data.decode('utf-8'))
+                tool = data.get('tool')
+                target = data.get('target')
+                
+                print(f"🕵️ [OSINT Engine] Solicitud para ejecutar {tool} contra {target}")
+                
+                import subprocess
+                import shlex
+                
+                osint_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'osint_tools')
+                output = ""
+                
+                if tool == 'sherlock':
+                    cmd = f"python3 -m sherlock_project {shlex.quote(target)}"
+                    cwd = os.path.join(osint_dir, 'sherlock')
+                elif tool == 'theharvester':
+                    cmd = f"theharvester -d {shlex.quote(target)} -b all"
+                    cwd = os.path.join(osint_dir, 'theHarvester')
+                elif tool == 'ghunt':
+                    cmd = f"ghunt email {shlex.quote(target)}"
+                    cwd = os.path.join(osint_dir, 'GHunt')
+                else:
+                    raise ValueError("Herramienta no soportada")
+                    
+                print(f"Ejecutando: {cmd} en {cwd}")
+                
+                # Para evitar bloquear el servidor demasiado tiempo, podríamos usar subprocess.Popen
+                # pero para esta versión devolvemos stdout. Usamos timeout para evitar cuelgues.
+                process = subprocess.run(
+                    cmd, shell=True, cwd=cwd,
+                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                    text=True, timeout=120
+                )
+                output = process.stdout
+                
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self._set_cors_headers()
+                self.end_headers()
+                self.wfile.write(json.dumps({"status": "success", "output": output}).encode('utf-8'))
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self._set_cors_headers()
+                self.end_headers()
+                self.wfile.write(json.dumps({"status": "error", "message": str(e)}).encode('utf-8'))
+                
         elif self.path == "/api/ingest/telemetry":
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)

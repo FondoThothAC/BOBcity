@@ -42,13 +42,13 @@ print_error() {
 }
 
 # Verificar si estamos en el directorio correcto
-if [ ! -d "/workspace" ]; then
-    print_error "Este script debe ejecutarse desde /workspace"
+if [ ! -d "$PWD" ]; then
+    print_error "Este script debe ejecutarse desde la raíz del proyecto"
     exit 1
 fi
 
 # Crear directorio para herramientas OSINT
-OSINT_DIR="/workspace/osint_tools"
+OSINT_DIR="$PWD/osint_tools"
 mkdir -p "$OSINT_DIR"
 print_status "Directorio de herramientas creado: $OSINT_DIR"
 
@@ -70,10 +70,10 @@ else
 fi
 
 cd "$OSINT_DIR/sherlock"
-pip3 install -r requirements.txt --quiet
+pip3 install -e . --quiet
 print_success "Sherlock instalado correctamente"
 print_status "Ubicación: $OSINT_DIR/sherlock"
-print_status "Uso: python3 sherlock.py <username>"
+print_status "Uso: python3 -m sherlock_project <username>"
 
 # ==============================================================================
 # 2. INSTALAR THEHARVESTER
@@ -93,7 +93,6 @@ else
 fi
 
 cd "$OSINT_DIR/theHarvester"
-pip3 install -r requirements.txt --quiet
 pip3 install -e . --quiet
 print_success "theHarvester instalado correctamente"
 print_status "Ubicación: $OSINT_DIR/theHarvester"
@@ -117,7 +116,7 @@ else
 fi
 
 cd "$OSINT_DIR/GHunt"
-pip3 install -r requirements.txt --quiet
+pip3 install -e . --quiet
 print_success "GHunt instalado correctamente"
 print_status "Ubicación: $OSINT_DIR/GHunt"
 print_status "Uso: python3 ghunt.py -e <email>"
@@ -164,25 +163,25 @@ echo "║     🔍 OSINT Tools Status Check                          ║"
 echo "╚══════════════════════════════════════════════════════════╝"
 echo ""
 
-OSINT_DIR="/workspace/osint_tools"
+OSINT_DIR="\$PWD/osint_tools"
 
 # Verificar Sherlock
-if [ -f "$OSINT_DIR/sherlock/sherlock.py" ]; then
+if [ -d "$OSINT_DIR/sherlock/sherlock_project" ]; then
     echo "✅ Sherlock: INSTALADO"
-    cd "$OSINT_DIR/sherlock" && python3 sherlock.py --version 2>/dev/null || echo "   Versión: disponible"
+    cd "$OSINT_DIR/sherlock" && python3 -m sherlock_project --version 2>/dev/null || echo "   Versión: disponible"
 else
     echo "❌ Sherlock: NO INSTALADO"
 fi
 
 # Verificar theHarvester
-if command -v theharvester &> /dev/null || [ -f "$OSINT_DIR/theHarvester/theHarvester.py" ]; then
+if command -v theharvester &> /dev/null || [ -d "$OSINT_DIR/theHarvester/theHarvester" ]; then
     echo "✅ theHarvester: INSTALADO"
 else
     echo "❌ theHarvester: NO INSTALADO"
 fi
 
 # Verificar GHunt
-if [ -f "$OSINT_DIR/GHunt/ghunt.py" ]; then
+if command -v ghunt &> /dev/null || [ -d "$OSINT_DIR/GHunt/ghunt" ]; then
     echo "✅ GHunt: INSTALADO"
 else
     echo "❌ GHunt: NO INSTALADO"

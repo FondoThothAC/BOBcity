@@ -1,0 +1,346 @@
+/* ─────────────────────────────────────────
+   CívicaOS Engine — Mapa Georeferenciado
+   Glassmorphic / Neón / Cyberpunk Civic
+   ───────────────────────────────────────── */
+
+:root {
+  --neon-purple: #a855f7;
+  --neon-green: #10b981;
+  --neon-red: #ef4444;
+  --neon-blue: #3b82f6;
+  --neon-orange: #f59e0b;
+  --glass-bg: rgba(15, 23, 42, 0.72);
+  --glass-border: rgba(148, 163, 184, 0.12);
+  --glass-blur: blur(14px) saturate(160%);
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --bg-dark: #0b0f19;
+}
+
+.civica-map-container {
+  width: 100vw;
+  height: 100vh;
+  background: var(--bg-dark);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* GLASS base */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+}
+
+/* ── HEADER ── */
+.map-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--glass-border);
+  z-index: 1000;
+}
+.header-left h1 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: -0.02em;
+}
+.header-icon { color: var(--neon-purple); }
+.header-left p {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+.header-right {
+  display: flex;
+  gap: 10px;
+}
+.badge {
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.badge.global {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--neon-green);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+.badge.gemelo {
+  background: rgba(168, 85, 247, 0.15);
+  color: var(--neon-purple);
+  border: 1px solid rgba(168, 85, 247, 0.25);
+}
+
+/* ── TOOLBAR ── */
+.map-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 10px 24px;
+  border-bottom: 1px solid var(--glass-border);
+  z-index: 1000;
+  flex-wrap: wrap;
+}
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.toolbar-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Ciudad pills */
+.ciudad-pill {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+  background: rgba(30, 41, 59, 0.6);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.ciudad-pill:hover {
+  border-color: var(--neon-purple);
+  color: var(--text-primary);
+  background: rgba(168, 85, 247, 0.12);
+}
+.ciudad-pill.active {
+  background: linear-gradient(135deg, rgba(168,85,247,0.25), rgba(59,130,246,0.25));
+  border-color: var(--neon-purple);
+  color: #fff;
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.25);
+}
+
+/* Dropdown capas */
+.dropdown-capas { position: relative; }
+.capa-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+  background: rgba(30, 41, 59, 0.8);
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 260px;
+  border-radius: 10px;
+  padding: 6px;
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 2000;
+}
+.dropdown-capas:hover .dropdown-menu { display: flex; }
+.dropdown-item {
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: 0.15s;
+}
+.dropdown-item:hover {
+  background: rgba(168, 85, 247, 0.15);
+  color: #fff;
+}
+.dropdown-item.active {
+  color: var(--neon-purple);
+  font-weight: 700;
+}
+
+/* Indicadores Banxico */
+.toolbar-indicadores {
+  margin-left: auto;
+  display: flex;
+  gap: 10px;
+}
+.ind-badge {
+  padding: 5px 10px;
+  border-radius: 6px;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid var(--glass-border);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--neon-green);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ── MAPA ── */
+.map-wrapper {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+.civica-leaflet-map {
+  width: 100%;
+  height: 100%;
+  background: #0f172a;
+}
+
+/* Leaflet overrides neón */
+.leaflet-container {
+  background: #0b0f19 !important;
+}
+.leaflet-control-layers {
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 10px !important;
+  color: var(--text-primary) !important;
+  padding: 8px 10px !important;
+  font-size: 0.78rem;
+}
+.leaflet-control-layers-toggle {
+  filter: invert(1) brightness(1.2);
+}
+.leaflet-control-zoom a {
+  background: var(--glass-bg) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--glass-border) !important;
+  backdrop-filter: var(--glass-blur);
+}
+
+/* ── POPUP CUSTOM ── */
+.civica-popup-wrapper .leaflet-popup-content-wrapper {
+  background: transparent;
+  box-shadow: none;
+  border-radius: 12px;
+  padding: 0;
+}
+.civica-popup-wrapper .leaflet-popup-tip {
+  background: rgba(15, 23, 42, 0.9);
+  backdrop-filter: blur(10px);
+}
+.civica-popup-wrapper .leaflet-popup-content {
+  margin: 0;
+  width: 260px !important;
+}
+.civica-popup {
+  border-radius: 12px;
+  overflow: hidden;
+  color: var(--text-primary);
+}
+.popup-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  border-bottom: 2px solid var(--neon-purple);
+  background: rgba(15, 23, 42, 0.85);
+}
+.popup-body {
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(15, 23, 42, 0.75);
+}
+.popup-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+}
+.popup-row span { color: var(--text-secondary); }
+.popup-row b { color: var(--text-primary); font-weight: 600; }
+.popup-footer {
+  padding: 8px 14px;
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+  text-align: center;
+  border-top: 1px solid var(--glass-border);
+}
+
+/* ── LEYENDA ── */
+.leyenda-neon {
+  position: absolute;
+  bottom: 24px;
+  left: 24px;
+  z-index: 1000;
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 180px;
+}
+.leyenda-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.leyenda-scale {
+  display: flex;
+  gap: 3px;
+}
+.leyenda-scale span {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  font-size: 0.55rem;
+  color: transparent;
+  transition: 0.2s;
+}
+.leyenda-scale:hover span { color: rgba(255,255,255,0.7); }
+
+/* ── LOADING ── */
+.map-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2000;
+  border-radius: 14px;
+  padding: 18px 28px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Scrollbar minimal */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.25); border-radius: 3px; }

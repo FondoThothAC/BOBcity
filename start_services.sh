@@ -53,17 +53,33 @@ VITE_PID=$!
 echo -e "${GREEN}✅ Servidor Frontend iniciado en segundo plano (PID: $VITE_PID)${NC}"
 
 # 5. Instrucción de Modelos IA en Ollama
-echo -e "${YELLOW}[5/5] Directiva de Modelos de Inteligencia Artificial (Ollama):${NC}"
+echo -e "${YELLOW}[5/6] Directiva de Modelos de Inteligencia Artificial (Ollama):${NC}"
 echo -e "   Para cargar y actualizar los modelos locales, abre una terminal y corre:"
 echo -e "   ${BLUE}ollama pull qwen2.5:14b${NC}   (Modelo de lenguaje recomendado para Hermosillo)"
 echo -e "   ${BLUE}ollama pull llama3:8b${NC}      (Modelo secundario de velocidad)"
 echo -e ""
+
+# 6. Levantar SpiderFoot (OSINT UI)
+if [ -f "osint_tools/spiderfoot/sf.py" ]; then
+    echo -e "${YELLOW}[6/6] Iniciando Interfaz Web de SpiderFoot OSINT (Port 5002)...${NC}"
+    cd osint_tools/spiderfoot
+    python3 sf.py -l 127.0.0.1:5002 > ../../spiderfoot_server.log 2>&1 &
+    SPIDERFOOT_PID=$!
+    cd ../..
+    echo -e "${GREEN}✅ Servidor SpiderFoot iniciado (PID: $SPIDERFOOT_PID)${NC}"
+else
+    echo -e "${YELLOW}[6/6] SpiderFoot no detectado. Si deseas usarlo, corre ./install_osint_tools.sh primero.${NC}"
+    SPIDERFOOT_PID=""
+fi
 
 # Guardar PIDs para apagar limpiamente
 echo -e "${GREEN}🚀 ¡Todos los servicios han sido levantados!${NC}"
 echo -e "   👉 Acceso al Panel Frontend: ${BLUE}http://localhost:3335${NC}"
 echo -e "   👉 Acceso al Motor Python:   ${BLUE}http://localhost:5001${NC}"
 echo -e "   👉 Acceso al Monitor Flower: ${BLUE}http://localhost:5555${NC}"
+if [ -n "$SPIDERFOOT_PID" ]; then
+    echo -e "   👉 Acceso a SpiderFoot:      ${BLUE}http://127.0.0.1:5002${NC}"
+fi
 echo ""
 echo -e "Presiona ${RED}[Ctrl+C]${NC} para apagar todos los servicios y limpiar procesos."
 
@@ -75,7 +91,10 @@ cleanup() {
     kill $BEAT_PID >/dev/null 2>&1 || true
     kill $FLOWER_PID >/dev/null 2>&1 || true
     kill $VITE_PID >/dev/null 2>&1 || true
-    rm -f simulation_server.log vite_server.log celery_worker.log celery_beat.log flower_monitor.log
+    if [ -n "$SPIDERFOOT_PID" ]; then
+        kill $SPIDERFOOT_PID >/dev/null 2>&1 || true
+    fi
+    rm -f simulation_server.log vite_server.log celery_worker.log celery_beat.log flower_monitor.log spiderfoot_server.log
     deactivate >/dev/null 2>&1 || true
     echo -e "${GREEN}✅ Puertos liberados. ¡Hasta luego!${NC}"
     exit 0

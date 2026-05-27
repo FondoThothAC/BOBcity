@@ -156,17 +156,60 @@ export default function HunterDashboard() {
         <div style={{ marginTop: '1rem' }}>
           <h4 style={{ fontSize: '0.85rem', color: '#10B981', marginBottom: '0.5rem' }}>ESTADO DE HERRAMIENTAS:</h4>
           <div style={{ background: 'rgba(0,0,0,0.4)', padding: '0.75rem', borderRadius: '8px', fontSize: '0.75rem', color: '#94A3B8' }}>
-            <div style={{ marginBottom: '0.5rem', color: '#E2E8F0' }}><strong>EN MODO SIMULACIÓN (3/7)</strong></div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', paddingLeft: '0.5rem', borderLeft: '1px solid rgba(255,255,255,0.1)' }}>
-              <div>🟡 Sherlock (búsqueda de usuarios)</div>
-              <div>🟡 theHarvester (extracción de correos/dominios)</div>
-              <div>🟡 GHunt (investigación Google)</div>
+            <div style={{ marginBottom: '0.5rem', color: '#10B981' }}><strong>EN LÍNEA (4/7)</strong></div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', paddingLeft: '0.5rem', borderLeft: '1px solid rgba(255,255,255,0.1)' }}>
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>🟢 Sherlock</span>
+                <button onClick={() => {
+                  const target = prompt("Usuario a buscar:");
+                  if(target) {
+                    fetch('http://localhost:5001/api/osint/execute', {
+                      method: 'POST',
+                      headers: {'Content-Type': 'application/json'},
+                      body: JSON.stringify({tool: 'sherlock', target})
+                    }).then(r=>r.json()).then(data=>console.log(data.output)).catch(console.error);
+                  }
+                }} style={{ background: 'rgba(16, 185, 129, 0.2)', border: '1px solid #10B981', color: '#10B981', borderRadius: '4px', cursor: 'pointer', padding: '2px 6px', fontSize: '0.65rem' }}>EJECUTAR</button>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>🟢 theHarvester</span>
+                <button onClick={() => {
+                  const target = prompt("Dominio a buscar (ej: thoth.org):");
+                  if(target) {
+                    fetch('http://localhost:5001/api/osint/execute', {
+                      method: 'POST',
+                      headers: {'Content-Type': 'application/json'},
+                      body: JSON.stringify({tool: 'theharvester', target})
+                    }).then(r=>r.json()).then(data=>console.log(data.output)).catch(console.error);
+                  }
+                }} style={{ background: 'rgba(16, 185, 129, 0.2)', border: '1px solid #10B981', color: '#10B981', borderRadius: '4px', cursor: 'pointer', padding: '2px 6px', fontSize: '0.65rem' }}>EJECUTAR</button>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>🟢 GHunt</span>
+                <button onClick={() => {
+                  const target = prompt("Email a investigar:");
+                  if(target) {
+                    fetch('http://localhost:5001/api/osint/execute', {
+                      method: 'POST',
+                      headers: {'Content-Type': 'application/json'},
+                      body: JSON.stringify({tool: 'ghunt', target})
+                    }).then(r=>r.json()).then(data=>console.log(data.output)).catch(console.error);
+                  }
+                }} style={{ background: 'rgba(16, 185, 129, 0.2)', border: '1px solid #10B981', color: '#10B981', borderRadius: '4px', cursor: 'pointer', padding: '2px 6px', fontSize: '0.65rem' }}>EJECUTAR</button>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>🟢 SpiderFoot</span>
+                <a href="http://127.0.0.1:5002" target="_blank" rel="noreferrer" style={{ background: 'rgba(16, 185, 129, 0.2)', border: '1px solid #10B981', color: '#10B981', borderRadius: '4px', cursor: 'pointer', padding: '2px 6px', fontSize: '0.65rem', textDecoration: 'none' }}>ABRIR UI</a>
+              </div>
             </div>
             
-            <div style={{ marginTop: '0.75rem', marginBottom: '0.5rem', color: '#E2E8F0' }}><strong>SIN CONEXIÓN (2/7)</strong></div>
+            <div style={{ marginTop: '0.75rem', marginBottom: '0.5rem', color: '#E2E8F0' }}><strong>SIN CONEXIÓN (1/7)</strong></div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', paddingLeft: '0.5rem', borderLeft: '1px solid rgba(255,255,255,0.1)' }}>
               <div>🔴 Maltego</div>
-              <div>🔴 SpiderFoot</div>
             </div>
           </div>
         </div>
