@@ -46,10 +46,10 @@ export default function UnifiedCommandCenter({ agents, clients }) {
       if (data.status === 'success') {
         if (!data.data.webcams) {
           data.data.webcams = [
-            { lat: 19.4326, lng: -99.1332, name: "Zócalo CDMX", viewers: 1205 },
-            { lat: 20.6596, lng: -103.3496, name: "Minerva GDL", viewers: 842 },
-            { lat: 25.6866, lng: -100.3161, name: "Macroplaza MTY", viewers: 630 },
-            { lat: 29.0729, lng: -110.9559, name: "Catedral HMO", viewers: 415 }
+            { lat: 19.4326, lng: -99.1332, name: "Zócalo CDMX", viewers: 1205, stream_url: "https://www.youtube.com/embed/WzWkB-WADB4?autoplay=1&mute=1" },
+            { lat: 20.6596, lng: -103.3496, name: "Minerva GDL", viewers: 842, stream_url: "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1" },
+            { lat: 25.6866, lng: -100.3161, name: "Macroplaza MTY", viewers: 630, stream_url: "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1" },
+            { lat: 29.0729, lng: -110.9559, name: "Catedral HMO", viewers: 415, stream_url: "https://www.youtube.com/embed/A1YxNYiyALg?autoplay=1&mute=1" }
           ];
         }
         setPulseData(data.data);
