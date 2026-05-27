@@ -10,6 +10,8 @@ import {
 import { Filter, Droplet, Shield, Landmark, Flame, Users, MapPin, Database, ArrowLeft, Car, School, AlertTriangle, TrendingUp, DollarSign } from 'lucide-react';
 import realMetrics from '../data/real_electoral_metrics.json';
 import electoralScenarios from '../data/electoral_scenarios.json';
+import { useGeoJSON } from '../hooks/useGeoJSON';
+import { GeoBoundaryLayer } from './GeoBoundaryLayer';
 
 // Helper Component para manejar el zoom y centrado dinámico de Leaflet de forma limpia
 function ChangeMapView({ center, zoom }) {
@@ -186,6 +188,15 @@ export default function PainPointsMap({ agents, externalCenter }) {
   // Estados de datos geográficos reales
   const [geoJsonData, setGeoJsonData] = useState(null);
   const [loadingGeoJson, setLoadingGeoJson] = useState(false);
+
+  // Cargar estados deterministas usando el hook useGeoJSON
+  const { data: statesGeo, loading: loadingGeo } = useGeoJSON("estados");
+
+  useEffect(() => {
+    if (!selectedState) {
+      setLoadingGeoJson(loadingGeo);
+    }
+  }, [loadingGeo, selectedState]);
 
   // Efecto para cargar GeoJSON del INE cuando se selecciona la capa
   useEffect(() => {
@@ -525,59 +536,30 @@ export default function PainPointsMap({ agents, externalCenter }) {
     const pythonApiUrl = localStorage.getItem('cp:python_api_url') || `http://${window.location.hostname}:5001`;
 
     if (!selectedState) {
-      // Cargar límites nacionales de México para visualización a nivel país
-      setLoadingGeoJson(true);
-      const localEstadosUrl = `${pythonApiUrl}/api/estados`;
-      
-      fetch(localEstadosUrl)
-        .then(res => {
-          if (!res.ok) throw new Error("Fallo al obtener límites desde servidor local, intentando fallback remoto");
-          return res.json();
-        })
-        .catch(() => {
-          // Intentar URL remota en caso de que el backend local no responda
-          const mexicoGeoJsonUrl = 'https://raw.githubusercontent.com/goxando/mexico-geojson/master/mexico.json';
-          return fetch(mexicoGeoJsonUrl).then(res => {
-            if (!res.ok) throw new Error("Fallo también en URL de respaldo externa");
-            return res.json();
-          });
-        })
-        .then(data => {
-          if (data && data.features) {
-            const mappedFeatures = data.features.map((f, idx) => {
-              const name = f.properties?.name || f.properties?.ESTADO || '';
-              const normalizedName = name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s/g, '');
-              const stateKey = Object.keys(MEXICO_STATES).find(k => k.toLowerCase().replace(/_/g, '') === normalizedName) || 'CDMX';
-              
-              return {
-
-                ...f,
-                properties: {
-                  ...f.properties,
-                  seccion: 'Estado',
-                  distrito: 'Fed',
-                  cp: 'N/A',
-                  name: name,
-                  state_id: stateKey,
-                  poblacion: MEXICO_STATES[stateKey]?.padronTotal * 1.45 || 1200000,
-                  lista_nominal: MEXICO_STATES[stateKey]?.padronTotal || 800000,
-                  indice_dolor: 30 + (idx % 4) * 8,
-                  indice_economico: 25 + (idx % 3) * 12
-                }
-              };
-            });
-            setGeoJsonData({ type: "FeatureCollection", features: mappedFeatures });
-          } else {
-            setGeoJsonData(null);
-          }
-        })
-        .catch(err => {
-          console.warn("Falla de carga GeoJSON nacional: usando fallback procedural celular de alta tecnología.", err);
-          setGeoJsonData(null);
-        })
-        .finally(() => {
-          setLoadingGeoJson(false);
+      if (statesGeo && statesGeo.features) {
+        const mappedFeatures = statesGeo.features.map((f, idx) => {
+          const name = f.properties?.name || f.properties?.ESTADO || '';
+          const normalizedName = name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s/g, '');
+          const stateKey = Object.keys(MEXICO_STATES).find(k => k.toLowerCase().replace(/_/g, '') === normalizedName) || 'CDMX';
+          
+          return {
+            ...f,
+            properties: {
+              ...f.properties,
+              seccion: 'Estado',
+              distrito: 'Fed',
+              cp: 'N/A',
+              name: name,
+              state_id: stateKey,
+              poblacion: MEXICO_STATES[stateKey]?.padronTotal * 1.45 || 1200000,
+              lista_nominal: MEXICO_STATES[stateKey]?.padronTotal || 800000,
+              indice_dolor: 30 + (idx % 4) * 8,
+              indice_economico: 25 + (idx % 3) * 12
+            }
+          };
         });
+        setGeoJsonData({ type: "FeatureCollection", features: mappedFeatures });
+      }
       return;
     }
 
@@ -615,7 +597,7 @@ export default function PainPointsMap({ agents, externalCenter }) {
       .finally(() => {
         setLoadingGeoJson(false);
       });
-  }, [selectedState, selectedMunicipality]);
+  }, [selectedState, selectedMunicipality, statesGeo]);
 
   // Hook para disparar la simulación inicial al seleccionar un municipio
   useEffect(() => {

@@ -543,60 +543,13 @@ class SimulationAPIHandler(BaseHTTPRequestHandler):
                 
         # 🗺️ Endpoint /api/estados - Servir límites geográficos estatales (GeoJSON) a nivel nacional
         if requested_path.startswith("/api/estados"):
-            features = []
-            estado_nombres = {
-                "01": "Aguascalientes", "02": "Baja California", "03": "Baja California Sur",
-                "04": "Campeche", "05": "Coahuila", "06": "Colima", "07": "Chiapas",
-                "08": "Chihuahua", "09": "Ciudad de México", "10": "Durango", "11": "Guanajuato",
-                "12": "Guerrero", "13": "Hidalgo", "14": "Jalisco", "15": "Estado de México",
-                "16": "Michoacán", "17": "Morelos", "18": "Nayarit", "19": "Nuevo León",
-                "20": "Oaxaca", "21": "Puebla", "22": "Querétaro", "23": "Quintana Roo",
-                "24": "San Luis Potosí", "25": "Sinaloa", "26": "Sonora", "27": "Tabasco",
-                "28": "Tamaulipas", "29": "Tlaxcala", "30": "Veracruz", "31": "Yucatán", "32": "Zacatecas"
-            }
-            estado_keys = {
-                "01": "AGUASCALIENTES", "02": "BAJA_CALIFORNIA", "03": "BAJA_SUR",
-                "04": "CAMPECHE", "05": "COAHUILA", "06": "COLIMA", "07": "CHIAPAS",
-                "08": "CHIHUAHUA", "09": "CDMX", "10": "DURANGO", "11": "GUANAJUATO",
-                "12": "GUERRERO", "13": "HIDALGO", "14": "JALISCO", "15": "MEXICO",
-                "16": "MICHOACAN", "17": "MORELOS", "18": "NAYARIT", "19": "NUEVO_LEON",
-                "20": "OAXACA", "21": "PUEBLA", "22": "QUERETARO", "23": "QUINTANA_ROO",
-                "24": "SAN_LUIS_POTOSI", "25": "SINALOA", "26": "SONORA", "27": "TABASCO",
-                "28": "TAMAULIPAS", "29": "TLAXCALA", "30": "VERACRUZ", "31": "YUCATAN", "32": "ZACATECAS"
-            }
-            import math
-            for code, (lat, lon) in estado_coords.items():
-                points = []
-                r = 0.55 # radio en grados para escala estatal
-                for step in range(14):
-                    angle = step * 2 * math.pi / 14
-                    seed_val = int(code)
-                    jitter = 0.05 * math.sin(angle * 3 + seed_val)
-                    p_lat = lat + (r + jitter) * math.sin(angle)
-                    p_lon = lon + (r + jitter) * math.cos(angle)
-                    points.append([p_lon, p_lat])
-                points.append(points[0]) # cerrar anillo
-                
-                features.append({
-                    "type": "Feature",
-                    "geometry": {
-                        "type": "Polygon",
-                        "coordinates": [points]
-                    },
-                    "properties": {
-                        "seccion": "Estado",
-                        "distrito": "Fed",
-                        "cp": "N/A",
-                        "name": estado_nombres.get(code, "Estado"),
-                        "state_id": estado_keys.get(code, "CDMX"),
-                        "poblacion": 1200000 + int(code) * 150000,
-                        "lista_nominal": 800000 + int(code) * 100000,
-                        "indice_dolor": 30 + (int(code) % 4) * 8,
-                        "indice_economico": 25 + (int(code) % 3) * 12
-                    }
-                })
+            try:
+                from geo_generator import generate_states_geojson
+                geojson = generate_states_geojson()
+            except Exception as e:
+                # Fallback en caso de fallo
+                geojson = {"type": "FeatureCollection", "features": [], "error": str(e)}
             
-            geojson = {"type": "FeatureCollection", "features": features}
             self.send_response(200)
             self.send_header('Content-Type', 'application/json; charset=utf-8')
             self._set_cors_headers()
