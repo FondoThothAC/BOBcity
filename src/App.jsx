@@ -16,7 +16,8 @@ import {
   BookOpen,
   Award,
   Target,
-  Globe
+  Globe,
+  Users
 } from 'lucide-react';
 
 import DashboardOverview from './components/DashboardOverview';
