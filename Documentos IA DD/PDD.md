@@ -84,6 +84,14 @@ El desarrollo del producto se organiza en torno a cuatro épicas principales de 
   * Debe proveer un parser JSON estricto con un algoritmo de fallback heurístico si Ollama está fuera de línea.
   * El gemelo simulado debe devolver su bienestar (1-100), una opinión cognitiva con acento local y su intención de voto.
 
+### Épica 6: Oráculo de Calificaciones de Riesgo (Moody's de BOBcity)
+* **Historia de Usuario:** Como inversor o alcalde, quiero evaluar el riesgo de los proyectos y agentes a través de un oráculo que asigne calificaciones de crédito y riesgo basadas en el entorno físico y social, simulando el comportamiento de calificadoras como Moody's o S&P.
+* **Criterios de Aceptación:**
+  * Debe calcular el Rating Score continuo ($S(t)$) usando la ecuación: $S(t) = w_1 F_{fin}(t) + w_2 F_{soc}(t) + w_3 F_{env}(t) - w_4 Vol(t)$.
+  * Donde $F_{env}(t) = 100 - (C_h \cdot PresiónHídrica + C_s \cdot ImpactoSolar)$.
+  * Debe mapear la puntuación a grados de inversión o basura (Ej: AAA, BBB, Subprime).
+  * Las agencias o agentes ajustan sus primas de riesgo automáticamente según este rating.
+
 ---
 
 ## 4. Roadmap del Producto

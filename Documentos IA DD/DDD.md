@@ -855,6 +855,78 @@ export class ElectoralPredictionService {
 }
 ```
 
+### 3.3 Servicio: RatingOracleService (Moody's de BOBcity)
+
+Este servicio evalúa la salud financiera, social y ambiental de los agentes y entidades, asignándoles una calificación de riesgo crediticio (Rating).
+
+```typescript
+// src/domain/services/RatingOracleService.ts
+
+export type RatingGrade = 'AAA' | 'AA' | 'A' | 'BBB' | 'BB' | 'B' | 'CCC' | 'CC' | 'C' | 'D';
+
+export interface RatingResult {
+  entityId: string;
+  score: number;
+  grade: RatingGrade;
+  factors: {
+    financial: number;
+    social: number;
+    environmental: number;
+    volatility: number;
+  };
+  timestamp: Date;
+}
+
+export class RatingOracleService {
+  public calculateRating(
+    entityId: string,
+    financialMetrics: { income: number; debt: number; reserves: number; paymentHistory: number },
+    socialCohesionScore: number,
+    environmentalStress: { waterPressure: number; solarImpact: number },
+    volatilityPenalty: number
+  ): RatingResult {
+    // F_fin = ((Income + Reserves) / (Debt + 1)) * PaymentHistory
+    const financialFactor = Math.min(100, Math.max(0, 
+      ((financialMetrics.income + financialMetrics.reserves) / (financialMetrics.debt + 1)) * financialMetrics.paymentHistory * 100
+    ));
+    
+    // F_env = 100 - (WaterPressure * 0.6 + SolarImpact * 0.4)
+    const environmentalFactor = Math.max(0, 100 - (environmentalStress.waterPressure * 0.6 + environmentalStress.solarImpact * 0.4));
+    
+    // S(t) = w1 * F_fin + w2 * F_soc + w3 * F_env - w4 * Vol
+    const score = (0.5 * financialFactor) + (0.2 * socialCohesionScore) + (0.3 * environmentalFactor) - volatilityPenalty;
+    
+    const normalizedScore = Math.min(100, Math.max(0, score));
+    
+    return {
+      entityId,
+      score: normalizedScore,
+      grade: this.mapScoreToGrade(normalizedScore),
+      factors: {
+        financial: financialFactor,
+        social: socialCohesionScore,
+        environmental: environmentalFactor,
+        volatility: volatilityPenalty
+      },
+      timestamp: new Date()
+    };
+  }
+
+  private mapScoreToGrade(score: number): RatingGrade {
+    if (score >= 95) return 'AAA';
+    if (score >= 90) return 'AA';
+    if (score >= 80) return 'A';
+    if (score >= 70) return 'BBB';
+    if (score >= 60) return 'BB';
+    if (score >= 50) return 'B';
+    if (score >= 40) return 'CCC';
+    if (score >= 30) return 'CC';
+    if (score >= 20) return 'C';
+    return 'D';
+  }
+}
+```
+
 ---
 
 ## 4. Eventos de Dominio
@@ -876,7 +948,9 @@ export type DomainEventType =
   | 'RecommendationCreated'
   | 'OBPExportInitiated'
   | 'OBPExportCompleted'
-  | 'AuditLogEntryCreated';
+  | 'AuditLogEntryCreated'
+  | 'RatingDowngraded'
+  | 'RatingUpgraded';
 
 export interface DomainEvent {
   type: DomainEventType;
@@ -914,6 +988,17 @@ export interface OBPExportCompletedEvent extends DomainEvent {
     obpProjectId: string;
     success: boolean;
     errorMessage?: string;
+  };
+}
+
+export interface RatingChangedEvent extends DomainEvent {
+  type: 'RatingDowngraded' | 'RatingUpgraded';
+  payload: {
+    entityId: string;
+    oldGrade: string;
+    newGrade: string;
+    score: number;
+    triggerFactor: string;
   };
 }
 ```

@@ -18,7 +18,7 @@ set -e
 
 # Configuration variables
 APP_DIR="/opt/plataforma"
-DOMAIN_NAME="129.146.213.8" # Your public VPS IP address
+DOMAIN_NAME="132.226.114.179" # Your public VPS IP address
 SERVICE_NAME="civicpulse"
 
 echo "======================================================================"

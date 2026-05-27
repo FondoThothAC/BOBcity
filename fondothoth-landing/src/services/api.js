@@ -55,3 +55,25 @@ export const saveAdminData = async (data, token) => {
     throw error;
   }
 };
+
+export const syncInstagram = async (token) => {
+  try {
+    const res = await fetch('/api/admin/sync-instagram', {
+      method: 'POST',
+      headers: { 
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error || 'Error al sincronizar Instagram');
+    }
+    
+    return await res.json();
+  } catch (error) {
+    console.error('Error en syncInstagram:', error);
+    throw error;
+  }
+};
+

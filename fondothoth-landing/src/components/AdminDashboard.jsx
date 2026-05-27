@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchPublicData, saveAdminData } from '../services/api';
+import { fetchPublicData, saveAdminData, syncInstagram } from '../services/api';
 
 export default function AdminDashboard() {
   const [data, setData] = useState({ config: {}, projects: [], posts: [] });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [syncingIg, setSyncingIg] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -48,6 +50,25 @@ export default function AdminDashboard() {
       }
     }
     setSaving(false);
+  };
+
+  const handleSyncInstagram = async () => {
+    setSyncingIg(true);
+    setMessage({ type: '', text: '' });
+    const token = localStorage.getItem('adminToken');
+    
+    try {
+      const res = await syncInstagram(token);
+      setMessage({ type: 'success', text: res.message || 'Sincronizado con Instagram con éxito.' });
+      await loadData();
+      setTimeout(() => setMessage({ type: '', text: '' }), 4000);
+    } catch (error) {
+      setMessage({ type: 'error', text: error.message });
+      if (error.message && (error.message.includes('Sesión') || error.message.includes('token'))) {
+        handleLogout();
+      }
+    }
+    setSyncingIg(false);
   };
 
   // ---- MANEJADORES DE ESTADO ----
@@ -179,7 +200,17 @@ export default function AdminDashboard() {
       <section className="glass-card" style={{ marginBottom: '3rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <h3 className="accent-gold">Publicaciones / Anuncios / Redes</h3>
-          <button className="btn btn-sm btn-ghost" onClick={addPost}>+ Añadir Publicación</button>
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <button 
+              className="btn btn-sm" 
+              style={{ background: 'var(--neon-cyan)', color: '#04030d', fontWeight: 'bold' }} 
+              onClick={handleSyncInstagram}
+              disabled={syncingIg}
+            >
+              {syncingIg ? '⏳ Sincronizando...' : '📷 Sincronizar Instagram'}
+            </button>
+            <button className="btn btn-sm btn-ghost" onClick={addPost}>+ Añadir Publicación</button>
+          </div>
         </div>
 
         {data.posts?.map(p => (
