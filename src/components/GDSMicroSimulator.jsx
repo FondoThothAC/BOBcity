@@ -108,7 +108,8 @@ export default function GDSMicroSimulator() {
       : { economia: 60, educacion: 65, seguridad: 70, salud: 65, voto: 'Morena' };
 
     try {
-      const response = await fetch(`http://${window.location.hostname}:5001/api/gds-micro/simulate`, {
+      const pythonApiUrl = window.location.port ? `http://${window.location.hostname}:5001` : `${window.location.protocol}//${window.location.hostname}`;
+      const response = await fetch(`${pythonApiUrl}/api/gds-micro/simulate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

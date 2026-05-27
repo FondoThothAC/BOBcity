@@ -87,7 +87,8 @@ export default function App() {
   useEffect(() => {
     const checkApiStatus = async () => {
       try {
-        const res = await fetch(`http://${window.location.hostname}:5001`, { method: 'GET' });
+        const pythonApiUrl = window.location.port ? `http://${window.location.hostname}:5001` : `${window.location.protocol}//${window.location.hostname}`;
+        const res = await fetch(pythonApiUrl, { method: 'GET' });
         setApiOnline(res.ok);
       } catch (err) {
         setApiOnline(false);

@@ -9,7 +9,7 @@ const MOCK_CANDIDATES = [
   { id: "C5", name: "Voz Popular", party: "IND" }
 ];
 
-export function MacroSimulator({ seed = "CIVICA_OS_2026" }) {
+export default function MacroSimulator({ seed = "CIVICA_OS_2026" }) {
   const [filters, setFilters] = useState({ state: "Sonora", type: "Municipal", risk: "all" });
   const [expanded, setExpanded] = useState(false);
 

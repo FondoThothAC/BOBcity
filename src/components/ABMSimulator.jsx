@@ -84,7 +84,8 @@ export default function ABMSimulator({ agents, setAgents, policies, setPolicies 
     setIsSimulatingApi(true);
 
     try {
-      const response = await fetch(`http://${window.location.hostname}:5001/run-simulation`, {
+      const pythonApiUrl = window.location.port ? `http://${window.location.hostname}:5001` : `${window.location.protocol}//${window.location.hostname}`;
+      const response = await fetch(`${pythonApiUrl}/run-simulation`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

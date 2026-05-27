@@ -250,7 +250,8 @@ export default function PainPointsMap({ agents, externalCenter }) {
   useEffect(() => {
     const fetchOrbital = async () => {
       try {
-        const res = await fetch('http://localhost:5001/api/osiris/global-pulse');
+        const base = window.location.port ? 'http://localhost:5001' : `${window.location.protocol}//${window.location.hostname}`;
+        const res = await fetch(`${base}/api/osiris/global-pulse`);
         const data = await res.json();
         if (data.status === 'success' && data.data) {
           setOrbitalData({
@@ -533,7 +534,7 @@ export default function PainPointsMap({ agents, externalCenter }) {
 
   // Cargar dinámicamente límites GeoJSON reales de PostGIS / Fallback de estados del backend local
   useEffect(() => {
-    const pythonApiUrl = localStorage.getItem('cp:python_api_url') || `http://${window.location.hostname}:5001`;
+    const pythonApiUrl = localStorage.getItem('cp:python_api_url') || (window.location.port ? `http://${window.location.hostname}:5001` : `${window.location.protocol}//${window.location.hostname}`);
 
     if (!selectedState) {
       if (statesGeo && statesGeo.features) {
@@ -613,7 +614,7 @@ export default function PainPointsMap({ agents, externalCenter }) {
   useEffect(() => {
     if (selectedMunicipality) {
       const fetchHistory = async () => {
-        const pythonApiUrl = localStorage.getItem('cp:python_api_url') || `http://${window.location.hostname}:5001`;
+        const pythonApiUrl = localStorage.getItem('cp:python_api_url') || (window.location.port ? `http://${window.location.hostname}:5001` : `${window.location.protocol}//${window.location.hostname}`);
         const munId = selectedMunicipality.id === "HERMOSILLO" ? "26019" : "26018";
         try {
           const res = await fetch(`${pythonApiUrl}/api/historial-electoral?municipio_id=${munId}`);
@@ -636,7 +637,7 @@ export default function PainPointsMap({ agents, externalCenter }) {
   const calculateCascadePrediction = async (variable, changeVal) => {
     if (!selectedMunicipality) return;
     setIsPredicting(true);
-    const pythonApiUrl = localStorage.getItem('cp:python_api_url') || `http://${window.location.hostname}:5001`;
+    const pythonApiUrl = localStorage.getItem('cp:python_api_url') || (window.location.port ? `http://${window.location.hostname}:5001` : `${window.location.protocol}//${window.location.hostname}`);
     const munId = selectedMunicipality.id === "HERMOSILLO" ? "26019" : "26018";
     try {
       const res = await fetch(`${pythonApiUrl}/api/predict-macro`, {
@@ -671,7 +672,7 @@ export default function PainPointsMap({ agents, externalCenter }) {
   // --- Funciones de Intervención del Sandbox GIS ---
   const calculateGISSandbox = async (updatedStructures) => {
     setIsLoadingGis(true);
-    const pythonApiUrl = localStorage.getItem('cp:python_api_url') || `http://${window.location.hostname}:5001`;
+    const pythonApiUrl = localStorage.getItem('cp:python_api_url') || (window.location.port ? `http://${window.location.hostname}:5001` : `${window.location.protocol}//${window.location.hostname}`);
     try {
       const response = await fetch(`${pythonApiUrl}/api/gis-sandbox/calculate`, {
         method: 'POST',

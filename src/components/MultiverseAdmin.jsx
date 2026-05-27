@@ -50,7 +50,7 @@ const DATA_SOURCES = [
   { id: 'reuters', name: 'Reuters / AP News', type: 'Noticias y OSINT', freq: 'Diario', coverage: 'Global / México', status: 'active', pct: 100, lastSync: 'Hoy (2026-05-25)', notes: 'Canal principal de noticias de cisne negro para Anubis.' }
 ];
 
-const MultiverseAdmin = ({ pythonApiUrl = 'http://localhost:5001' }) => {
+const MultiverseAdmin = ({ pythonApiUrl = (window.location.port ? 'http://localhost:5001' : `${window.location.protocol}//${window.location.hostname}`) }) => {
   // === ESTADOS ===
   const [activeSubTab, setActiveSubTab] = useState('Multiverso');
   const [timelines, setTimelines] = useState([]);

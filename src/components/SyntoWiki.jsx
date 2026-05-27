@@ -450,7 +450,8 @@ Cédula ciudadana firmada digitalmente con sal criptográfica local. Los datos d
         `📝 [Compilador] Consultando al Agente Recolector OSINT en la bóveda local...`
       ]);
       
-      fetch('http://localhost:5001/api/wiki/sync')
+      const base = window.location.port ? 'http://localhost:5001' : `${window.location.protocol}//${window.location.hostname}`;
+      fetch(`${base}/api/wiki/sync`)
         .then(res => res.json())
         .then(data => {
           if(data.status === 'success' && data.articles) {

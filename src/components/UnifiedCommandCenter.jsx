@@ -36,7 +36,7 @@ export default function UnifiedCommandCenter({ agents, clients }) {
   // Active Webcam popup in 3D Mode
   const [activeWebcam, setActiveWebcam] = useState(null);
 
-  const pythonApiUrl = 'http://localhost:5001';
+  const pythonApiUrl = window.location.port ? 'http://localhost:5001' : `${window.location.protocol}//${window.location.hostname}`;
 
   // Fetch telemetry
   const fetchPulse = useCallback(async () => {

@@ -87,8 +87,13 @@ export function useGeoJSON(level = "estados") {
             emit("AGENT_COMPLETED", { message: `GeoJSON generado proceduralmente (${src.id})` });
             break;
           }
+          let fetchUrl = src.url;
+          if (src.id === "local_api") {
+            const base = window.location.port ? 'http://127.0.0.1:5001' : `${window.location.protocol}//${window.location.hostname}`;
+            fetchUrl = `${base}/api/estados`;
+          }
           emit("AGENT_PROGRESS", { progress: 0.3, message: `Consultando ${src.id}...` });
-          const res = await fetch(src.url, { signal: AbortSignal.timeout(3000) });
+          const res = await fetch(fetchUrl, { signal: AbortSignal.timeout(3000) });
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const json = await res.json();
           if (!cancelled) {

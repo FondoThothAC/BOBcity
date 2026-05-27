@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 
 export default function HunterDashboard() {
+  const base = window.location.port ? 'http://localhost:5001' : `${window.location.protocol}//${window.location.hostname}`;
   const [logs, setLogs] = useState([
     "[SYSTEM] Inicializando Agente Autónomo 'El Cazador' v3.4.1",
     "[PROXY] Cargando pool de proxies libres (Zmap, Nitter, Tor nodes)...",
@@ -164,7 +165,7 @@ export default function HunterDashboard() {
                 <button onClick={() => {
                   const target = prompt("Usuario a buscar:");
                   if(target) {
-                    fetch('http://localhost:5001/api/osint/execute', {
+                    fetch(`${base}/api/osint/execute`, {
                       method: 'POST',
                       headers: {'Content-Type': 'application/json'},
                       body: JSON.stringify({tool: 'sherlock', target})
@@ -178,7 +179,7 @@ export default function HunterDashboard() {
                 <button onClick={() => {
                   const target = prompt("Dominio a buscar (ej: thoth.org):");
                   if(target) {
-                    fetch('http://localhost:5001/api/osint/execute', {
+                    fetch(`${base}/api/osint/execute`, {
                       method: 'POST',
                       headers: {'Content-Type': 'application/json'},
                       body: JSON.stringify({tool: 'theharvester', target})
@@ -192,7 +193,7 @@ export default function HunterDashboard() {
                 <button onClick={() => {
                   const target = prompt("Email a investigar:");
                   if(target) {
-                    fetch('http://localhost:5001/api/osint/execute', {
+                    fetch(`${base}/api/osint/execute`, {
                       method: 'POST',
                       headers: {'Content-Type': 'application/json'},
                       body: JSON.stringify({tool: 'ghunt', target})
