@@ -54,7 +54,23 @@ Este documento sirve para que cualquier desarrollador humano u otra IA (Gemini, 
 
 ---
 
-## 4. Próximos Pasos Sugeridos para la Siguiente IA/Developer
-1. **Cache de Coordenadas Municipales:** Para evitar la dependencia al 100% de la API externa de Nominatim durante las búsquedas frecuentes de municipios, se podría pre-cargar o cachear un listado de coordenadas lat/lng en `electoral_scenarios.json` para los municipios más importantes de México.
-2. **Mapas de Dolor (Cruce de Datos):** Conectar las herramientas de construcción colocada en el Sandbox directamente con la tabla de "Cruce de Datos" de INEGI en los mapas de dolor para que las obras viales reduzcan dinámicamente la queja de tránsito del municipio en tiempo real.
-3. **Soporte de Alturas 3D:** Si el usuario proporciona un API Token de Mapbox, se puede migrar la vista de Leaflet 2D a Mapbox GL JS 3D para activar la extrusión de edificios en tiempo real al hacer zoom.
+## 4. Tareas Realizadas (Completadas)
+- [x] **Reversión de PredictorEngine:** Separación del simulador masivo a su propia pestaña limpia, devolviendo el Duelo Electoral 1v1 a su estado original de laboratorio.
+- [x] **Algoritmo de Simulación Electoral N-Way (Softmax):** Creación del modelo probabilístico multi-candidato con cálculo automático de spreads y ventaja en `MacroSimulator.jsx` y `dataModel.js`.
+- [x] **Migración de Sandbox WorldBox a Leaflet:** Eliminación del Canvas isométrico procedural e inyección del mapa interactivo geográfico 2D (CartoDB Dark) con marcadores dinámicos para los agentes ciudadanos (60 fps).
+- [x] **Buscador de Municipios Nacional:** Búsqueda en barra de autocompletado sobre los ~2,500 municipios del catálogo oficial de México en `electoral_scenarios.json`.
+- [x] **Geocodificador dinámico Nominatim (OSM):** Conexión HTTP en caliente con la API de Nominatim para centrar el mapa sandbox en cualquier municipio del país con coordenadas precisas.
+- [x] **Reparación del Canal de Webcams CCTV (Bug Fix):**
+  - Corrección de la propagación del objeto webcam en la capa 3D (`...w` agregado en el map).
+  - Habilitación del visor modal interactivo de streams de YouTube dentro de `GlobalOsirisMap.jsx`.
+  - Configuración del stream YouTube Live provisto por el usuario como cámara activa en tiempo real para el Zócalo CDMX.
+  - Corrección de la propiedad `stream_url` en las cámaras simuladas de `PainPointsMap.jsx` (Mapas de Dolor) y `UnifiedCommandCenter.jsx` (Globo 3D), eliminando el mensaje indefinido "CONECTANDO AL SATÉLITE...".
+- [x] **Compilación Limpia:** Compilación de producción validada mediante Vite (`npm run build`).
+
+## 5. Tareas Pendientes (Backlog de Desarrollo)
+- [ ] **Optimización / Caché de Coordenadas:** Crear un script de Python para geocodificar localmente las coordenadas de los municipios del país e inyectarlas directamente en `electoral_scenarios.json`, evitando llamadas innecesarias a la API externa de Nominatim.
+- [ ] **Integración del Clic de Infraestructura en Mapas de Dolor:** Vincular el puente, pozo o cierre vial colocado en el mapa sandbox directamente al restador de tensiones (por ejemplo, reducir el dolor de agua del municipio al colocar un pozo en el GIS).
+- [ ] **Implementación de la Vista Inclinada 3D en Leaflet:** Investigar plugins de inclinación de mapa para simular una perspectiva isométrica en el visor Leaflet o incorporar Mapbox GL/Maplibre en el futuro si se requiere renderizado 3D de edificios.
+- [ ] **Persistencia de Obras Tácticas:** Guardar la infraestructura colocada por el usuario (pozos, puentes) en `localStorage` o base de datos local para que no se borre al cambiar de pestaña.
+- [ ] **Swarm Agent Telemetry Integration:** Conectar la telemetría del backend `simulation/agent_swarm.py` directamente al monitor del Command Center.
+
