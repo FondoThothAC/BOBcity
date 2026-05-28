@@ -1,6 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { calculateElectionProbability } from '../models/dataModel';
 import { Shield, Award, Landmark, HelpCircle, CheckCircle, TrendingUp, User, Vote } from 'lucide-react';
+import realMetrics from "../data/real_electoral_metrics.json";
+
+const PARTY_LABELS = {
+  MORENA: "Candidatura MORENA",
+  PAN: "Candidatura PAN",
+  PRI: "Candidatura PRI",
+  MC: "Candidatura MC",
+  PVEM: "Candidatura PVEM",
+  PT: "Candidatura PT",
+  PRD: "Candidatura PRD",
+  IND: "Independiente / Otros"
+};
 
 export default function PredictorEngine({ agents }) {
   // Parámetros de los candidatos configurables
@@ -60,6 +72,17 @@ export default function PredictorEngine({ agents }) {
   };
 
   const districtVotes = getVotesByDistrict();
+  const fullCandidateField = useMemo(() => {
+    const hermosillo = realMetrics?.SONORA?.HERMOSILLO || {};
+    const parties = ["MORENA", "PAN", "PRI", "MC", "PVEM", "PT", "PRD", "IND"];
+    const totalVotes = parties.reduce((acc, party) => acc + (Number(hermosillo[party]) || 0), 0) || 1;
+    return parties.map((party) => ({
+      party,
+      label: PARTY_LABELS[party],
+      votes: Number(hermosillo[party]) || 0,
+      pct: ((Number(hermosillo[party]) || 0) / totalVotes) * 100
+    })).sort((a, b) => b.pct - a.pct);
+  }, []);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
@@ -173,6 +196,30 @@ export default function PredictorEngine({ agents }) {
           </div>
 
         </div>
+      </div>
+
+      <div className="glass-card" style={{ padding: '1.5rem', border: '1px solid rgba(0, 229, 255, 0.18)' }}>
+        <h2 style={{ fontSize: '1.05rem', fontWeight: '800', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+          <Vote size={20} style={{ color: 'var(--neon-blue)' }} />
+          Campo completo de candidaturas cargadas
+        </h2>
+        <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr', gap: '0.5rem', fontSize: '0.72rem', color: 'var(--text-secondary)', textTransform: 'uppercase', padding: '0 0.35rem 0.45rem' }}>
+          <span>Candidatura / Partido</span>
+          <span>Votos reales cargados</span>
+          <span>Participación</span>
+        </div>
+        {fullCandidateField.map((row) => (
+          <div key={row.party} style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr', gap: '0.5rem', alignItems: 'center', padding: '0.55rem 0.35rem', borderTop: '1px solid rgba(255,255,255,0.07)', fontSize: '0.82rem' }}>
+            <b style={{ color: '#fff' }}>{row.label} <span style={{ color: '#94a3b8' }}>({row.party})</span></b>
+            <span>{row.votes.toLocaleString('es-MX')}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
+              <div style={{ flex: 1, height: 7, background: 'rgba(255,255,255,0.08)', borderRadius: 8, overflow: 'hidden' }}>
+                <div style={{ width: `${row.pct}%`, height: '100%', background: 'var(--neon-blue)' }} />
+              </div>
+              <b style={{ color: 'var(--neon-blue)', minWidth: 46 }}>{row.pct.toFixed(1)}%</b>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Arena de Duelo (Enfrentamiento y Probabilidades) */}

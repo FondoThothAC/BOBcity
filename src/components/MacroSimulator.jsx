@@ -1,5 +1,7 @@
 import React, { useState, useMemo } from "react";
 import electoralScenarios from "../data/electoral_scenarios.json";
+import realMetrics from "../data/real_electoral_metrics.json";
+import { cleanTerritoryName, territoryKey } from "../utils/territoryData";
 
 // Configuración detallada de colores y nombres de los partidos reales de México
 const PARTY_DETAILS = {
@@ -59,6 +61,25 @@ function getDeterministicNoise(string, party) {
   return ((Math.abs(hash) % 60) - 30) / 10; // Rango [-3%, +3%]
 }
 
+function getRealMetricsForFilters(filters) {
+  const stateBucket = realMetrics[territoryKey(filters.state)];
+  if (!stateBucket) return null;
+
+  if (filters.municipality !== "Todos") {
+    const muni = electoralScenarios.find(d => d.code === filters.municipality);
+    const muniKey = territoryKey(cleanTerritoryName(muni?.name || ""));
+    return stateBucket[muniKey] || null;
+  }
+
+  const aggregate = Object.values(stateBucket).reduce((acc, row) => {
+    Object.entries(row).forEach(([key, value]) => {
+      acc[key] = (acc[key] || 0) + (Number(value) || 0);
+    });
+    return acc;
+  }, {});
+  return Object.keys(aggregate).length ? aggregate : null;
+}
+
 export default function MacroSimulator({ seed = "CIVICA_OS_2026" }) {
   const [filters, setFilters] = useState({ 
     state: "Sonora", 
@@ -113,8 +134,34 @@ export default function MacroSimulator({ seed = "CIVICA_OS_2026" }) {
       }
     }
 
-    // Base nacional de voto de partidos políticos de México
     const parties = ["MORENA", "PAN", "PRI", "MC", "PVEM", "PT", "PRD", "IND"];
+    const realRow = getRealMetricsForFilters(filters);
+
+    if (realRow) {
+      const voteTotal = parties.reduce((acc, p) => acc + (Number(realRow[p]) || 0), 0) || 1;
+      const results = parties.map(p => ({ id: p, party: p, estimatedVote: ((Number(realRow[p]) || 0) / voteTotal) * 100 }));
+      const temp = 7.0;
+      const exps = results.map(r => Math.exp(r.estimatedVote / temp));
+      const sumExp = exps.reduce((acc, v) => acc + v, 0);
+      const withProb = results.map((r, idx) => ({ ...r, winProbability: (exps[idx] / sumExp) * 100 }));
+      withProb.sort((a, b) => b.estimatedVote - a.estimatedVote);
+      const formatted = withProb.map((c, idx, arr) => ({
+        id: c.id,
+        party: c.party,
+        name: PARTY_DETAILS[c.party].name,
+        estimatedVote: parseFloat(c.estimatedVote.toFixed(2)),
+        winProbability: parseFloat(c.winProbability.toFixed(2)),
+        spread: parseFloat((idx === 0 ? c.estimatedVote - (arr[1]?.estimatedVote || 0) : c.estimatedVote - arr[0].estimatedVote).toFixed(2)),
+        riskLevel: "",
+        source: "Voto real cargado"
+      }));
+      const leadSpread = formatted[0].spread;
+      const electionRisk = leadSpread < 4.0 ? "alto" : leadSpread < 10.0 ? "medio" : "bajo";
+      const finalData = formatted.map(f => ({ ...f, riskLevel: electionRisk }));
+      return filters.risk !== "all" ? finalData.filter(d => d.riskLevel === filters.risk) : finalData;
+    }
+
+    // Base nacional de voto de partidos políticos de México. Solo se usa cuando no existe métrica real local.
     const baseSupport = { MORENA: 36, PAN: 18, PRI: 10, MC: 11, PVEM: 5, PT: 4, PRD: 2, IND: 4 };
 
     // Sesgo estatal
@@ -202,7 +249,8 @@ export default function MacroSimulator({ seed = "CIVICA_OS_2026" }) {
         estimatedVote: parseFloat(c.estimatedVote.toFixed(2)),
         winProbability: parseFloat(c.winProbability.toFixed(2)),
         spread: parseFloat(spread.toFixed(2)),
-        riskLevel: ""
+        riskLevel: "",
+        source: "Proyección territorial"
       };
     });
 
@@ -223,7 +271,7 @@ export default function MacroSimulator({ seed = "CIVICA_OS_2026" }) {
 
   return (
     <div className="glass-panel" style={{ padding: 20 }}>
-      <h2 style={{ fontFamily: "var(--font-heading)", margin: "0 0 15px", color: "var(--neon-cyan)" }}>🗳️ Macro-Simulador Electoral N-Way (Softmax)</h2>
+      <h2 style={{ fontFamily: "var(--font-heading)", margin: "0 0 15px", color: "var(--neon-cyan)" }}>Macro-Simulador Electoral N-Way (Softmax)</h2>
       
       <div style={{ display: "flex", gap: 10, marginBottom: 15, flexWrap: "wrap" }}>
         {/* Selector de Estado */}
@@ -275,7 +323,7 @@ export default function MacroSimulator({ seed = "CIVICA_OS_2026" }) {
       <table className="civica-table">
         <thead>
           <tr>
-            <th>Partido Político / Coalición</th>
+            <th>Candidatura / Partido / Coalición</th>
             <th>Voto Estimado (%)</th>
             <th>Prob. Victoria (%)</th>
             <th>Spread (vs Líder)</th>
@@ -291,6 +339,7 @@ export default function MacroSimulator({ seed = "CIVICA_OS_2026" }) {
                   <b>{d.name}</b> 
                   <span style={{ color: "#64748b", fontSize: 11, marginLeft: 6 }}>({d.party})</span>
                   <div style={{ fontSize: 10, color: "#94a3b8", paddingLeft: 18 }}>{PARTY_DETAILS[d.party]?.alliance}</div>
+                  <div style={{ fontSize: 10, color: "#38bdf8", paddingLeft: 18 }}>{d.source}</div>
                 </td>
                 <td style={{ color: "var(--accent-cyan)", fontWeight: "700" }}>{d.estimatedVote}%</td>
                 <td style={{ fontWeight: "700" }}>{d.winProbability}%</td>

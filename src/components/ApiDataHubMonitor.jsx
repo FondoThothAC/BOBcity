@@ -127,7 +127,7 @@ const ApiDataHubMonitor = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <h3 style={{ margin: 0, fontSize: '1rem', color: 'white', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Camera size={18} color="var(--neon-emerald)" />
-            Live CCTV Feeds (Webcams de México / C5)
+            Live CCTV Feeds & OSIRIS AI Globals
           </h3>
           <button className="btn-premium" style={{ fontSize: '0.75rem', padding: '0.4rem 0.8rem', background: 'rgba(16, 185, 129, 0.2)', border: '1px solid var(--neon-emerald)', color: 'var(--neon-emerald)' }}>
             + Añadir Stream
@@ -136,7 +136,29 @@ const ApiDataHubMonitor = () => {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
           
-          {/* Cámara 1 */}
+          {/* Cámara 1: OSIRIS Global */}
+          <div style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid var(--neon-emerald)', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 0 10px rgba(16,185,129,0.2)' }}>
+            <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%' }}>
+              <iframe 
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
+                src="https://www.youtube.com/embed/8oA-6B_eFuk?autoplay=1&mute=1" 
+                title="OSIRIS AI - Shibuya Tokyo (Demo)" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowFullScreen
+              ></iframe>
+            </div>
+            <div style={{ padding: '0.8rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(16,185,129,0.1)' }}>
+              <div>
+                <span style={{ color: '#fff', fontSize: '0.85rem', fontWeight: 'bold', display: 'block' }}>OSIRIS: Shibuya, Tokyo</span>
+                <span style={{ color: '#00e676', fontSize: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><div className="pulse-dot" style={{ background: '#00e676', width: '6px', height: '6px', borderRadius: '50%' }}></div> OSINT LIVE</span>
+              </div>
+              <button style={{ background: 'rgba(16, 185, 129, 0.2)', color: 'var(--neon-emerald)', border: '1px solid var(--neon-emerald)', padding: '0.3rem 0.6rem', borderRadius: '4px', fontSize: '0.7rem', cursor: 'pointer' }}>
+                Recon. Facial (Activo)
+              </button>
+            </div>
+          </div>
+
+          {/* Cámara 2: SCT Zócalo */}
           <div style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid var(--border-glass)', borderRadius: '8px', overflow: 'hidden' }}>
             <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%' }}>
               <iframe 
@@ -180,8 +202,8 @@ const ApiDataHubMonitor = () => {
             </div>
           </div>
 
-          {/* Cámara 3 Internacional */}
-          <div style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid var(--border-glass)', borderRadius: '8px', overflow: 'hidden' }}>
+          {/* Cámara 4: OSIRIS NY */}
+          <div style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid var(--neon-blue)', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 0 10px rgba(59,130,246,0.2)' }}>
             <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%' }}>
               <iframe 
                 style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
@@ -191,10 +213,10 @@ const ApiDataHubMonitor = () => {
                 allowFullScreen
               ></iframe>
             </div>
-            <div style={{ padding: '0.8rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ padding: '0.8rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(59,130,246,0.1)' }}>
               <div>
-                <span style={{ color: '#fff', fontSize: '0.85rem', fontWeight: 'bold', display: 'block' }}>New York (Global Feed)</span>
-                <span style={{ color: '#00e676', fontSize: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><div className="pulse-dot" style={{ background: '#00e676', width: '6px', height: '6px', borderRadius: '50%' }}></div> EN VIVO</span>
+                <span style={{ color: '#fff', fontSize: '0.85rem', fontWeight: 'bold', display: 'block' }}>OSIRIS: New York (Times Sq)</span>
+                <span style={{ color: '#00e676', fontSize: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><div className="pulse-dot" style={{ background: '#00e676', width: '6px', height: '6px', borderRadius: '50%' }}></div> GLOBAL FEED</span>
               </div>
               <button style={{ background: 'rgba(59, 130, 246, 0.2)', color: 'var(--neon-blue)', border: '1px solid var(--neon-blue)', padding: '0.3rem 0.6rem', borderRadius: '4px', fontSize: '0.7rem', cursor: 'pointer' }}>
                 Capturar & Analizar (CrewAI)

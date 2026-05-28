@@ -3,9 +3,10 @@ import Globe from 'react-globe.gl';
 import * as THREE from 'three';
 import { Activity, ShieldAlert, Zap, Globe as GlobeIcon, Map as MapIcon, Crosshair, Navigation, Wifi, Video, Layers, Search, Eye } from 'lucide-react';
 import PainPointsMap from './PainPointsMap';
-import municipiosCatalogo from '../data/municipios_catalogo.json';
+import osirisWebcams from '../data/osiris_webcams.json';
 import { themes } from '../themeManager';
 import { normalizeWebcams } from "../utils/webcamNormalizer";
+import { getNationalMunicipalityCatalog } from "../utils/territoryData";
 
 // UXDD / IDD: Unified OSINT Command Center
 // Comentarios y textos en español neutro premium.
@@ -38,6 +39,16 @@ export default function UnifiedCommandCenter({ agents, clients }) {
   const [activeWebcam, setActiveWebcam] = useState(null);
 
   const pythonApiUrl = window.location.port ? 'http://localhost:5001' : `${window.location.protocol}//${window.location.hostname}`;
+  const nationalMunicipalities = useMemo(() => getNationalMunicipalityCatalog(), []);
+  const mergeWebcams = useCallback((rawWebcams = []) => {
+    const seen = new Set();
+    return normalizeWebcams([...rawWebcams, ...osirisWebcams]).filter((cam) => {
+      const key = cam.stream_url || cam.id;
+      if (seen.has(key) || !cam.lat || !cam.lng) return false;
+      seen.add(key);
+      return true;
+    });
+  }, []);
 
   // Fetch telemetry
   const fetchPulse = useCallback(async () => {
@@ -45,23 +56,11 @@ export default function UnifiedCommandCenter({ agents, clients }) {
       const res = await fetch(`${pythonApiUrl}/api/osiris/global-pulse`);
       const data = await res.json();
       if (data.status === 'success') {
-        const rawWebs = data.data.webcams || [
-          { lat: 19.4326, lng: -99.1332, name: "Zócalo CDMX", viewers: 1205, stream_url: "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1" },
-          { lat: 20.6596, lng: -103.3496, name: "Minerva GDL", viewers: 842, stream_url: "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1" },
-          { lat: 25.6866, lng: -100.3161, name: "Macroplaza MTY", viewers: 630, stream_url: "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1" },
-          { lat: 29.0729, lng: -110.9559, name: "Catedral HMO", viewers: 415, stream_url: "https://www.youtube.com/embed/A1YxNYiyALg?autoplay=1&mute=1" }
-        ];
-        data.data.webcams = normalizeWebcams(rawWebs);
+        data.data.webcams = mergeWebcams(data.data.webcams || []);
         setPulseData(data.data);
       }
     } catch (e) {
       console.warn("Fallo al conectar con Osiris Backend. Usando simulador offline.");
-      const rawWebcams = [
-        { lat: 19.4326, lng: -99.1332, name: "Zócalo CDMX", viewers: 1205, stream_url: "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1" },
-        { lat: 20.6596, lng: -103.3496, name: "Minerva GDL", viewers: 842, stream_url: "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1" },
-        { lat: 25.6866, lng: -100.3161, name: "Macroplaza MTY", viewers: 630, stream_url: "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1" },
-        { lat: 29.0729, lng: -110.9559, name: "Catedral HMO", viewers: 415, stream_url: "https://www.youtube.com/embed/A1YxNYiyALg?autoplay=1&mute=1" }
-      ];
       setPulseData({
         conflicts: [
           { lat: 19.4326, lng: -99.1332, label: "CDMX: Tensión Social" },
@@ -70,10 +69,10 @@ export default function UnifiedCommandCenter({ agents, clients }) {
         ],
         disasters: [],
         satellites: Array(15).fill().map(() => ({ lat: (Math.random() - 0.5) * 120, lng: (Math.random() - 0.5) * 360, alt: 0.15 + Math.random() * 0.2 })),
-        webcams: normalizeWebcams(rawWebcams)
+        webcams: mergeWebcams([])
       });
     }
-  }, [pythonApiUrl]);
+  }, [pythonApiUrl, mergeWebcams]);
 
   useEffect(() => {
     fetchPulse();
@@ -97,10 +96,10 @@ export default function UnifiedCommandCenter({ agents, clients }) {
   const filteredMunicipalities = useMemo(() => {
     if (!searchTerm) return [];
     const term = searchTerm.toLowerCase();
-    return municipiosCatalogo
+    return nationalMunicipalities
       .filter(m => m.name.toLowerCase().includes(term) || m.state.toLowerCase().includes(term))
       .slice(0, 8);
-  }, [searchTerm]);
+  }, [searchTerm, nationalMunicipalities]);
 
   const handleSelectLocation = (loc) => {
     setSelectedLocation(loc);
@@ -150,7 +149,7 @@ export default function UnifiedCommandCenter({ agents, clients }) {
   }
   if (layers.webcams) {
     customLayerData.push(...(pulseData.webcams || []).map(w => ({
-      ...w, lat: w.lat, lng: w.lng, alt: 0.01, size: 0.06, color: '#ffff00', type: 'webcam'
+      ...w, lat: w.lat, lng: w.lng, alt: 0.012, size: 0.075, color: '#ffff00', type: 'webcam'
     })));
   }
 
@@ -294,6 +293,32 @@ export default function UnifiedCommandCenter({ agents, clients }) {
 
           </div>
 
+          {layers.webcams && pulseData.webcams.length > 0 && (
+            <div style={{ background: 'rgba(250, 204, 21, 0.06)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(250, 204, 21, 0.2)' }}>
+              <h4 style={{ fontSize: '0.75rem', color: '#facc15', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Video size={14} /> OSIRIS CCTV Integrado
+              </h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', maxHeight: 150, overflowY: 'auto' }}>
+                {pulseData.webcams.slice(0, 8).map(cam => (
+                  <button
+                    key={cam.id}
+                    onClick={() => {
+                      setActiveWebcam(cam);
+                      if (globeRef.current) {
+                        globeRef.current.controls().autoRotate = false;
+                        globeRef.current.pointOfView({ lat: cam.lat, lng: cam.lng, altitude: 0.45 }, 1200);
+                      }
+                    }}
+                    style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.08)', color: '#e5e7eb', borderRadius: 5, padding: '0.45rem', textAlign: 'left', cursor: 'pointer', fontSize: '0.68rem' }}
+                  >
+                    <b>{cam.name}</b>
+                    <div style={{ color: '#94a3b8' }}>{cam.source}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div style={{ marginTop: 'auto', background: 'rgba(0, 229, 255, 0.05)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(0, 229, 255, 0.2)' }}>
             <h4 style={{ fontSize: '0.75rem', color: 'var(--neon-blue)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
               <Eye size={14} /> Telemetría Global
@@ -338,8 +363,8 @@ export default function UnifiedCommandCenter({ agents, clients }) {
               customThreeObject={d => {
                 if (d.type === 'webcam') {
                   return new THREE.Mesh(
-                    new THREE.BoxGeometry(d.size, d.size, d.size),
-                    new THREE.MeshBasicMaterial({ color: d.color, wireframe: true })
+                    new THREE.SphereGeometry(d.size, 12, 12),
+                    new THREE.MeshBasicMaterial({ color: d.color })
                   );
                 }
                 return new THREE.Mesh(
