@@ -97,7 +97,17 @@ export function WorldBoxSimulator({ catalog, initialCenter = [29.073, -110.956] 
     return getNationalMunicipalityCatalog();
   }, [catalog]);
 
-  const searchResults = useMemo(() => searchMunicipalities(query, municipalities, 12), [query, municipalities]);
+  const [selectedState, setSelectedState] = useState("Sonora");
+
+  const statesList = useMemo(() => {
+    const unique = [...new Set(municipalities.map(d => d.state))].filter(Boolean);
+    return unique.sort();
+  }, [municipalities]);
+
+  const municipalitiesList = useMemo(() => {
+    return municipalities.filter(d => d.state === selectedState).sort((a, b) => a.name.localeCompare(b.name));
+  }, [municipalities, selectedState]);
+
   const agentsRef = useRef(createAgents(initialCenter, 180, "Hermosillo"));
   useAgentLoop(agentsRef, { speed, running });
 
@@ -162,27 +172,30 @@ export function WorldBoxSimulator({ catalog, initialCenter = [29.073, -110.956] 
   return (
     <div className="glass-panel" style={{ height: "85vh", display: "flex", flexDirection: "column", padding: 15 }}>
       <div style={{ display: "flex", gap: 12, marginBottom: 12, alignItems: "center" }}>
-        <div style={{ flex: 1, position: "relative" }}>
-          <input
-            type="text"
-            value={query}
-            placeholder={`Buscar entre ${municipalities.length.toLocaleString("es-MX")} municipios reales...`}
-            style={{ width: "100%", background: "rgba(0,0,0,0.3)", border: "1px solid var(--border-subtle)", padding: 8, borderRadius: 6, color: "#fff" }}
-            onChange={e => setQuery(e.target.value)}
-          />
-          {query && searchResults.length > 0 && (
-            <div className="glass-panel" style={{ position: "absolute", left: 0, right: 0, top: 38, zIndex: 800, maxHeight: 260, overflowY: "auto", padding: 6 }}>
-              {searchResults.map(city => (
-                <button
-                  key={city.id}
-                  onClick={() => selectCity(city)}
-                  style={{ width: "100%", textAlign: "left", background: "transparent", border: "none", color: "#fff", padding: "8px 10px", cursor: "pointer", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
-                >
-                  <b>{city.name}</b> <span style={{ color: "#94a3b8" }}>{city.state}</span>
-                </button>
-              ))}
-            </div>
-          )}
+        <div style={{ flex: 1, display: "flex", gap: "8px" }}>
+          <select 
+            value={selectedState} 
+            onChange={(e) => setSelectedState(e.target.value)}
+            style={{ flex: 1, background: "rgba(0,0,0,0.3)", border: "1px solid var(--border-subtle)", padding: 8, borderRadius: 6, color: "#fff", outline: "none" }}
+          >
+            {statesList.map(s => <option key={s} value={s} style={{ color: "black" }}>{s}</option>)}
+          </select>
+
+          <select 
+            value={selectedCity?.name || ""} 
+            onChange={(e) => {
+              const cityObj = municipalitiesList.find(m => m.name === e.target.value);
+              if (cityObj) selectCity(cityObj);
+            }}
+            style={{ flex: 1, background: "rgba(0,0,0,0.3)", border: "1px solid var(--border-subtle)", padding: 8, borderRadius: 6, color: "#fff", outline: "none" }}
+          >
+            <option value="" style={{ color: "black" }}>Selecciona un Municipio...</option>
+            {municipalitiesList.map(city => (
+              <option key={city.id} value={city.name} style={{ color: "black" }}>
+                {city.name}
+              </option>
+            ))}
+          </select>
         </div>
         <div style={{ fontSize: 12, color: "#94a3b8", minWidth: 210 }}>
           <b style={{ color: "var(--accent-cyan)" }}>{selectedCity.name}</b><br />

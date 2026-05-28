@@ -12,6 +12,7 @@ import realMetrics from '../data/real_electoral_metrics.json';
 import electoralScenarios from '../data/electoral_scenarios.json';
 import { useGeoJSON } from '../hooks/useGeoJSON';
 import { GeoBoundaryLayer } from './GeoBoundaryLayer';
+import mexicoWebcams from '../data/mexico_webcams.json';
 
 // Helper Component para manejar el zoom y centrado dinámico de Leaflet de forma limpia
 function ChangeMapView({ center, zoom }) {
@@ -148,13 +149,17 @@ export default function PainPointsMap({ agents, externalCenter }) {
       });
   }, []);
 
-  const filteredMunicipalities = useMemo(() => {
-    if (!searchTerm) return [];
-    const term = searchTerm.toLowerCase();
+  const statesList = useMemo(() => {
+    const unique = [...new Set(allMunicipalities.map(d => d.stateName))].filter(Boolean);
+    return unique.sort();
+  }, [allMunicipalities]);
+
+  const municipalitiesList = useMemo(() => {
+    const currentThemeStateName = selectedState ? selectedState.name : "Sonora";
     return allMunicipalities
-      .filter(m => m.name.toLowerCase().includes(term) || m.stateName.toLowerCase().includes(term))
-      .slice(0, 15);
-  }, [searchTerm, allMunicipalities]);
+      .filter(d => d.stateName === currentThemeStateName)
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [allMunicipalities, selectedState]);
 
   const handleSelectUniversalCity = (cityObj) => {
     const stateData = MEXICO_STATES[cityObj.stateKey] || MEXICO_STATES["CDMX"];
@@ -302,13 +307,14 @@ export default function PainPointsMap({ agents, externalCenter }) {
       { lat: baseCoords[0] - 0.11, lng: baseCoords[1] - 0.15, alt: 0.15 }
     ];
 
-    // Generar webcams locales distribuidas tácticamente en la ciudad seleccionada
-    const localWebcams = [
-      { lat: baseCoords[0] + 0.005, lng: baseCoords[1] - 0.008, name: `CCTV Plaza Cívica - ${baseName}`, viewers: Math.floor(Math.random() * 450) + 120, stream_url: "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1" },
-      { lat: baseCoords[0] - 0.012, lng: baseCoords[1] + 0.015, name: `CCTV Zona Centro - ${baseName}`, viewers: Math.floor(Math.random() * 850) + 200, stream_url: "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1" },
-      { lat: baseCoords[0] + 0.022, lng: baseCoords[1] + 0.028, name: `CCTV Zona Norte / Acceso - ${baseName}`, viewers: Math.floor(Math.random() * 310) + 90, stream_url: "https://www.youtube.com/embed/A1YxNYiyALg?autoplay=1&mute=1" },
-      { lat: baseCoords[0] - 0.018, lng: baseCoords[1] - 0.025, name: `CCTV Corredor Industrial - ${baseName}`, viewers: Math.floor(Math.random() * 540) + 110, stream_url: "https://www.youtube.com/embed/live_stream?channel=UCvNlw10m_T2eKk12g17nKSA&autoplay=1&mute=1" }
-    ];
+    // Extraer cámaras reales del archivo JSON que acabamos de integrar
+    const localWebcams = mexicoWebcams.map(cam => ({
+      lat: cam.lat,
+      lng: cam.lng,
+      name: `CCTV ${cam.city || ''} - ${cam.name}`,
+      viewers: cam.viewers || Math.floor(Math.random() * 450) + 120,
+      stream_url: cam.stream_url
+    }));
 
     // Combinar con los datos del backend para no perder la vista global
     return {
@@ -1388,74 +1394,35 @@ export default function PainPointsMap({ agents, externalCenter }) {
             ))}
           </div>
 
-          {/* Buscador Universal de Municipios (2478) */}
-          <div style={{ position: 'relative', flex: 1, minWidth: '220px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(8,15,30,0.85)', padding: '0.2rem 0.6rem', borderRadius: '4px', border: '1px solid var(--border-glass)' }}>
-              <span style={{ marginRight: '0.4rem' }}>🔍</span>
-              <input
-                type="text"
-                value={searchTerm}
+          {/* Selector de Estado y Municipio (32 Estados y 2500 Municipios) */}
+          <div style={{ display: 'flex', gap: '0.5rem', flex: 1, minWidth: '220px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(8,15,30,0.85)', padding: '0.2rem 0.6rem', borderRadius: '4px', border: '1px solid var(--border-glass)', flex: 1 }}>
+              <select 
+                value={selectedState?.name || "Sonora"} 
                 onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setShowDropdown(e.target.value.length > 0);
+                  const stateData = Object.values(MEXICO_STATES).find(s => s.name === e.target.value) || MEXICO_STATES["SONORA"];
+                  setSelectedState(stateData);
+                  setSelectedMunicipality(null);
+                  handleQuickZoom(stateData.name);
                 }}
-                onFocus={() => {
-                  if (searchTerm.length > 0) setShowDropdown(true);
-                }}
-                onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
-                placeholder="Buscar entre 2,478 municipios del país..."
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: 'white',
-                  fontSize: '0.75rem',
-                  fontWeight: '600',
-                  width: '100%',
-                  outline: 'none'
-                }}
-              />
+                style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '0.75rem', fontWeight: '600', width: '100%', outline: 'none' }}
+              >
+                {statesList.map(s => <option key={s} value={s} style={{ color: "black" }}>{s}</option>)}
+              </select>
             </div>
-            {showDropdown && filteredMunicipalities.length > 0 && (
-              <div style={{
-                position: 'absolute',
-                top: '110%',
-                left: 0,
-                right: 0,
-                background: 'rgba(10, 18, 36, 0.95)',
-                border: '1px solid var(--neon-blue)',
-                borderRadius: '4px',
-                zIndex: 9999,
-                maxHeight: '200px',
-                overflowY: 'auto',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)',
-                backdropFilter: 'blur(10px)'
-              }}>
-                {filteredMunicipalities.map((city, idx) => (
-                  <div
-                    key={idx}
-                    onClick={() => handleSelectUniversalCity(city)}
-                    style={{
-                      padding: '0.4rem 0.6rem',
-                      cursor: 'pointer',
-                      borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-                      fontSize: '0.75rem',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'rgba(0, 229, 255, 0.15)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'transparent';
-                    }}
-                  >
-                    <span style={{ color: 'white', fontWeight: '700' }}>{city.name}</span>
-                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.65rem' }}>{city.stateName}</span>
-                  </div>
-                ))}
-              </div>
-            )}
+            <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(8,15,30,0.85)', padding: '0.2rem 0.6rem', borderRadius: '4px', border: '1px solid var(--border-glass)', flex: 1 }}>
+              <select 
+                value={selectedMunicipality?.name.split(',')[0] || "Selecciona..."} 
+                onChange={(e) => {
+                  const cityObj = allMunicipalities.find(m => m.name === e.target.value && m.stateName === (selectedState?.name || "Sonora"));
+                  if (cityObj) handleSelectUniversalCity(cityObj);
+                }}
+                style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '0.75rem', fontWeight: '600', width: '100%', outline: 'none' }}
+              >
+                <option value="Selecciona..." style={{ color: "black" }}>Municipios...</option>
+                {municipalitiesList.map(m => <option key={m.id} value={m.name} style={{ color: "black" }}>{m.name}</option>)}
+              </select>
+            </div>
           </div>
 
         </div>
