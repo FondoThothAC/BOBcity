@@ -5,6 +5,7 @@ import { Activity, ShieldAlert, Zap, Globe as GlobeIcon, Map as MapIcon, Crossha
 import PainPointsMap from './PainPointsMap';
 import osirisWebcams from '../data/osiris_webcams.json';
 import mexicoWebcams from '../data/mexico_webcams.json';
+import govWebcams from '../data/gov_webcams.json';
 import { themes } from '../themeManager';
 import { normalizeWebcams } from "../utils/webcamNormalizer";
 import { getNationalMunicipalityCatalog } from "../utils/territoryData";
@@ -43,7 +44,7 @@ export default function UnifiedCommandCenter({ agents, clients }) {
   const nationalMunicipalities = useMemo(() => getNationalMunicipalityCatalog(), []);
   const mergeWebcams = useCallback((rawWebcams = []) => {
     const seen = new Set();
-    return normalizeWebcams([...rawWebcams, ...mexicoWebcams, ...osirisWebcams]).filter((cam) => {
+    return normalizeWebcams([...rawWebcams, ...mexicoWebcams, ...govWebcams, ...osirisWebcams]).filter((cam) => {
       const key = cam.stream_url || cam.id;
       if (seen.has(key) || !cam.lat || !cam.lng) return false;
       seen.add(key);
