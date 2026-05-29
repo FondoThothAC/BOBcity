@@ -1528,3 +1528,55 @@ table.civica-table td {
 .geo-boundary {
   transition: all 300ms ease;
 }
+
+/* ══════════════════════════════════════════════════════════════
+   🧠 MESA DE EXPERTOS — Estilos del Panel MoE
+   Animaciones de deliberación, swap y cards de agentes
+   ══════════════════════════════════════════════════════════════ */
+
+/* Animación de pulso cerebral para agente activo */
+@keyframes mesaPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 12px 4px rgba(212, 175, 55, 0.15);
+    transform: scale(1.05);
+  }
+}
+
+/* Animación de spinner para Loader2 */
+.mesa-spin {
+  animation: mesaSpin 1s linear infinite;
+}
+
+@keyframes mesaSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Cards de experto con efecto hover premium */
+.mesa-experto-card {
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
+}
+
+.mesa-experto-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+
+/* Grid responsivo para cards de expertos */
+@media (max-width: 1200px) {
+  .mesa-experto-card {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  /* En móvil, las cards de expertos se vuelven 2 columnas */
+  div:has(> .mesa-experto-card) {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+

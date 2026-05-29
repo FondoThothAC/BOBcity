@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import MesaExpertosPanel from './MesaExpertosPanel';
 import { 
   Terminal, 
   Play, 
@@ -213,6 +214,7 @@ export default function OrchestratorConsole() {
   const [ollamaStatus, setOllamaStatus] = useState('checking'); // 'connected' | 'disconnected' | 'checking'
   const [pythonStatus, setPythonStatus] = useState('checking'); // 'connected' | 'disconnected' | 'checking'
   const [showConfig, setShowConfig] = useState(false);
+  const [modoMesa, setModoMesa] = useState(false); // false = Swarm clásico, true = Mesa de Expertos
 
   const terminalEndRef = useRef(null);
   const swarmIntervalRef = useRef(null);
@@ -500,21 +502,40 @@ export default function OrchestratorConsole() {
             <Lock size={12} />
             Nivel 2/3 On-Premise Air-Gapped
           </span>
-          <button 
-            onClick={() => setShowConfig(!showConfig)}
-            className="btn-outline" 
-            style={{ 
-              fontSize: '0.75rem', 
-              padding: '0.25rem 0.5rem', 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '0.25rem',
-              borderColor: showConfig ? 'var(--neon-purple)' : 'var(--border-glass)',
-              cursor: 'pointer'
-            }}
-          >
-            ⚙️ {showConfig ? "Ocultar Ajustes" : "Ajustes de Red"}
-          </button>
+          <div style={{ display: 'flex', gap: '0.4rem' }}>
+            <button 
+              onClick={() => setModoMesa(!modoMesa)}
+              className="btn-outline" 
+              style={{ 
+                fontSize: '0.75rem', 
+                padding: '0.25rem 0.5rem', 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '0.25rem',
+                borderColor: modoMesa ? 'var(--thoth-oro-borde)' : 'var(--border-glass)',
+                color: modoMesa ? 'var(--thoth-oro)' : 'var(--text-secondary)',
+                background: modoMesa ? 'rgba(212,175,55,0.08)' : 'transparent',
+                cursor: 'pointer'
+              }}
+            >
+              🧠 {modoMesa ? 'Mesa Activa' : 'Mesa de Expertos'}
+            </button>
+            <button 
+              onClick={() => setShowConfig(!showConfig)}
+              className="btn-outline" 
+              style={{ 
+                fontSize: '0.75rem', 
+                padding: '0.25rem 0.5rem', 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '0.25rem',
+                borderColor: showConfig ? 'var(--neon-purple)' : 'var(--border-glass)',
+                cursor: 'pointer'
+              }}
+            >
+              ⚙️ {showConfig ? 'Ocultar' : 'Red'}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1219,6 +1240,22 @@ export default function OrchestratorConsole() {
           `}} />
 
         </div>
+      )}
+
+      {/* ─── Mesa de Expertos (Panel Alternativo MoE) ─────────────── */}
+      {modoMesa && (
+        <MesaExpertosPanel 
+          pythonApiUrl={pythonStatus === 'connected' ? pythonApiUrl : null}
+          onComplete={() => {
+            const toast = new CustomEvent('civic-toast', {
+              detail: {
+                message: '🧠 Mesa de Expertos completada — Síntesis consolidada disponible.',
+                type: 'success'
+              }
+            });
+            window.dispatchEvent(toast);
+          }}
+        />
       )}
 
     </div>

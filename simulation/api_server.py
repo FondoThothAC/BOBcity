@@ -944,6 +944,33 @@ class SimulationAPIHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         """Handle simulation and multi-agent swarm requests"""
         global TIMELINES
+
+        # ─── Endpoint: Mesa de Expertos MoE ──────────────────────────
+        if self.path == "/mesa-expertos":
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            try:
+                params = json.loads(post_data.decode('utf-8'))
+                from mesa_expertos import handle_mesa_expertos_request
+                resultado = handle_mesa_expertos_request(params)
+                
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json; charset=utf-8')
+                self._set_cors_headers()
+                self.end_headers()
+                self.wfile.write(json.dumps(resultado, ensure_ascii=False).encode('utf-8'))
+            except Exception as e:
+                print(f"⚠️ [MesaExpertos] Error: {e}")
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json; charset=utf-8')
+                self._set_cors_headers()
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    "status": "error",
+                    "message": f"Error en Mesa de Expertos: {str(e)}"
+                }, ensure_ascii=False).encode('utf-8'))
+            return
+
         if self.path == "/run-simulation":
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
