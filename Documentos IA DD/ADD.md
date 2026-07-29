@@ -167,15 +167,32 @@ Diseñado para operaciones en campo o ayuntamientos con restricciones estrictas 
   * `ollama-local`: Servicio local ejecutando Qwen 2.5 72B (cuantizado Q4) y BGE-M3 para embeddings con aceleración por GPU/NPU.
   * `postgres-db`: Base de datos PostgreSQL con `pgvector`.
   * `qdrant-server`: Base de datos vectorial ligera.
-* **Seguridad:** Tráfico TLS local sobre interfaces loopback.
-
-### 5.2 Despliegue en Clúster "Tier 2" (Infraestructura Institucional)
-Diseñado para secretarías de estado u organizaciones de análisis sociopolítico a nivel estatal/nacional.
-* **Orquestador:** Kubernetes (k3s o EKS) con auto-escalado de pods de simulación.
-* **Almacenamiento:** Base de datos gestionada PostgreSQL con réplicas de lectura y volumen montado compartido NFS para archivos `.parquet` de DuckDB.
-* **Inferencia de IA:** Servidor vLLM centralizado que expone modelos a través de endpoints de OpenAI de forma local.
+### 5.3 Despliegue Bare-Metal Híbrido (Go + MariaDB / SQLite Embebido)
+Diseñado para máximo rendimiento computacional en VPS y ejecutables locales autónomos.
+* **Motor de Simulación (`civicaos-engine-go`):** Servicio binario estático compilado en Go con arquitectura Data-Oriented Design (DOD).
+* **Almacenamiento VPS:** MariaDB (100% Open-Source GPLv2).
+* **Almacenamiento Local Desktop:** SQLite / DuckDB embebido en el binario sin requerir servicios externos instalados.
 
 ---
 
-*Documento ADD actualizado: 2026-05-18*  
-*Próxima revisión programada: 2026-06-18*  
+## 6. Motor Multiverso y Simulación Paralela Bare-Metal (`civicaos-engine-go`)
+
+El subsistema de exploración multiverso (*Doctor Strange Monte Carlo Engine / Emergence World Simulator*) permite evaluar millones de líneas temporales de políticas públicas en paralelo.
+
+```mermaid
+graph LR
+    Sub1[Línea Temporal A: Subsidios] --> Engine[Go Bare-Metal Engine]
+    Sub2[Línea Temporal B: Infraestructura] --> Engine
+    Sub3[Línea Temporal C: Ajuste Fiscal] --> Engine
+    Engine -->|Goroutines + DOD| Matrix[Matriz de Convergencia Social]
+```
+
+1. **Paralelismo Masivo:** Ejecución asíncrona de simulaciones concurrentes mediante `goroutines` ligeras.
+2. **Memoria Contigua (Zero-Allocation):** Los 1024 parámetros por agente sintético se estructuran en arreglos planos (`Structure of Arrays`) para eliminar *cache misses* en la CPU L1/L2/L3.
+3. **Distribución Autónoma:** Compilación directa a binarios nativos independientes para macOS (`.app`), Windows (`.exe`) y Linux VPS.
+
+---
+
+*Documento ADD actualizado: 2026-07-29*  
+*Próxima revisión programada: 2026-08-29*  
+
