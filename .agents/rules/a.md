@@ -38,3 +38,11 @@ Cualquier agente de IA que trabaje en este repositorio (como Qwen Coder, Gemini 
   - **PDD** (Physical/Parameter Design Document)
   - **UXDD** (User Experience Design Document)
 - Ninguna funcionalidad física o lógica compleja debe ser implementada sin su correspondiente especificación viva.
+
+5. Reglas de Optimización Bare-Metal (Bajo Nivel y Eficiencia Extrema):
+
+- **Data-Oriented Design (DOD):** En módulos de alto rendimiento (motores de simulación, scrapers masivos o procesadores de eventos en Go/Rust), priorizar datos organizados en memoria contigua (slices/arrays de structs) para maximizar aciertos en la caché L1/L2/L3 de la CPU y minimizar *cache misses*.
+- **Zero-Allocation en Hot Loops:** Prohibidas las asignaciones dinámicas de memoria (heap allocations) dentro de bucles principales o de alta frecuencia. Reutilizar buffers y estructuras mediante pools (ej. `sync.Pool` en Go, allocators dedicados en Rust).
+- **Ejecutables Autónomos (Standalone Binaries):** Todo software distribuido para usuario final en escritorio (Windows/macOS) debe compilarse como un binario estático y autónomo. El usuario final **nunca** debe requerir la instalación manual de dependencias (Node.js, Python, Java o runtimes externos).
+- **Concurrencia sin Bloqueos (Lock-Free Primitives):** Minimizar el uso de Mutexes pesados en rutas de datos críticas; preferir operaciones atómicas y canales/colas síncronas de bajo impacto.
+
