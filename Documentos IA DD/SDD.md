@@ -1028,7 +1028,20 @@ Para robustecer la visualización geográfica y el rendimiento del gemelo digita
    * Para evitar el desbordamiento de la pila de llamadas (`Maximum update depth exceeded`) causado por re-cálculos del centro y del zoom de Leaflet durante re-renderizados de componentes React, se implementa la memorización estricta del viewport del mapa (`mapViewport`) usando `useMemo`.
    * Las llamadas de sincronización de datos con capas externas (como la búsqueda de escuelas del DENUE/INEGI) se enlazan exclusivamente a dependencias atómicas primitivas (`mapCenter[0]`, `mapCenter[1]`) en lugar de arrays o referencias de objetos mutables.
 
+### 7.6 Motor Bare-Metal Go: Data-Oriented Design & Exploración Multiverso (Actualización Julio 2026)
+
+Para escalar las simulaciones de gemelos digitales sociales (GDS-MEGA) a millones de iteraciones concurrentes (Modo Doctor Strange / Emergence World) con latencias sub-milisegundo, se define la especificación técnica del componente `civicaos-engine-go`:
+
+1. **Estructura Data-Oriented Design (DOD - 1024 Parámetros):**
+   * **Memoria Contigua (Structure of Arrays - SoA):** En lugar de instanciar cada agente sintético como una clase u objeto disperso con punteros en el Heap, los 1024 parámetros dinámicos se organizan en un vector continuo de punto flotante `[]float32` de tamaño $N \times 1024$.
+   * **Eficiencia de Caché L1/L2/L3:** La CPU lee bloques secuenciales de memoria mediante *Hardware Prefetching*, reduciendo la tasa de *Cache Misses* a cerca del 0%.
+2. **Cero Asignación Dinámica en Hot Loops (Zero-Allocation):**
+   * **Pool de Memoria (`sync.Pool`):** Los bloques de simulación (`AgentBatchDOD`) se reutilizan entre goroutines. Se prohíbe el uso de `make()` o asignaciones dinámicas en el bucle principal de evolución temporal.
+3. **Persistencia Híbrida y Ejecutable Autónomo:**
+   * **VPS Server:** Conexión nativa a MariaDB (GPLv2) con pool de conexiones optimizado (50 conexiones máximas / 10 inactivas).
+   * **Cliente Desktop Local:** Motor SQLite embebido directamente en el binario compilado. El instalador final (`civicaos-engine-windows-amd64.exe` / `civicaos-engine-darwin-arm64`) no requiere la instalación previa de Node.js, Python ni bases de datos externas por parte del usuario final.
+
 ---
 
-*Documento SDD actualizado con especificación de persistencia GDS-MEGA y resiliencia GIS: 2026-05-19*
-*Próxima revisión programada: 2026-06-19*
+*Documento SDD actualizado con especificación de Motor Bare-Metal Go (DOD & Zero-Alloc): 2026-07-29*
+*Próxima revisión programada: 2026-08-29*
