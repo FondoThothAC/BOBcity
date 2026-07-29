@@ -379,11 +379,26 @@ const MultiverseAdmin = ({ pythonApiUrl = (window.location.port ? 'http://localh
       {/* ====== PANEL IZQUIERDO: MULTIVERSE MANAGER ====== */}
       <div style={styles.leftPanel}>
         <div>
-          <div style={styles.sectionTitle}><Globe size={12} /> Gestor de Multiversos</div>
-          <button style={{ ...styles.btn('primary'), width: '100%', justifyContent: 'center', marginBottom: '8px' }}
-            onClick={() => setShowCreateModal(true)}>
-            <Plus size={14} /> Crear Universo
-          </button>
+          <div style={{ display: 'flex', gap: '6px', marginBottom: '8px' }}>
+            <button style={{ ...styles.btn('primary'), flex: 1, justifyContent: 'center' }}
+              onClick={() => setShowCreateModal(true)}>
+              <Plus size={14} /> Crear Universo
+            </button>
+            <button style={{ ...styles.btn('ghost'), background: 'rgba(0, 229, 255, 0.1)', color: '#00e5ff', border: '1px solid rgba(0, 229, 255, 0.3)', flex: 1, justifyContent: 'center' }}
+              onClick={async () => {
+                addLog('⚡ Iniciando exploración multiverso Go Bare-Metal (Modo Doctor Strange)...');
+                try {
+                  const res = await fetch('http://localhost:8085/api/v1/multiverse/explore?timelines=1000');
+                  const data = await res.json();
+                  addLog(`✅ 1000 Líneas Temporales exploradas en Go en ${data.total_duration_ms}ms.`);
+                } catch (e) {
+                  addLog('⚠️ Motor Go local (puerto 8085) no detectado. Inicia `go run engine-go/main.go` o `./build_standalone.sh`.');
+                }
+              }}>
+              <Zap size={14} /> Simular Go (14M)
+            </button>
+          </div>
+
 
           {showCreateModal && (
             <div style={{ background: 'rgba(0,229,255,0.05)', border: '1px solid rgba(0,229,255,0.2)', borderRadius: '8px', padding: '10px', marginBottom: '8px' }}>
