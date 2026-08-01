@@ -43,6 +43,7 @@ func main() {
 	aiH := handlers.NewAIHandler()
 	osintH := handlers.NewOSINTHandler(cfg)
 	citizenH := handlers.NewCitizenHandler(cfg)
+	guitarH := handlers.NewGuitarHandler()
 
 	// Rutas Públicas
 	app.Get("/health", func(c *fiber.Ctx) error {
@@ -72,6 +73,10 @@ func main() {
 	citizenGroup := api.Group("/citizen")
 	citizenGroup.Post("/ingest", citizenH.IngestProposal)
 	citizenGroup.Post("/proposal", citizenH.IngestProposal)
+
+	guitarGroup := api.Group("/v1/guitar")
+	guitarGroup.Post("/convert-tab", guitarH.ConvertToTab)
+	guitarGroup.Post("/parse-gp", guitarH.ParseGP3)
 
 	// Rutas Protegidas (JWT Middleware)
 	protected := api.Group("")
