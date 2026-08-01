@@ -10,7 +10,7 @@ import (
 	"civicaos-engine-go/internal/static"
 	"civicaos-engine-go/internal/ws"
 
-	"github.com/gofiber/contrib/websocket"
+	"github.com/gofiber/websocket/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"

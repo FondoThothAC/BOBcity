@@ -104,6 +104,14 @@ func (h *OSINTHandler) InvestigateTarget(c *fiber.Ctx) error {
 			"Gitleaks_Go (Secrets)",
 			"PhoneInfoga_Go (Teléfonos)",
 			"Harvester_Go (Emails)",
+			"SocialMedia_Go (6 plataformas)",
+			"EmailRecon_Go (EmailRep/Hunter)",
+			"DomainRecon_Go (DNS/WHOIS/CRT)",
+			"IPNetwork_Go (IPinfo/Banners)",
+			"GeoLocation_Go (IP-API/ipapi.co)",
+			"ThreatIntel_Go (OTX/ThreatFox/URLhaus)",
+			"WebFingerprint_Go (Tech Detection)",
+			"DocMetadata_Go (PDF/PNG/EXIF)",
 		},
 	})
 }
@@ -111,15 +119,33 @@ func (h *OSINTHandler) InvestigateTarget(c *fiber.Ctx) error {
 // GetTools retorna la lista de herramientas disponibles
 func (h *OSINTHandler) GetTools(c *fiber.Ctx) error {
 	tools := []fiber.Map{
-		{"id": "sherlock", "name": "Sherlock Go", "category": "username", "description": "Enumera 300+ sitios web para un usuario", "engine": "go_native", "status": "active"},
-		{"id": "subfinder", "name": "Subfinder Go", "category": "domain", "description": "Enumeración pasiva de subdominios vía crt.sh", "engine": "go_native", "status": "active"},
-		{"id": "amass", "name": "Amass Go", "category": "domain", "description": "Resolución DNS y mapeo ASN", "engine": "go_native", "status": "active"},
-		{"id": "gobuster", "name": "Gobuster Go", "category": "domain", "description": "Descubrimiento de directorios y rutas", "engine": "go_native", "status": "active"},
-		{"id": "gitleaks", "name": "Gitleaks Go", "category": "username", "description": "Escaneo de secretos en GitHub", "engine": "go_native", "status": "active"},
-		{"id": "phoneinfoga", "name": "PhoneInfoga Go", "category": "phone", "description": "OSINT sobre números de teléfono", "engine": "go_native", "status": "active"},
-		{"id": "harvester", "name": "Harvester Go", "category": "email", "description": "Extracción de emails vía crt.sh", "engine": "go_native", "status": "active"},
-		{"id": "ghunt", "name": "GHunt", "category": "email", "description": "Investigación de cuentas Google", "engine": "python", "status": "active"},
-		{"id": "spiderfoot", "name": "SpiderFoot", "category": "multi", "description": "Automatización OSINT completa", "engine": "python", "status": "active"},
+		// Core OSINT - Go Native
+		{"id": "sherlock", "name": "Sherlock Go", "category": "username", "description": "Enumera 300+ sitios web para un usuario", "engine": "go_native", "status": "active", "package": "sherlock"},
+		{"id": "subfinder", "name": "Subfinder Go", "category": "domain", "description": "Enumeración pasiva de subdominios vía crt.sh", "engine": "go_native", "status": "active", "package": "subfinder"},
+		{"id": "amass", "name": "Amass Go", "category": "domain", "description": "Resolución DNS y mapeo ASN", "engine": "go_native", "status": "active", "package": "amass"},
+		{"id": "gobuster", "name": "Gobuster Go", "category": "domain", "description": "Descubrimiento de directorios y rutas", "engine": "go_native", "status": "active", "package": "gobuster"},
+		{"id": "gitleaks", "name": "Gitleaks Go", "category": "username", "description": "Escaneo de secretos en GitHub", "engine": "go_native", "status": "active", "package": "gitleaks"},
+		{"id": "phoneinfoga", "name": "PhoneInfoga Go", "category": "phone", "description": "OSINT sobre números de teléfono", "engine": "go_native", "status": "active", "package": "phoneinfoga"},
+		{"id": "harvester", "name": "Harvester Go", "category": "email", "description": "Extracción de emails vía crt.sh", "engine": "go_native", "status": "active", "package": "harvester"},
+		// Social Media - Go Native
+		{"id": "social_media", "name": "Social Media Scanner", "category": "username", "description": "Instagram, Twitter/X, TikTok, GitHub, Reddit, Pinterest", "engine": "go_native", "status": "active", "package": "socialmedia"},
+		// Email Recon - Go Native
+		{"id": "email_recon", "name": "Email Recon", "category": "email", "description": "EmailRep, Hunter.io, disposable/webmail detection", "engine": "go_native", "status": "active", "package": "emailrecon"},
+		// Domain Recon - Go Native
+		{"id": "domain_recon", "name": "Domain Recon", "category": "domain", "description": "DNS completo, WHOIS/RDAP, Certificate Transparency, HTTP Headers", "engine": "go_native", "status": "active", "package": "domainrecon"},
+		// IP/Network - Go Native
+		{"id": "ip_network", "name": "IP/Network OSINT", "category": "ip", "description": "IPinfo, IP-API, AbuseIPDB, banner grabbing", "engine": "go_native", "status": "active", "package": "ipnetwork"},
+		// Geolocation - Go Native
+		{"id": "geolocation", "name": "Geolocation", "category": "ip", "description": "Geolocalización por IP o coordenadas", "engine": "go_native", "status": "active", "package": "geolocation"},
+		// Threat Intelligence - Go Native
+		{"id": "threat_intel", "name": "Threat Intelligence", "category": "multi", "description": "VirusTotal, AlienVault OTX, URLhaus, ThreatFox", "engine": "go_native", "status": "active", "package": "threatintel"},
+		// Web Fingerprint - Go Native
+		{"id": "web_fingerprint", "name": "Web Fingerprint", "category": "domain", "description": "Detección de tecnologías (CMS, frameworks, analytics, CDN)", "engine": "go_native", "status": "active", "package": "webfingerprint"},
+		// Document Metadata - Go Native
+		{"id": "doc_metadata", "name": "Document Metadata", "category": "multi", "description": "Extracción de metadatos PDF, PNG, JPEG (EXIF, autor, fechas)", "engine": "go_native", "status": "active", "package": "docmetadata"},
+		// Python fallback
+		{"id": "ghunt", "name": "GHunt", "category": "email", "description": "Investigación de cuentas Google", "engine": "python", "status": "active", "package": "ghunt"},
+		{"id": "spiderfoot", "name": "SpiderFoot", "category": "multi", "description": "Automatización OSINT completa", "engine": "python", "status": "active", "package": "spiderfoot"},
 	}
 	return c.JSON(fiber.Map{"tools": tools, "total": len(tools)})
 }
