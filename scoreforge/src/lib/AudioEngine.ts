@@ -51,11 +51,11 @@ export class AudioEngine {
     this.masterGain = this.ctx.createGain();
     this.masterGain.gain.value = 0.72;
 
-    // Cadena: compressor → masterGain → destination
+  // Cadena: compressor → masterGain → destination
     this.compressor.connect(this.masterGain);
     this.masterGain.connect(this.ctx.destination);
 
-    // Reverb sintético (impulse de ruido filtrado)
+    // Reverb sintético (impulse de ruido filtrado con filtro de paso alto)
     this._createReverb();
   }
 

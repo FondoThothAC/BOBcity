@@ -38,7 +38,7 @@ export const Header: React.FC = () => {
       const url = URL.createObjectURL(wavBlob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${score.title.replace(/[^a-zA-Z0-9]/g, '_')}_ScoreForge.wav`;
+      a.download = `${score.title.replace(/[^a-zA-Z0-9]/g, '_')}_ThothNeuralScore.wav`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
