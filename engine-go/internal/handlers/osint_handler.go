@@ -112,6 +112,10 @@ func (h *OSINTHandler) InvestigateTarget(c *fiber.Ctx) error {
 			"ThreatIntel_Go (OTX/ThreatFox/URLhaus)",
 			"WebFingerprint_Go (Tech Detection)",
 			"DocMetadata_Go (PDF/PNG/EXIF)",
+			"FullRecon_Go (Puertos/HTTP/DNS/Tech)",
+			"CloudSec_Go (S3/GCS/Azure)",
+			"Crypto_Go (BTC/ETH Analysis)",
+			"Mobile_Go (PlayStore/F-Droid/APK)",
 		},
 	})
 }
@@ -143,6 +147,14 @@ func (h *OSINTHandler) GetTools(c *fiber.Ctx) error {
 		{"id": "web_fingerprint", "name": "Web Fingerprint", "category": "domain", "description": "Detección de tecnologías (CMS, frameworks, analytics, CDN)", "engine": "go_native", "status": "active", "package": "webfingerprint"},
 		// Document Metadata - Go Native
 		{"id": "doc_metadata", "name": "Document Metadata", "category": "multi", "description": "Extracción de metadatos PDF, PNG, JPEG (EXIF, autor, fechas)", "engine": "go_native", "status": "active", "package": "docmetadata"},
+		// Automation & Recon
+		{"id": "automation", "name": "Full Recon", "category": "multi", "description": "Escaneo completo: puertos, HTTP, DNS, headers, tecnologías", "engine": "go_native", "status": "active", "package": "automation"},
+		// Cloud Security
+		{"id": "cloud_security", "name": "Cloud Enumeration", "category": "multi", "description": "S3, GCS, Azure Blob, AWS Endpoints", "engine": "go_native", "status": "active", "package": "cloudsecurity"},
+		// Crypto Analysis
+		{"id": "crypto", "name": "Blockchain Analysis", "category": "multi", "description": "BTC/ETH addresses, transactions, exchanges", "engine": "go_native", "status": "active", "package": "crypto"},
+		// Mobile Analysis
+		{"id": "mobile", "name": "Mobile Analysis", "category": "multi", "description": "Play Store, F-Droid, APK metadata", "engine": "go_native", "status": "active", "package": "mobile"},
 		// Python fallback
 		{"id": "ghunt", "name": "GHunt", "category": "email", "description": "Investigación de cuentas Google", "engine": "python", "status": "active", "package": "ghunt"},
 		{"id": "spiderfoot", "name": "SpiderFoot", "category": "multi", "description": "Automatización OSINT completa", "engine": "python", "status": "active", "package": "spiderfoot"},

@@ -6,6 +6,7 @@ export interface OSTool {
   engine: 'go_native' | 'python' | 'hybrid'
   status: 'active' | 'inactive' | 'error'
   icon?: string
+  package?: string
 }
 
 export interface OSINTMatch {

@@ -168,6 +168,30 @@ func (e *Engine) GetPackageStatus() map[string]map[string]interface{} {
 			"sources": "PDF, PNG, JPEG, Office",
 			"type":    "document_metadata",
 		},
+		"automation": {
+			"status":  "active",
+			"engine":  "go_native",
+			"sources": "PortScan, HTTPProbe, DNS, Headers, TechDetect",
+			"type":    "full_recon",
+		},
+		"cloud_security": {
+			"status":  "active",
+			"engine":  "go_native",
+			"sources": "S3, GCS, Azure Blob, AWS Endpoints",
+			"type":    "cloud_enumeration",
+		},
+		"crypto": {
+			"status":  "active",
+			"engine":  "go_native",
+			"sources": "Blockchain.com, Etherscan, Blockstream",
+			"type":    "blockchain_analysis",
+		},
+		"mobile": {
+			"status":  "active",
+			"engine":  "go_native",
+			"sources": "Play Store, F-Droid, APK Analysis",
+			"type":    "mobile_analysis",
+		},
 	}
 }
 
@@ -186,8 +210,11 @@ func (e *Engine) GetToolsByCategory() map[string][]string {
 		"phone":      {"phoneinfoga"},
 		"secrets":    {"gitleaks"},
 		"threat":     {"threat_intel"},
-		"web":        {"web_fingerprint"},
+		"web":        {"web_fingerprint", "automation"},
 		"documents":  {"doc_metadata"},
+		"cloud":      {"cloud_security"},
+		"crypto":     {"crypto"},
+		"mobile":     {"mobile"},
 	}
 	return categories
 }

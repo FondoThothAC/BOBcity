@@ -16,9 +16,33 @@ const categoryLabels: Record<string, string> = {
   username: 'Usuarios',
   email: 'Emails',
   domain: 'Dominios',
-  ip: 'IPs',
+  ip: 'IPs/Red',
   phone: 'Teléfonos',
   multi: 'Multi-objeto',
+}
+
+const toolIcons: Record<string, string> = {
+  sherlock: '🔍',
+  subfinder: '🌐',
+  amass: '📡',
+  gobuster: '📁',
+  gitleaks: '🔐',
+  phoneinfoga: '📱',
+  harvester: '✉',
+  social_media: '💬',
+  email_recon: '📧',
+  domain_recon: '🌍',
+  ip_network: '🖥',
+  geolocation: '📍',
+  threat_intel: '🛡',
+  web_fingerprint: '🕸',
+  doc_metadata: '📄',
+  automation: '⚡',
+  cloud_security: '☁',
+  crypto: '₿',
+  mobile: '📲',
+  ghunt: '🔍',
+  spiderfoot: '🕷',
 }
 
 export function ToolsExplorer() {
@@ -83,9 +107,12 @@ export function ToolsExplorer() {
               className="bg-gray-900 border border-gray-800 rounded-lg p-4 hover:border-gray-600 transition-colors"
             >
               <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="font-semibold text-white">{tool.name}</h3>
-                  <p className="text-xs text-gray-500 mt-1">{tool.description}</p>
+                <div className="flex items-start gap-2">
+                  <span className="text-xl">{toolIcons[tool.id] || '⚙'}</span>
+                  <div>
+                    <h3 className="font-semibold text-white">{tool.name}</h3>
+                    <p className="text-xs text-gray-500 mt-1">{tool.description}</p>
+                  </div>
                 </div>
                 <span className={`text-[10px] px-1.5 py-0.5 rounded bg-${color}-500/10 text-${color}-400`}>
                   {tool.engine === 'go_native' ? 'Go' : 'Py'}

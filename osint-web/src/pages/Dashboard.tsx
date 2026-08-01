@@ -19,6 +19,18 @@ const engineIcons: Record<string, string> = {
   'Gitleaks_Go (Secrets)': '🔐',
   'PhoneInfoga_Go (Teléfonos)': '📱',
   'Harvester_Go (Emails)': '✉',
+  'SocialMedia_Go (6 plataformas)': '💬',
+  'EmailRecon_Go (EmailRep/Hunter)': '📧',
+  'DomainRecon_Go (DNS/WHOIS/CRT)': '🌍',
+  'IPNetwork_Go (IPinfo/Banners)': '🖥',
+  'GeoLocation_Go (IP-API/ipapi.co)': '📍',
+  'ThreatIntel_Go (OTX/ThreatFox/URLhaus)': '🛡',
+  'WebFingerprint_Go (Tech Detection)': '🕸',
+  'DocMetadata_Go (PDF/PNG/EXIF)': '📄',
+  'FullRecon_Go (Puertos/HTTP/DNS/Tech)': '⚡',
+  'CloudSec_Go (S3/GCS/Azure)': '☁',
+  'Crypto_Go (BTC/ETH Analysis)': '₿',
+  'Mobile_Go (PlayStore/F-Droid/APK)': '📲',
 }
 
 export function Dashboard() {
