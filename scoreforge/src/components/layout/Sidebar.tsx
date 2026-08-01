@@ -23,9 +23,7 @@ export const Sidebar: React.FC = () => {
         {/* Header / Logo */}
         <div className="p-4 flex items-center justify-between border-b border-white/5 mb-4">
           <div className="flex items-center gap-3 text-white overflow-hidden">
-            <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg shadow-cyan-500/20 shrink-0">
-              <span className="font-black text-white text-[9px] tracking-tighter">TNS</span>
-            </div>
+            <img src="/logo.png" alt="ThothNeuralScore Logo" className="w-8 h-8 rounded-lg object-cover shadow-lg shadow-cyan-500/20 shrink-0" />
             {!sidebarCollapsed && (
               <span className="font-bold text-sm tracking-tight truncate text-white">ThothNeuralScore</span>
             )}
