@@ -1,6 +1,0 @@
-{
-  "name": "ScoreForge",
-  "description": "Advanced web-based music notation, tablature, and piano roll editor with community features.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}

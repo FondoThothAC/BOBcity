@@ -52,9 +52,9 @@ func NewEngine() *Engine {
 	e := &Engine{
 		scrapers: make([]Scraper, 0),
 	}
-	// Registrar módulos nativos por defecto
-	e.RegisterScraper(NewUsernameReconScraper())
-	e.RegisterScraper(NewDomainReconScraper())
+	// Registrar módulos nativos por defecto (Sprint 1)
+	e.RegisterScraper(NewSherlockScraper())
+	e.RegisterScraper(NewHarvesterScraper())
 	return e
 }
 

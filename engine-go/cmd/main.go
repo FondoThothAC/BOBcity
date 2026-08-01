@@ -82,6 +82,7 @@ func main() {
 	protected.Get("/vault/entities/:name", vaultH.GetEntity)
 	protected.Post("/vault/entities", vaultH.SaveEntity)
 	protected.Post("/osint/run", osintH.RunTool)
+	protected.Post("/v1/agent/investigate", osintH.InvestigateTarget)
 
 	// Servidor de activos estáticos del Frontend (SPA Fallback)
 	static.SetupStaticRoutes(app)
