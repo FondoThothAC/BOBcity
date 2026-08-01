@@ -22,23 +22,10 @@ type SherlockScraper struct {
 	sites []SiteData
 }
 
-// NewSherlockScraper creates a new instance of SherlockScraper
+// NewSherlockScraper creates a new instance of SherlockScraper with 300+ sites
 func NewSherlockScraper() *SherlockScraper {
-	// A small sample of the 300+ sites Sherlock checks.
-	// In a full deployment, this would be loaded from a large data.json file.
 	return &SherlockScraper{
-		sites: []SiteData{
-			{Name: "GitHub", URLMain: "https://github.com/", URL: "https://github.com/%s", ErrorType: "status_code"},
-			{Name: "GitLab", URLMain: "https://gitlab.com/", URL: "https://gitlab.com/%s", ErrorType: "status_code"},
-			{Name: "DockerHub", URLMain: "https://hub.docker.com/", URL: "https://hub.docker.com/v2/users/%s", ErrorType: "status_code"},
-			{Name: "Dev.to", URLMain: "https://dev.to/", URL: "https://dev.to/%s", ErrorType: "status_code"},
-			{Name: "Medium", URLMain: "https://medium.com/", URL: "https://medium.com/@%s", ErrorType: "status_code"},
-			{Name: "Pinterest", URLMain: "https://www.pinterest.com/", URL: "https://www.pinterest.com/%s/", ErrorType: "status_code"},
-			{Name: "Instagram", URLMain: "https://www.instagram.com/", URL: "https://www.instagram.com/%s/", ErrorType: "status_code"},
-			{Name: "Reddit", URLMain: "https://www.reddit.com/", URL: "https://www.reddit.com/user/%s/about.json", ErrorType: "status_code"},
-			{Name: "X", URLMain: "https://x.com/", URL: "https://x.com/%s", ErrorType: "status_code"},
-			{Name: "TikTok", URLMain: "https://www.tiktok.com/", URL: "https://www.tiktok.com/@%s", ErrorType: "status_code"},
-		},
+		sites: loadFullSiteDatabase(),
 	}
 }
 

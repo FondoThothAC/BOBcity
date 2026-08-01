@@ -15,6 +15,7 @@ const (
 	TargetTypeEmail    TargetType = "email"
 	TargetTypeDomain   TargetType = "domain"
 	TargetTypeIP       TargetType = "ip"
+	TargetTypePhone    TargetType = "phone"
 )
 
 // OSINTMatch representa una coincidencia individual encontrada por un módulo de escaneo.
@@ -52,9 +53,14 @@ func NewEngine() *Engine {
 	e := &Engine{
 		scrapers: make([]Scraper, 0),
 	}
-	// Registrar módulos nativos por defecto (Sprint 1)
-	e.RegisterScraper(NewSherlockScraper())
-	e.RegisterScraper(NewHarvesterScraper())
+	// OSINT modules - Go native implementations
+	e.RegisterScraper(NewSherlockScraper())    // 300+ username enumeration
+	e.RegisterScraper(NewHarvesterScraper())   // Email harvester via crt.sh
+	e.RegisterScraper(NewSubfinderScraper())   // Subdomain enumeration (crt.sh)
+	e.RegisterScraper(NewAmassScraper())       // DNS/ASN enumeration
+	e.RegisterScraper(NewGobusterScraper())    // Directory discovery
+	e.RegisterScraper(NewGitleaksScraper())    // GitHub secret scanning
+	e.RegisterScraper(NewPhoneInfogaScraper()) // Phone number OSINT
 	return e
 }
 

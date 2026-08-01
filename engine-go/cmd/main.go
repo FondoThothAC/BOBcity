@@ -8,7 +8,9 @@ import (
 	"civicaos-engine-go/internal/handlers"
 	"civicaos-engine-go/internal/middleware"
 	"civicaos-engine-go/internal/static"
+	"civicaos-engine-go/internal/ws"
 
+	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -19,9 +21,14 @@ func main() {
 	// Cargar configuración de entorno
 	cfg := config.LoadConfig()
 
+	// Iniciar WebSocket hub para streaming en tiempo real
+	hub := ws.NewHub()
+	go hub.Run()
+	log.Printf("[WS] Hub WebSocket iniciado para streaming de logs OSINT")
+
 	// Crear aplicación de Go Fiber
 	app := fiber.New(fiber.Config{
-		AppName:      "CívicaOS Engine Go v1.0",
+		AppName:      "CívicaOS Engine Go v2.0",
 		ServerHeader: "Fiber/CivicaOS",
 	})
 
@@ -36,23 +43,29 @@ func main() {
 		AllowMethods: "GET, POST, PUT, DELETE, OPTIONS",
 	}))
 
-	// Instanciar manejadores
+	// Instanciar manejadores (con WebSocket hub para OSINT)
 	authH := handlers.NewAuthHandler(cfg)
 	vaultH := handlers.NewVaultHandler(cfg)
 	simH := handlers.NewSimulationHandler()
 	aiH := handlers.NewAIHandler()
-	osintH := handlers.NewOSINTHandler(cfg)
+	osintH := handlers.NewOSINTHandler(cfg, hub)
 	citizenH := handlers.NewCitizenHandler(cfg)
 	guitarH := handlers.NewGuitarHandler()
 
 	// Rutas Públicas
 	app.Get("/health", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
-			"status":  "ok",
-			"engine":  "Go Fiber",
-			"version": "1.0.0",
+			"status":           "ok",
+			"engine":           "Go Fiber",
+			"version":          "2.0.0",
+			"ws_clients":       hub.GetClientCount(),
+			"osint_engines":    7,
+			"tools_registered": "Sherlock, Subfinder, Amass, Gobuster, Gitleaks, PhoneInfoga, Harvester",
 		})
 	})
+
+	// WebSocket endpoint para logs en tiempo real
+	app.Get("/ws/logs", websocket.New(ws.HandleWebSocket(hub)))
 
 	// Compatibilidad con frontend legado
 	app.Post("/run-simulation", simH.RunABM)
@@ -78,6 +91,11 @@ func main() {
 	guitarGroup.Post("/convert-tab", guitarH.ConvertToTab)
 	guitarGroup.Post("/parse-gp", guitarH.ParseGP3)
 
+	// OSINT API - Herramientas y Investigación
+	osintGroup := api.Group("/osint")
+	osintGroup.Get("/tools", osintH.GetTools)
+	osintGroup.Get("/scan/:id", osintH.GetScanStatus)
+
 	// Rutas Protegidas (JWT Middleware)
 	protected := api.Group("")
 	protected.Use(middleware.JWTMiddleware(cfg.JWTSecret))
@@ -92,13 +110,11 @@ func main() {
 	// Servidor de activos estáticos del Frontend (SPA Fallback)
 	static.SetupStaticRoutes(app)
 
-	log.Printf("🚀 Servidor CívicaOS Engine (Go) iniciado en el puerto :%s", cfg.Port)
+	log.Printf("🚀 Servidor CívicaOS Engine (Go) v2.0 iniciado en el puerto :%s", cfg.Port)
+	log.Printf("📡 WebSocket disponible en ws://%s:%s/ws/logs", "localhost", cfg.Port)
+	log.Printf("🔧 Herramientas OSINT nativas: Sherlock(300+), Subfinder, Amass, Gobuster, Gitleaks, PhoneInfoga, Harvester")
+
 	if err := app.Listen(":" + cfg.Port); err != nil {
 		log.Fatalf("Error al iniciar servidor de Go: %v", err)
 	}
 }
-
-
-
-
-
