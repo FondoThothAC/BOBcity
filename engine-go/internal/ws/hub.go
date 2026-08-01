@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gofiber/contrib/websocket"
+	"github.com/gofiber/websocket/v2"
 )
 
 // LogMessage representa un mensaje de log en tiempo real

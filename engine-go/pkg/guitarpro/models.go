@@ -1,7 +1,5 @@
 package guitarpro
 
-import "time"
-
 // Song representa la estructura completa de un documento de GuitarPro / ScoreForge
 type Song struct {
 	Title        string   `json:"title"`
