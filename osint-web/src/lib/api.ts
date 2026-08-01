@@ -1,6 +1,6 @@
 import type { OSTool, ScanReport, InvestigationRequest, InvestigationResponse } from '@/types'
 
-const API_BASE = '/api'
+const API_BASE = '/osint/api'
 
 class ApiClient {
   private baseUrl: string

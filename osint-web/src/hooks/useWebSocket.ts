@@ -11,7 +11,7 @@ interface UseWebSocketOptions {
 
 export function useWebSocket(options: UseWebSocketOptions = {}) {
   const {
-    url = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws/logs`,
+    url = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/osint/ws/logs`,
     onMessage,
     onConnect,
     onDisconnect,
